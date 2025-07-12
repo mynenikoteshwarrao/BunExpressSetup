@@ -4,7 +4,7 @@
 
 This repository contains a fully functional CLI tool that generates Bun-based API project templates. The CLI creates complete project structures with Express.js and MongoDB integration, including authentication, security middleware, and proper project organization. The generated projects are designed to run on Bun runtime for improved performance while maintaining Node.js ecosystem compatibility.
 
-**Status**: Completed and fully functional ✅
+**Status**: Completed and ready for npm publishing ✅
 
 ## User Preferences
 

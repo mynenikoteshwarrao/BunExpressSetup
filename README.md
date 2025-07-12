@@ -15,7 +15,17 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 
 ## Installation
 
-### Install and Setup
+### Global Installation (Recommended)
+
+Install globally via npm:
+
+```bash
+npm install -g koti
+```
+
+### Development Setup
+
+For development or local testing:
 
 1. **Clone this repository**:
    ```bash
@@ -38,13 +48,13 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 Create a new Bun API project:
 
 ```bash
-./koti new my-awesome-api
+koti new my-awesome-api
 ```
 
 Or use the create alias:
 
 ```bash
-./koti create my-awesome-api
+koti create my-awesome-api
 ```
 
 ## Generated Project Structure
