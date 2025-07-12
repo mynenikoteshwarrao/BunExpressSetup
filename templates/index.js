@@ -1,23 +1,4 @@
-#!/usr/bin/env node
-
-const { Command } = require('commander');
-const fs = require('fs-extra');
-const path = require('path');
-
-const program = new Command();
-
-// Console colors without chalk
-const colors = {
-  green: (text) => `\x1b[32m${text}\x1b[0m`,
-  blue: (text) => `\x1b[34m${text}\x1b[0m`,
-  yellow: (text) => `\x1b[33m${text}\x1b[0m`,
-  red: (text) => `\x1b[31m${text}\x1b[0m`,
-  cyan: (text) => `\x1b[36m${text}\x1b[0m`,
-  bold: (text) => `\x1b[1m${text}\x1b[0m`
-};
-
-// Template files content
-const templates = {
+module.exports = {
   'package.json': {
     "name": "{{PROJECT_NAME}}",
     "version": "1.0.0",
@@ -898,144 +879,103 @@ A modern API built with Bun, Express.js, and MongoDB.
 \`\`\`
 {{PROJECT_NAME}}/
 ├── config/
-│   └── database.js          # Database connection
+│   └── database.js          # MongoDB connection setup
 ├── controllers/
-│   └── authController.js    # Authentication logic
+│   └── authController.js    # Authentication controllers
 ├── middleware/
-│   ├── auth.js             # Authentication middleware
+│   ├── auth.js             # JWT authentication middleware
 │   └── errorHandler.js     # Error handling middleware
 ├── models/
-│   └── User.js             # User model
+│   └── User.js             # User model with Mongoose
 ├── routes/
-│   ├── index.js            # Main routes
-│   └── auth.js             # Authentication routes
+│   ├── auth.js             # Authentication routes
+│   └── index.js            # General API routes
 ├── .env                    # Environment variables
 ├── .gitignore             # Git ignore rules
-├── package.json           # Dependencies and scripts
+├── package.json           # Project dependencies
 ├── README.md              # Project documentation
-└── server.js              # Application entry point
+└── server.js              # Main server file
 \`\`\`
 
-## 🔌 API Endpoints
+## 📡 API Endpoints
 
 ### Health Check
-- **GET** \`/health\` - Server health status
+- \`GET /health\` - Server health status
 
-### General
-- **GET** \`/api/\` - Welcome message
-- **GET** \`/api/status\` - API status
+### General API
+- \`GET /api/\` - API welcome message
+- \`GET /api/status\` - Detailed API status
 
 ### Authentication
-- **POST** \`/api/auth/register\` - Register new user
-- **POST** \`/api/auth/login\` - Login user
-- **GET** \`/api/auth/me\` - Get current user (protected)
-- **PUT** \`/api/auth/update\` - Update user profile (protected)
-- **POST** \`/api/auth/logout\` - Logout user (protected)
+- \`POST /api/auth/register\` - Register new user
+- \`POST /api/auth/login\` - User login
+- \`GET /api/auth/me\` - Get current user (protected)
+- \`PUT /api/auth/update\` - Update user profile (protected)
+- \`POST /api/auth/logout\` - User logout (protected)
 
-## 📝 API Usage Examples
+## 🔒 Authentication
 
-### Register a new user
-\`\`\`bash
-curl -X POST http://localhost:8000/api/auth/register \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123"
-  }'
+This API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
+
+\`\`\`
+Authorization: Bearer <your-jwt-token>
 \`\`\`
 
-### Login
-\`\`\`bash
-curl -X POST http://localhost:8000/api/auth/login \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "email": "john@example.com",
-    "password": "password123"
-  }'
+## 🛡️ Security Features
+
+- **Rate Limiting**: Prevents brute force attacks
+- **CORS Configuration**: Secure cross-origin requests
+- **Helmet**: Sets various HTTP headers for security
+- **Password Hashing**: bcrypt with configurable rounds
+- **JWT Authentication**: Stateless authentication
+- **Input Validation**: Mongoose schema validation
+
+## 📝 Environment Variables
+
+Create a \`.env\` file with:
+
+\`\`\`env
+# Server Configuration
+NODE_ENV=development
+PORT=8000
+FRONTEND_URL=http://localhost:5000
+
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017/{{PROJECT_NAME}}
+DB_NAME={{PROJECT_NAME}}
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRE=7d
+
+# Security
+BCRYPT_ROUNDS=12
 \`\`\`
 
-### Get current user (with token)
+## 🚦 Development Commands
+
 \`\`\`bash
-curl -X GET http://localhost:8000/api/auth/me \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+# Start production server
+bun run start
+
+# Start development server with hot reload
+bun run dev
+
+# Run tests (when implemented)
+bun run test
 \`\`\`
-
-## 🚀 Available Scripts
-
-- \`bun run start\` - Start production server
-- \`bun run dev\` - Start development server with watch mode
-- \`bun run test\` - Run tests (not implemented yet)
-
-## 🔧 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| \`NODE_ENV\` | Environment mode | \`development\` |
-| \`PORT\` | Server port | \`8000\` |
-| \`MONGODB_URI\` | MongoDB connection string | \`mongodb://localhost:27017/{{PROJECT_NAME}}\` |
-| \`JWT_SECRET\` | JWT signing secret | Required |
-| \`JWT_EXPIRE\` | JWT expiration time | \`7d\` |
-| \`BCRYPT_ROUNDS\` | Bcrypt hashing rounds | \`12\` |
-| \`FRONTEND_URL\` | Frontend URL for CORS | \`http://localhost:5000\` |
-
-## 🔒 Security Features
-
-- **Helmet**: Security headers
-- **CORS**: Cross-origin resource sharing
-- **Rate Limiting**: Request rate limiting
-- **JWT Authentication**: Secure token-based auth
-- **Password Hashing**: Bcrypt password hashing
-- **Input Validation**: Request validation and sanitization
-
-## 🛡️ Error Handling
-
-The API includes comprehensive error handling:
-
-- **Validation Errors**: 400 Bad Request
-- **Authentication Errors**: 401 Unauthorized
-- **Authorization Errors**: 403 Forbidden
-- **Not Found Errors**: 404 Not Found
-- **Server Errors**: 500 Internal Server Error
-
-## 🧪 Testing
-
-Testing endpoints with curl or tools like Postman:
-
-1. **Health Check**:
-   \`\`\`bash
-   curl http://localhost:8000/health
-   \`\`\`
-
-2. **API Status**:
-   \`\`\`bash
-   curl http://localhost:8000/api/status
-   \`\`\`
-
-## 📚 Next Steps
-
-1. **Add more models**: Create additional models for your application
-2. **Implement validation**: Add request validation using libraries like Joi
-3. **Add tests**: Implement unit and integration tests
-4. **Set up CI/CD**: Configure continuous integration and deployment
-5. **Add documentation**: Use tools like Swagger for API documentation
-6. **Implement logging**: Add structured logging with Winston or similar
-7. **Add caching**: Implement Redis for caching
-8. **File uploads**: Add file upload functionality
-9. **Email service**: Integrate email service for notifications
-10. **Real-time features**: Add WebSocket support for real-time features
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+2. Create your feature branch (\`git checkout -b feature/amazing-feature\`)
+3. Commit your changes (\`git commit -m 'Add some amazing feature'\`)
+4. Push to the branch (\`git push origin feature/amazing-feature\`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
@@ -1049,155 +989,3 @@ If you have any questions or need help:
 
 **Happy coding! 🎉**`
 };
-
-program
-  .name('koti')
-  .description('CLI tool to generate Bun API projects with Express and MongoDB')
-  .version('1.0.0')
-
-program
-  .command('new <project-name>')
-  .description('Create a new Bun API project')
-  .alias('create')
-  .action(async (projectName) => {
-    try {
-      // Validate project name
-      if (!projectName || projectName.trim() === '') {
-        console.error(colors.red('❌ Error: Project name is required'));
-        process.exit(1);
-      }
-
-      // Check for valid project name format
-      if (!/^[a-zA-Z0-9-_]+$/.test(projectName)) {
-        console.error(colors.red('❌ Error: Project name can only contain letters, numbers, hyphens, and underscores'));
-        process.exit(1);
-      }
-
-      const projectPath = path.join(process.cwd(), projectName);
-
-      // Check if directory already exists
-      if (await fs.pathExists(projectPath)) {
-        console.error(colors.red(`❌ Error: Directory "${projectName}" already exists`));
-        process.exit(1);
-      }
-
-      console.log(colors.blue(`🚀 Creating Bun API project: ${projectName}`));
-      console.log(colors.cyan(`📁 Project directory: ${projectPath}`));
-
-      // Create project directory
-      await fs.ensureDir(projectPath);
-
-      // Create subdirectories
-      const directories = [
-        'config',
-        'controllers', 
-        'middleware',
-        'models',
-        'routes'
-      ];
-
-      for (const dir of directories) {
-        await fs.ensureDir(path.join(projectPath, dir));
-        console.log(colors.green(`✅ Created directory: ${dir}/`));
-      }
-
-      // Create files from templates
-      const files = [
-        { 
-          name: 'package.json', 
-          content: JSON.stringify(templates['package.json'], null, 2).replace(/{{PROJECT_NAME}}/g, projectName)
-        },
-        { 
-          name: 'server.js', 
-          content: templates['server.js']
-        },
-        { 
-          name: '.env', 
-          content: templates['.env'].replace(/{{PROJECT_NAME}}/g, projectName)
-        },
-        { 
-          name: 'config/database.js', 
-          content: templates['config/database.js']
-        },
-        { 
-          name: 'routes/index.js', 
-          content: templates['routes/index.js'].replace(/{{PROJECT_NAME}}/g, projectName)
-        },
-        { 
-          name: 'routes/auth.js', 
-          content: templates['routes/auth.js']
-        },
-        { 
-          name: 'controllers/authController.js', 
-          content: templates['controllers/authController.js']
-        },
-        { 
-          name: 'models/User.js', 
-          content: templates['models/User.js']
-        },
-        { 
-          name: 'middleware/auth.js', 
-          content: templates['middleware/auth.js']
-        },
-        { 
-          name: 'middleware/errorHandler.js', 
-          content: templates['middleware/errorHandler.js']
-        },
-        { 
-          name: '.gitignore', 
-          content: templates['.gitignore']
-        },
-        { 
-          name: 'README.md', 
-          content: templates['README.md'].replace(/{{PROJECT_NAME}}/g, projectName)
-        }
-      ];
-
-      for (const file of files) {
-        const filePath = path.join(projectPath, file.name);
-        await fs.writeFile(filePath, file.content);
-        console.log(colors.green(`✅ Created file: ${file.name}`));
-      }
-
-      // Success message
-      console.log('\n' + colors.green('🎉 Project created successfully!'));
-      console.log('\n' + colors.yellow('📋 Next steps:'));
-      console.log(`   1. cd ${projectName}`);
-      console.log('   2. bun install');
-      console.log('   3. Update .env file with your MongoDB URI and JWT secret');
-      console.log('   4. Start MongoDB server');
-      console.log('   5. bun run dev');
-      
-      console.log('\n' + colors.blue('📚 Useful commands:'));
-      console.log('   • bun run start    - Start production server');
-      console.log('   • bun run dev      - Start development server with watch mode');
-      
-      console.log('\n' + colors.cyan('🌐 Default endpoints:'));
-      console.log('   • http://localhost:8000/health     - Health check');
-      console.log('   • http://localhost:8000/api/       - API welcome');
-      console.log('   • http://localhost:8000/api/status - API status');
-      
-      console.log('\n' + colors.cyan('🔐 Authentication endpoints:'));
-      console.log('   • POST /api/auth/register - Register user');
-      console.log('   • POST /api/auth/login    - Login user');
-      console.log('   • GET  /api/auth/me       - Get current user');
-      
-      console.log('\n' + colors.yellow('💡 Don\'t forget to:'));
-      console.log('   • Set up your MongoDB database');
-      console.log('   • Generate a secure JWT secret');
-      console.log('   • Configure your environment variables');
-      
-      console.log('\n' + colors.green('Happy coding! 🚀'));
-
-    } catch (error) {
-      console.error(colors.red('❌ Error creating project:'), error.message);
-      process.exit(1);
-    }
-  });
-
-// Show help if no arguments provided
-if (process.argv.length <= 2) {
-  program.help();
-}
-
-program.parse();

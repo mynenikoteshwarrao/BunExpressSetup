@@ -9,6 +9,7 @@ This repository contains a fully functional CLI tool that generates Bun-based AP
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+CLI Command Format: `koti new project-name` (updated from `node cli.js project-name`)
 
 ## System Architecture
 

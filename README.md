@@ -1,4 +1,4 @@
-# Create Bun API
+# Koti - Bun API Generator
 
 A CLI tool that generates Bun-based API projects with Express.js and MongoDB setup. This tool creates a complete, production-ready API project structure with authentication, security middleware, and best practices built-in.
 
@@ -15,30 +15,36 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 
 ## Installation
 
-### Global Installation (Recommended)
+### Install and Setup
 
-```bash
-npm install -g create-bun-api
-```
+1. **Clone this repository**:
+   ```bash
+   git clone <repository-url>
+   cd koti
+   ```
 
-### Local Usage
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npx create-bun-api my-project
-```
+3. **Make executable**:
+   ```bash
+   chmod +x koti
+   ```
 
 ## Usage
 
 Create a new Bun API project:
 
 ```bash
-create-bun-api my-awesome-api
+./koti new my-awesome-api
 ```
 
-Or with npx:
+Or use the create alias:
 
 ```bash
-npx create-bun-api my-awesome-api
+./koti create my-awesome-api
 ```
 
 ## Generated Project Structure
