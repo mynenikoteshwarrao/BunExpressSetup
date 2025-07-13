@@ -3,6 +3,7 @@
 const { Command } = require('commander');
 const fs = require('fs-extra');
 const path = require('path');
+const readline = require('readline');
 
 const program = new Command();
 
@@ -14,6 +15,773 @@ const colors = {
   red: (text) => `\x1b[31m${text}\x1b[0m`,
   cyan: (text) => `\x1b[36m${text}\x1b[0m`,
   bold: (text) => `\x1b[1m${text}\x1b[0m`
+};
+
+// Available Mongoose data types
+const availableDataTypes = [
+  'String',
+  'Number',
+  'Date',
+  'Boolean', 
+  'ObjectId',
+  'Array',
+  'Mixed',
+  'Decimal128',
+  'Map',
+  'Schema'
+];
+
+// Helper function to create readline interface
+const createReadlineInterface = () => {
+  return readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+};
+
+// Helper function to ask question
+const askQuestion = (rl, question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+};
+
+// Helper function to capitalize first letter
+const capitalize = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+// Helper function to generate model schema fields
+const generateSchemaFields = (fields) => {
+  return fields.map(field => {
+    let fieldDef = `  ${field.name}: {\n`;
+    
+    if (field.type === 'ObjectId' && field.ref) {
+      fieldDef += `    type: mongoose.Schema.Types.ObjectId,\n`;
+      fieldDef += `    ref: '${field.ref}',\n`;
+    } else if (field.type === 'Array' && field.arrayType) {
+      if (field.arrayType === 'ObjectId' && field.ref) {
+        fieldDef += `    type: [{\n`;
+        fieldDef += `      type: mongoose.Schema.Types.ObjectId,\n`;
+        fieldDef += `      ref: '${field.ref}'\n`;
+        fieldDef += `    }],\n`;
+      } else {
+        fieldDef += `    type: [${field.arrayType}],\n`;
+      }
+    } else {
+      fieldDef += `    type: ${field.type},\n`;
+    }
+    
+    if (field.required) fieldDef += `    required: true,\n`;
+    if (field.unique) fieldDef += `    unique: true,\n`;
+    if (field.default !== undefined && field.default !== '') {
+      if (field.type === 'String') {
+        fieldDef += `    default: '${field.default}',\n`;
+      } else if (field.type === 'Boolean') {
+        fieldDef += `    default: ${field.default},\n`;
+      } else if (field.type === 'Number') {
+        fieldDef += `    default: ${field.default},\n`;
+      } else {
+        fieldDef += `    default: ${field.default},\n`;
+      }
+    }
+    if (field.minLength) fieldDef += `    minlength: ${field.minLength},\n`;
+    if (field.maxLength) fieldDef += `    maxlength: ${field.maxLength},\n`;
+    if (field.min) fieldDef += `    min: ${field.min},\n`;
+    if (field.max) fieldDef += `    max: ${field.max},\n`;
+    if (field.trim && field.type === 'String') fieldDef += `    trim: true,\n`;
+    if (field.lowercase && field.type === 'String') fieldDef += `    lowercase: true,\n`;
+    if (field.uppercase && field.type === 'String') fieldDef += `    uppercase: true,\n`;
+    
+    fieldDef = fieldDef.slice(0, -2) + '\n'; // Remove trailing comma
+    fieldDef += `  }`;
+    
+    return fieldDef;
+  }).join(',\n');
+};
+
+// Helper function to find existing models in project
+const findExistingModels = async (projectPath) => {
+  const modelsPath = path.join(projectPath, 'models');
+  if (!await fs.pathExists(modelsPath)) {
+    return [];
+  }
+  
+  const files = await fs.readdir(modelsPath);
+  return files
+    .filter(file => file.endsWith('.js'))
+    .map(file => file.replace('.js', ''))
+    .filter(model => model !== 'index'); // Exclude index files
+};
+
+// Template generators for model components
+const generateModelTemplate = (modelName, fields) => {
+  const modelNameCap = capitalize(modelName);
+  const schemaFields = generateSchemaFields(fields);
+  
+  return `const mongoose = require('mongoose');
+
+const ${modelName}Schema = new mongoose.Schema({
+${schemaFields}
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Indexes for better performance
+${fields.filter(f => f.index).map(f => `${modelName}Schema.index({ ${f.name}: 1 });`).join('\n')}
+
+// Virtual fields
+${modelName}Schema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+// Instance methods
+${modelName}Schema.methods.toPublicJSON = function() {
+  return {
+    id: this._id,
+    ${fields.map(f => `${f.name}: this.${f.name}`).join(',\n    ')},
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt
+  };
+};
+
+// Static methods
+${modelName}Schema.statics.findActive = function() {
+  return this.find({ isActive: { $ne: false } });
+};
+
+module.exports = mongoose.model('${modelNameCap}', ${modelName}Schema);`;
+};
+
+const generateServiceTemplate = (modelName, fields) => {
+  const modelNameCap = capitalize(modelName);
+  const modelNameLower = modelName.toLowerCase();
+  
+  return `const ${modelNameCap} = require('../models/${modelNameCap}');
+
+class ${modelNameCap}Service {
+  // Create a new ${modelNameLower}
+  async create(${modelNameLower}Data) {
+    try {
+      const ${modelNameLower} = new ${modelNameCap}(${modelNameLower}Data);
+      await ${modelNameLower}.save();
+      return { success: true, data: ${modelNameLower}.toPublicJSON() };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get all ${modelNameLower}s with pagination
+  async findAll(options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = { createdAt: -1 },
+        filter = {}
+      } = options;
+
+      const skip = (page - 1) * limit;
+      
+      const ${modelNameLower}s = await ${modelNameCap}
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      const total = await ${modelNameCap}.countDocuments(filter);
+      
+      return {
+        success: true,
+        data: {
+          ${modelNameLower}s,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+          }
+        }
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get ${modelNameLower} by ID
+  async findById(id) {
+    try {
+      const ${modelNameLower} = await ${modelNameCap}.findById(id);
+      
+      if (!${modelNameLower}) {
+        return { success: false, message: '${modelNameCap} not found' };
+      }
+      
+      return { success: true, data: ${modelNameLower}.toPublicJSON() };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Update ${modelNameLower} by ID
+  async updateById(id, updateData) {
+    try {
+      const ${modelNameLower} = await ${modelNameCap}.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+      
+      if (!${modelNameLower}) {
+        return { success: false, message: '${modelNameCap} not found' };
+      }
+      
+      return { success: true, data: ${modelNameLower}.toPublicJSON() };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Delete ${modelNameLower} by ID
+  async deleteById(id) {
+    try {
+      const ${modelNameLower} = await ${modelNameCap}.findByIdAndDelete(id);
+      
+      if (!${modelNameLower}) {
+        return { success: false, message: '${modelNameCap} not found' };
+      }
+      
+      return { success: true, message: '${modelNameCap} deleted successfully' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Search ${modelNameLower}s
+  async search(query, options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        fields = ['${fields.filter(f => f.type === 'String').map(f => f.name).join("', '")}']
+      } = options;
+
+      const searchRegex = new RegExp(query, 'i');
+      const searchConditions = fields.map(field => ({
+        [field]: searchRegex
+      }));
+
+      const filter = {
+        $or: searchConditions
+      };
+
+      return await this.findAll({ page, limit, filter });
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+module.exports = new ${modelNameCap}Service();`;
+};
+
+const generateControllerTemplate = (modelName, fields) => {
+  const modelNameCap = capitalize(modelName);
+  const modelNameLower = modelName.toLowerCase();
+  const serviceName = `${modelNameLower}Service`;
+  
+  return `const ${serviceName} = require('../services/${modelNameLower}Service');
+
+// @desc    Create new ${modelNameLower}
+// @route   POST /api/${modelNameLower}s
+// @access  Private
+exports.create${modelNameCap} = async (req, res, next) => {
+  try {
+    const result = await ${serviceName}.create(req.body);
+    
+    res.status(201).json({
+      success: true,
+      message: '${modelNameCap} created successfully',
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all ${modelNameLower}s
+// @route   GET /api/${modelNameLower}s
+// @access  Private
+exports.get${modelNameCap}s = async (req, res, next) => {
+  try {
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10,
+      sort: req.query.sort ? JSON.parse(req.query.sort) : { createdAt: -1 }
+    };
+
+    const result = await ${serviceName}.findAll(options);
+    
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get single ${modelNameLower}
+// @route   GET /api/${modelNameLower}s/:id
+// @access  Private
+exports.get${modelNameCap} = async (req, res, next) => {
+  try {
+    const result = await ${serviceName}.findById(req.params.id);
+    
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update ${modelNameLower}
+// @route   PUT /api/${modelNameLower}s/:id
+// @access  Private
+exports.update${modelNameCap} = async (req, res, next) => {
+  try {
+    const result = await ${serviceName}.updateById(req.params.id, req.body);
+    
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: '${modelNameCap} updated successfully',
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete ${modelNameLower}
+// @route   DELETE /api/${modelNameLower}s/:id
+// @access  Private
+exports.delete${modelNameCap} = async (req, res, next) => {
+  try {
+    const result = await ${serviceName}.deleteById(req.params.id);
+    
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: result.message
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Search ${modelNameLower}s
+// @route   GET /api/${modelNameLower}s/search
+// @access  Private
+exports.search${modelNameCap}s = async (req, res, next) => {
+  try {
+    const { q: query } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query is required'
+      });
+    }
+
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10
+    };
+
+    const result = await ${serviceName}.search(query, options);
+    
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};`;
+};
+
+const generateRouteTemplate = (modelName) => {
+  const modelNameCap = capitalize(modelName);
+  const modelNameLower = modelName.toLowerCase();
+  const controllerName = `${modelNameLower}Controller`;
+  
+  return `const express = require('express');
+const router = express.Router();
+const ${controllerName} = require('../controllers/${controllerName}');
+const auth = require('../middleware/auth');
+
+// @route   GET /api/${modelNameLower}s/search
+// @desc    Search ${modelNameLower}s
+// @access  Private
+router.get('/search', auth, ${controllerName}.search${modelNameCap}s);
+
+// @route   POST /api/${modelNameLower}s
+// @desc    Create new ${modelNameLower}
+// @access  Private
+router.post('/', auth, ${controllerName}.create${modelNameCap});
+
+// @route   GET /api/${modelNameLower}s
+// @desc    Get all ${modelNameLower}s
+// @access  Private
+router.get('/', auth, ${controllerName}.get${modelNameCap}s);
+
+// @route   GET /api/${modelNameLower}s/:id
+// @desc    Get single ${modelNameLower}
+// @access  Private
+router.get('/:id', auth, ${controllerName}.get${modelNameCap});
+
+// @route   PUT /api/${modelNameLower}s/:id
+// @desc    Update ${modelNameLower}
+// @access  Private
+router.put('/:id', auth, ${controllerName}.update${modelNameCap});
+
+// @route   DELETE /api/${modelNameLower}s/:id
+// @desc    Delete ${modelNameLower}
+// @access  Private
+router.delete('/:id', auth, ${controllerName}.delete${modelNameCap});
+
+module.exports = router;`;
+};
+
+// Main interactive model creation function
+const createInteractiveModel = async (modelName) => {
+  const rl = createReadlineInterface();
+  const fields = [];
+  
+  try {
+    // Check if we're in a valid project directory
+    const currentPath = process.cwd();
+    const packageJsonPath = path.join(currentPath, 'package.json');
+    const serverJsPath = path.join(currentPath, 'server.js');
+    
+    if (!await fs.pathExists(packageJsonPath) || !await fs.pathExists(serverJsPath)) {
+      console.log(colors.red('❌ This command must be run inside a Koti project directory.'));
+      console.log(colors.yellow('💡 Create a new project first: koti new my-project'));
+      process.exit(1);
+    }
+
+    // Check if services directory exists, create if not
+    const servicesPath = path.join(currentPath, 'services');
+    if (!await fs.pathExists(servicesPath)) {
+      await fs.ensureDir(servicesPath);
+      console.log(colors.green('✅ Created services directory'));
+    }
+
+    // Get existing models for reference options
+    const existingModels = await findExistingModels(currentPath);
+    
+    console.log(colors.bold(`\n🏗️  Creating model: ${colors.cyan(capitalize(modelName))}\n`));
+    console.log(colors.yellow('Available data types:'));
+    availableDataTypes.forEach((type, index) => {
+      console.log(`  ${index + 1}. ${type}`);
+    });
+    
+    if (existingModels.length > 0) {
+      console.log(colors.yellow('\nExisting models for references:'));
+      existingModels.forEach((model, index) => {
+        console.log(`  ${index + 1}. ${model}`);
+      });
+    }
+    
+    console.log(colors.cyan('\n📝 Add fields to your model (press Enter without field name to finish):\n'));
+    
+    // Interactive field creation loop
+    let fieldCount = 1;
+    while (true) {
+      console.log(colors.bold(`--- Field ${fieldCount} ---`));
+      
+      // Get field name
+      const fieldName = await askQuestion(rl, `Field name: `);
+      if (!fieldName) {
+        break; // Exit loop if no field name provided
+      }
+      
+      // Validate field name
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(fieldName)) {
+        console.log(colors.red('❌ Invalid field name. Use letters, numbers, and underscore only.'));
+        continue;
+      }
+      
+      // Check for duplicate field names
+      if (fields.find(f => f.name === fieldName)) {
+        console.log(colors.red('❌ Field name already exists. Please choose a different name.'));
+        continue;
+      }
+      
+      const field = { name: fieldName };
+      
+      // Get data type
+      while (true) {
+        const typeChoice = await askQuestion(rl, `Data type (1-${availableDataTypes.length}): `);
+        const typeIndex = parseInt(typeChoice) - 1;
+        
+        if (typeIndex >= 0 && typeIndex < availableDataTypes.length) {
+          field.type = availableDataTypes[typeIndex];
+          break;
+        } else {
+          console.log(colors.red(`❌ Please enter a number between 1 and ${availableDataTypes.length}`));
+        }
+      }
+      
+      // Handle special type configurations
+      if (field.type === 'ObjectId' && existingModels.length > 0) {
+        console.log(colors.yellow('Available models for reference:'));
+        existingModels.forEach((model, index) => {
+          console.log(`  ${index + 1}. ${model}`);
+        });
+        
+        const refChoice = await askQuestion(rl, `Reference model (1-${existingModels.length}) or custom name: `);
+        const refIndex = parseInt(refChoice) - 1;
+        
+        if (refIndex >= 0 && refIndex < existingModels.length) {
+          field.ref = existingModels[refIndex];
+        } else if (refChoice.trim()) {
+          field.ref = refChoice.trim();
+        }
+      }
+      
+      if (field.type === 'Array') {
+        console.log(colors.yellow('Array element type:'));
+        availableDataTypes.forEach((type, index) => {
+          console.log(`  ${index + 1}. ${type}`);
+        });
+        
+        while (true) {
+          const arrayTypeChoice = await askQuestion(rl, `Array element type (1-${availableDataTypes.length}): `);
+          const arrayTypeIndex = parseInt(arrayTypeChoice) - 1;
+          
+          if (arrayTypeIndex >= 0 && arrayTypeIndex < availableDataTypes.length) {
+            field.arrayType = availableDataTypes[arrayTypeIndex];
+            
+            // If array of ObjectId, ask for reference
+            if (field.arrayType === 'ObjectId' && existingModels.length > 0) {
+              console.log(colors.yellow('Available models for reference:'));
+              existingModels.forEach((model, index) => {
+                console.log(`  ${index + 1}. ${model}`);
+              });
+              
+              const arrayRefChoice = await askQuestion(rl, `Reference model (1-${existingModels.length}) or custom name: `);
+              const arrayRefIndex = parseInt(arrayRefChoice) - 1;
+              
+              if (arrayRefIndex >= 0 && arrayRefIndex < existingModels.length) {
+                field.ref = existingModels[arrayRefIndex];
+              } else if (arrayRefChoice.trim()) {
+                field.ref = arrayRefChoice.trim();
+              }
+            }
+            break;
+          } else {
+            console.log(colors.red(`❌ Please enter a number between 1 and ${availableDataTypes.length}`));
+          }
+        }
+      }
+      
+      // Field options
+      const required = await askQuestion(rl, `Required? (y/N): `);
+      field.required = required.toLowerCase() === 'y' || required.toLowerCase() === 'yes';
+      
+      const unique = await askQuestion(rl, `Unique? (y/N): `);
+      field.unique = unique.toLowerCase() === 'y' || unique.toLowerCase() === 'yes';
+      
+      const index = await askQuestion(rl, `Add database index? (y/N): `);
+      field.index = index.toLowerCase() === 'y' || index.toLowerCase() === 'yes';
+      
+      // Type-specific options
+      if (field.type === 'String') {
+        const minLength = await askQuestion(rl, `Minimum length (optional): `);
+        if (minLength && !isNaN(minLength)) field.minLength = parseInt(minLength);
+        
+        const maxLength = await askQuestion(rl, `Maximum length (optional): `);
+        if (maxLength && !isNaN(maxLength)) field.maxLength = parseInt(maxLength);
+        
+        const trim = await askQuestion(rl, `Trim whitespace? (Y/n): `);
+        field.trim = trim.toLowerCase() !== 'n' && trim.toLowerCase() !== 'no';
+        
+        const lowercase = await askQuestion(rl, `Convert to lowercase? (y/N): `);
+        field.lowercase = lowercase.toLowerCase() === 'y' || lowercase.toLowerCase() === 'yes';
+        
+        const uppercase = await askQuestion(rl, `Convert to uppercase? (y/N): `);
+        field.uppercase = uppercase.toLowerCase() === 'y' || uppercase.toLowerCase() === 'yes';
+        
+        const defaultValue = await askQuestion(rl, `Default value (optional): `);
+        if (defaultValue) field.default = defaultValue;
+      }
+      
+      if (field.type === 'Number') {
+        const min = await askQuestion(rl, `Minimum value (optional): `);
+        if (min && !isNaN(min)) field.min = parseFloat(min);
+        
+        const max = await askQuestion(rl, `Maximum value (optional): `);
+        if (max && !isNaN(max)) field.max = parseFloat(max);
+        
+        const defaultValue = await askQuestion(rl, `Default value (optional): `);
+        if (defaultValue && !isNaN(defaultValue)) field.default = parseFloat(defaultValue);
+      }
+      
+      if (field.type === 'Boolean') {
+        const defaultValue = await askQuestion(rl, `Default value (true/false, optional): `);
+        if (defaultValue === 'true') field.default = true;
+        else if (defaultValue === 'false') field.default = false;
+      }
+      
+      fields.push(field);
+      fieldCount++;
+      
+      console.log(colors.green(`✅ Added field: ${fieldName} (${field.type})`));
+      console.log('');
+    }
+    
+    if (fields.length === 0) {
+      console.log(colors.red('❌ No fields added. Model creation cancelled.'));
+      rl.close();
+      return;
+    }
+    
+    // Show summary and confirm
+    console.log(colors.bold('\n📋 Model Summary:'));
+    console.log(colors.cyan(`Model Name: ${capitalize(modelName)}`));
+    console.log(colors.cyan('Fields:'));
+    fields.forEach(field => {
+      let fieldInfo = `  • ${field.name}: ${field.type}`;
+      if (field.ref) fieldInfo += ` (ref: ${field.ref})`;
+      if (field.required) fieldInfo += ` [required]`;
+      if (field.unique) fieldInfo += ` [unique]`;
+      if (field.index) fieldInfo += ` [indexed]`;
+      console.log(fieldInfo);
+    });
+    
+    const confirm = await askQuestion(rl, colors.yellow('\nCreate this model? (Y/n): '));
+    if (confirm.toLowerCase() === 'n' || confirm.toLowerCase() === 'no') {
+      console.log(colors.yellow('Model creation cancelled.'));
+      rl.close();
+      return;
+    }
+    
+    // Generate and create files
+    console.log(colors.cyan('\n🔨 Generating files...\n'));
+    
+    const modelContent = generateModelTemplate(modelName, fields);
+    const serviceContent = generateServiceTemplate(modelName, fields);
+    const controllerContent = generateControllerTemplate(modelName, fields);
+    const routeContent = generateRouteTemplate(modelName);
+    
+    // Create directories if they don't exist
+    await fs.ensureDir(path.join(currentPath, 'models'));
+    await fs.ensureDir(path.join(currentPath, 'services'));
+    await fs.ensureDir(path.join(currentPath, 'controllers'));
+    await fs.ensureDir(path.join(currentPath, 'routes'));
+    
+    // Write files
+    const modelPath = path.join(currentPath, 'models', `${capitalize(modelName)}.js`);
+    const servicePath = path.join(currentPath, 'services', `${modelName.toLowerCase()}Service.js`);
+    const controllerPath = path.join(currentPath, 'controllers', `${modelName.toLowerCase()}Controller.js`);
+    const routePath = path.join(currentPath, 'routes', `${modelName.toLowerCase()}.js`);
+    
+    await fs.writeFile(modelPath, modelContent);
+    console.log(colors.green(`✅ Created model: models/${capitalize(modelName)}.js`));
+    
+    await fs.writeFile(servicePath, serviceContent);
+    console.log(colors.green(`✅ Created service: services/${modelName.toLowerCase()}Service.js`));
+    
+    await fs.writeFile(controllerPath, controllerContent);
+    console.log(colors.green(`✅ Created controller: controllers/${modelName.toLowerCase()}Controller.js`));
+    
+    await fs.writeFile(routePath, routeContent);
+    console.log(colors.green(`✅ Created routes: routes/${modelName.toLowerCase()}.js`));
+    
+    // Update server.js to include new routes
+    const serverPath = path.join(currentPath, 'server.js');
+    const serverContent = await fs.readFile(serverPath, 'utf8');
+    
+    const routeImport = `const ${modelName.toLowerCase()}Routes = require('./routes/${modelName.toLowerCase()}');`;
+    const routeUse = `app.use('/api/${modelName.toLowerCase()}s', ${modelName.toLowerCase()}Routes);`;
+    
+    // Check if route is already imported
+    if (!serverContent.includes(routeImport)) {
+      // Add import after existing route imports
+      const authImportIndex = serverContent.indexOf("const authRoutes = require('./routes/auth');");
+      if (authImportIndex !== -1) {
+        const insertPosition = serverContent.indexOf('\n', authImportIndex) + 1;
+        const newServerContent = serverContent.slice(0, insertPosition) + routeImport + '\n' + serverContent.slice(insertPosition);
+        
+        // Add route usage after existing route usage
+        const authUseIndex = newServerContent.indexOf("app.use('/api/auth', authRoutes);");
+        if (authUseIndex !== -1) {
+          const routeInsertPosition = newServerContent.indexOf('\n', authUseIndex) + 1;
+          const finalServerContent = newServerContent.slice(0, routeInsertPosition) + routeUse + '\n' + newServerContent.slice(routeInsertPosition);
+          
+          await fs.writeFile(serverPath, finalServerContent);
+          console.log(colors.green(`✅ Updated server.js with new routes`));
+        }
+      }
+    }
+    
+    // Success message
+    console.log(colors.bold('\n🎉 Model created successfully!\n'));
+    
+    console.log(colors.cyan('📋 Generated files:'));
+    console.log(`   • Model: models/${capitalize(modelName)}.js`);
+    console.log(`   • Service: services/${modelName.toLowerCase()}Service.js`);
+    console.log(`   • Controller: controllers/${modelName.toLowerCase()}Controller.js`);
+    console.log(`   • Routes: routes/${modelName.toLowerCase()}.js`);
+    
+    console.log(colors.cyan('\n🌐 Available endpoints:'));
+    console.log(`   • GET    /api/${modelName.toLowerCase()}s           - Get all ${modelName.toLowerCase()}s`);
+    console.log(`   • GET    /api/${modelName.toLowerCase()}s/search    - Search ${modelName.toLowerCase()}s`);
+    console.log(`   • GET    /api/${modelName.toLowerCase()}s/:id       - Get single ${modelName.toLowerCase()}`);
+    console.log(`   • POST   /api/${modelName.toLowerCase()}s           - Create new ${modelName.toLowerCase()}`);
+    console.log(`   • PUT    /api/${modelName.toLowerCase()}s/:id       - Update ${modelName.toLowerCase()}`);
+    console.log(`   • DELETE /api/${modelName.toLowerCase()}s/:id       - Delete ${modelName.toLowerCase()}`);
+    
+    console.log(colors.yellow('\n💡 Next steps:'));
+    console.log('   • Start your server: bun run dev');
+    console.log('   • Test your endpoints with Postman or curl');
+    console.log('   • All endpoints require authentication (JWT token)');
+    
+    console.log(colors.green('\nHappy coding! 🚀'));
+    
+  } catch (error) {
+    console.error(colors.red('❌ Error creating model:'), error.message);
+  } finally {
+    rl.close();
+  }
 };
 
 // Template files content
@@ -1191,6 +1959,31 @@ program
 
     } catch (error) {
       console.error(colors.red('❌ Error creating project:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Model command for interactive model creation
+program
+  .command('model <model-name>')
+  .description('Create a new model with interactive setup')
+  .action(async (modelName) => {
+    try {
+      // Validate model name
+      if (!modelName || modelName.trim() === '') {
+        console.error(colors.red('❌ Error: Model name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid model name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modelName)) {
+        console.error(colors.red('❌ Error: Model name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createInteractiveModel(modelName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating model:'), error.message);
       process.exit(1);
     }
   });

@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/koti.git"
+    "url": "git+https://github.com/mynenikoteshwarrao/BunExpressSetup.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/koti/issues"
+    "url": "https://github.com/mynenikoteshwarrao/BunExpressSetup/issues"
   },
-  "homepage": "https://github.com/yourusername/koti#readme",
+  "homepage": "https://github.com/mynenikoteshwarrao/BunExpressSetup#readme",
   "engines": {
     "node": ">=16.0.0"
   },

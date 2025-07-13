@@ -9,7 +9,9 @@ This repository contains a fully functional CLI tool that generates Bun-based AP
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-CLI Command Format: `koti new project-name` (updated from `node cli.js project-name`)
+CLI Command Format: 
+- `koti new project-name` (project creation)
+- `koti model <model-name>` (interactive model creation)
 
 ## System Architecture
 
@@ -30,8 +32,10 @@ The generated projects follow a standard Express.js API architecture with the fo
 ### CLI Tool Components
 1. **Main CLI Script** (`cli.js`): Command-line interface using Commander.js
 2. **Template System**: Static template files with placeholder substitution
-3. **File System Operations**: Uses fs-extra for enhanced file operations
-4. **Output Formatting**: Chalk for colored console output
+3. **Interactive Model Creator**: Dynamic model generation with user input
+4. **File System Operations**: Uses fs-extra for enhanced file operations
+5. **Output Formatting**: Chalk for colored console output
+6. **Readline Interface**: Interactive CLI experience for model creation
 
 ### Generated Project Components
 1. **Server Entry Point** (`server.js`): Main application server with middleware setup
@@ -47,6 +51,15 @@ The generated projects follow a standard Express.js API architecture with the fo
 5. **Route Structure**:
    - Index routes for basic API endpoints
    - Auth routes for user management
+   - Dynamic model routes (generated via `koti model` command)
+6. **Service Layer** (auto-generated):
+   - Business logic separation
+   - CRUD operations with pagination
+   - Search functionality
+7. **Controller Layer** (auto-generated):
+   - REST API endpoints
+   - Request validation and error handling
+   - Consistent JSON response format
 
 ## Data Flow
 

@@ -69,7 +69,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     echo "   - repository.url: Your GitHub repository URL"
     echo ""
     echo "2. Create a GitHub repository and push your code:"
-    echo "   git remote add origin https://github.com/yourusername/koti.git"
+    echo "   git remote add origin https://github.com/mynenikoteshwarrao/BunExpressSetup.git"
     echo "   git push -u origin main"
     echo ""
     echo "3. Test the package locally:"

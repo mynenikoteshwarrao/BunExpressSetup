@@ -29,8 +29,8 @@ For development or local testing:
 
 1. **Clone this repository**:
    ```bash
-   git clone <repository-url>
-   cd koti
+   git clone https://github.com/mynenikoteshwarrao/BunExpressSetup.git
+   cd BunExpressSetup
    ```
 
 2. **Install dependencies**:
@@ -45,7 +45,7 @@ For development or local testing:
 
 ## Usage
 
-Create a new Bun API project:
+### Create a new Bun API project:
 
 ```bash
 koti new my-awesome-api
@@ -56,6 +56,19 @@ Or use the create alias:
 ```bash
 koti create my-awesome-api
 ```
+
+### Create interactive models (run inside a Koti project):
+
+```bash
+koti model Product
+```
+
+This will start an interactive process to:
+- Add custom fields with data types
+- Set up field validation (required, unique, etc.)
+- Configure relationships with other models
+- Generate complete model, service, controller, and routes
+- Automatically update your server.js with new endpoints
 
 ## Generated Project Structure
 

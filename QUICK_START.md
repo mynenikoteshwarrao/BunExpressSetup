@@ -15,6 +15,73 @@ koti new my-awesome-api
 cd my-awesome-api
 bun install
 bun run dev
+
+# Create interactive models (inside project directory)
+koti model Product
+koti model Category
+koti model Order
+```
+
+### Interactive Model Creation
+
+The `koti model` command provides an interactive experience to:
+
+- **Add custom fields** with various data types (String, Number, Date, Boolean, ObjectId, Array, etc.)
+- **Set validation rules** (required, unique, min/max length, etc.)
+- **Configure relationships** between models using ObjectId references
+- **Auto-generate** complete CRUD operations:
+  - Mongoose model with schema validation
+  - Service layer with business logic
+  - Controller with REST endpoints
+  - Express routes with authentication
+- **Update server.js** automatically with new routes
+
+#### Example Model Creation Flow:
+```bash
+$ koti model Product
+
+🏗️  Creating model: Product
+
+Available data types:
+  1. String   2. Number   3. Date      4. Boolean   5. ObjectId
+  6. Array    7. Mixed    8. Decimal128 9. Map      10. Schema
+
+📝 Add fields to your model (press Enter without field name to finish):
+
+--- Field 1 ---
+Field name: title
+Data type (1-10): 1
+Required? (y/N): y
+Unique? (y/N): n
+Trim whitespace? (Y/n): y
+Minimum length (optional): 3
+Maximum length (optional): 100
+
+--- Field 2 ---
+Field name: price
+Data type (1-10): 2
+Required? (y/N): y
+Minimum value (optional): 0
+
+--- Field 3 ---
+Field name: category
+Data type (1-10): 5
+Reference model: Category
+Required? (y/N): y
+
+✅ Created model: models/Product.js
+✅ Created service: services/productService.js  
+✅ Created controller: controllers/productController.js
+✅ Created routes: routes/product.js
+✅ Updated server.js with new routes
+
+🌐 Available endpoints:
+   • GET    /api/products           - Get all products
+   • GET    /api/products/search    - Search products  
+   • GET    /api/products/:id       - Get single product
+   • POST   /api/products           - Create new product
+   • PUT    /api/products/:id       - Update product
+   • DELETE /api/products/:id       - Delete product
 ```
 
 ## For Developers (Publishing to npm)
