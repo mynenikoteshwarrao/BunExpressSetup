@@ -1,6 +1,6 @@
 {
   "name": "koti",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "⚠️ DEVELOPMENT VERSION: CLI tool to generate Bun API projects with Express and MongoDB. This is an initial development release and may contain errors or bugs. Use at your own discretion.",
   "main": "dist/cli.js",
   "bin": {
@@ -9,7 +9,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js",
+    "update-version": "node scripts/update-version.js",
     "prepare": "npm run build",
+    "prepublishOnly": "npm run update-version && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

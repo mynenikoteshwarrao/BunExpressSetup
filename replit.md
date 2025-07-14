@@ -4,7 +4,7 @@
 
 This repository contains a fully functional TypeScript CLI tool that generates Bun-based API project templates. The CLI creates complete TypeScript project structures with Express.js and MongoDB integration, including authentication, security middleware, and proper project organization. The generated projects are designed to run on Bun runtime for improved performance while maintaining full TypeScript support and Node.js ecosystem compatibility.
 
-**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.4 - Development Release)
+**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.5 - Development Release)
 
 ## User Preferences
 
@@ -21,7 +21,11 @@ CLI Command Format:
 
 ## Recent Changes
 
-**July 14, 2025**: Version 1.0.4 - Comprehensive Audit System + Soft Delete Functionality
+**July 14, 2025**: Version 1.0.5 - Comprehensive Audit System + Soft Delete Functionality + Centralized Version Management
+- **Centralized Version Management**: Created version.json as single source of truth for all version numbers
+- **Automated Version Updates**: Version management script updates all configuration files from centralized location
+- **Build System Enhancement**: Added npm scripts for automated version synchronization across documentation
+- **Version Consistency**: CLI, documentation, and npm package all read from same version.json file
 - **Complete Google OAuth Integration**: Optional Google authentication with Passport.js strategy
 - **Email Service System**: Comprehensive nodemailer integration with welcome, reset, and verification templates
 - **TinyURL Implementation**: Complete URL shortening service with crypto-secure IDs and TTL
@@ -108,7 +112,7 @@ CLI Command Format:
 - **OAuth Passport Integration**: Google OAuth 2.0 strategy with user linking
 - **Production Dependencies**: Added passport, nodemailer, express-session packages
 
-**July 13, 2025**: Version 1.0.1 - Development Release with Disclaimers & Enhanced Features
+**July 13, 2025**: Version 1.0.5 - Development Release with Disclaimers & Enhanced Features
 - Added comprehensive TypeScript code generation system
 - Implemented centralized schema registry with automatic updates
 - Created new commands: create:model, create:enum, create:controller, create:service, create:middleware

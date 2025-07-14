@@ -1,23 +1,28 @@
 {
   "name": "koti",
-  "version": "1.0.0",
-  "description": "CLI tool to generate Bun API projects with Express and MongoDB",
-  "main": "koti",
+  "version": "1.0.5",
+  "description": "⚠️ DEVELOPMENT VERSION: CLI tool to generate Bun API projects with Express and MongoDB. This is an initial development release and may contain errors or bugs. Use at your own discretion.",
+  "main": "dist/cli.js",
   "bin": {
-    "koti": "./koti"
+    "koti": "./dist/cli.js"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js",
+    "update-version": "node scripts/update-version.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run update-version && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/memoizee": "^0.4.12",
-    "@types/node": "^24.0.13",
     "chalk": "^5.4.1",
     "commander": "^11.1.0",
-    "fs-extra": "^11.3.0",
-    "memoizee": "^0.4.17",
-    "openid-client": "^6.6.2",
+    "fs-extra": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.19.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -34,8 +39,8 @@
     "nodejs"
   ],
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "mynenikoteshwarrao",
+    "email": "mynenikoteshwarrao@gmail.com"
   },
   "license": "MIT",
   "repository": {
