@@ -2,6 +2,20 @@
 
 A CLI tool that generates Bun-based API projects with Express.js and MongoDB setup. This tool creates a complete, production-ready API project structure with authentication, security middleware, and best practices built-in.
 
+## ⚠️ Development Version Disclaimer
+
+**Current Version: 1.0.3 - Initial Development Release**
+
+This is an early development version and may contain errors, bugs, or security vulnerabilities. Please use with caution:
+
+- **Review all generated code** before using in production environments
+- **Test thoroughly** in development environments first
+- **Update dependencies** to latest secure versions after generation
+- **Implement proper security measures** for production deployment
+- **Use at your own discretion and risk**
+
+This software is provided "as-is" without warranty of any kind. Always review and validate generated code before production use.
+
 ## Features
 
 - **Bun Runtime**: Optimized for speed with modern JavaScript runtime
@@ -57,18 +71,149 @@ Or use the create alias:
 koti create my-awesome-api
 ```
 
-### Create interactive models (run inside a Koti project):
+### Enhanced TypeScript Code Generation:
 
+**Create TypeScript models with schema registry:**
+```bash
+koti create:model Product
+```
+
+**Create TypeScript enums:**
+```bash
+koti create:enum Status
+```
+
+**Create TypeScript controllers:**
+```bash
+koti create:controller Product
+```
+
+**Create TypeScript services:**
+```bash
+koti create:service Product
+```
+
+**Create TypeScript middleware:**
+```bash
+koti create:middleware Auth
+```
+
+**Legacy model creation (JavaScript):**
 ```bash
 koti model Product
 ```
 
-This will start an interactive process to:
-- Add custom fields with data types
-- Set up field validation (required, unique, etc.)
-- Configure relationships with other models
-- Generate complete model, service, controller, and routes
-- Automatically update your server.js with new endpoints
+### Enhanced Features:
+
+#### 🚀 **TypeScript Architecture**
+- **Schema Reference Handling**: Centralized schema definitions with automatic registry updates
+- **Complete MVC Generation**: Auto-generates models, services, controllers, and routes
+- **Routing Structure**: Maintains single routes/index.ts file with centralized route management
+- **Type Safety**: Full TypeScript support with proper interfaces and types
+- **Automatic Index Updates**: Updates index.ts files for easy imports
+- **Enum Support**: Interactive enum creation with string or number values
+
+#### 📋 **Joi Validation**
+- **Request Validation**: Automatic validation for create, update, and query operations
+- **Custom Validation Schemas**: Generated validation schemas for each model
+- **Error Handling**: Comprehensive validation error messages with field-level details
+- **Type-Safe Validation**: Joi schemas that match TypeScript interfaces
+
+#### 📚 **Swagger Documentation**
+- **Auto-Generated Docs**: Complete API documentation with OpenAPI 3.0 specification
+- **Interactive UI**: Swagger UI available at `/api-docs` endpoint
+- **Model Documentation**: Automatic schema documentation for all generated models
+- **Endpoint Documentation**: Comprehensive documentation for all CRUD operations
+- **Authentication Support**: Built-in authentication documentation
+
+#### 🛡️ **Advanced Error Handling**
+- **Custom Error Classes**: AppError class with operational error handling
+- **Comprehensive Middleware**: Enhanced error handling with proper logging
+- **Rate Limiting**: Built-in rate limiting with customizable options
+- **Request Logging**: Structured logging with development and production modes
+- **Response Helpers**: Consistent API response formatting
+
+## 🎯 Complete Example
+
+Here's how to create a complete API with all features:
+
+```bash
+# 1. Create a new project
+koti new my-blog-api
+cd my-blog-api
+
+# 2. Create enums for status values
+koti create:enum PostStatus
+# Choose: String enum
+# Add values: draft, published, archived
+
+# 3. Create models with validation
+koti create:model User
+# Add fields: username (String, required), email (String, required, unique), role (String)
+
+koti create:model Post
+# Add fields: title (String, required), content (String), status (String), author (ObjectId, ref: User)
+
+# 4. Create custom middleware
+koti create:middleware Auth
+koti create:middleware Logger
+
+# 5. Create custom services
+koti create:service Analytics
+koti create:service Email
+
+# 6. Run your API
+bun run dev
+```
+
+### Generated Project Structure:
+```
+my-blog-api/
+├── src/
+│   ├── config/
+│   │   └── swagger.ts          # Swagger configuration
+│   ├── controllers/
+│   │   ├── userController.ts   # User CRUD with validation
+│   │   ├── postController.ts   # Post CRUD with validation
+│   │   └── index.ts           # Controller exports
+│   ├── enums/
+│   │   ├── PostStatus.ts       # Post status enum
+│   │   └── index.ts           # Enum exports
+│   ├── middleware/
+│   │   ├── auth.ts            # Custom auth middleware
+│   │   ├── logger.ts          # Custom logger middleware
+│   │   ├── validation.ts      # Joi validation middleware
+│   │   ├── errorHandler.ts    # Enhanced error handling
+│   │   └── rateLimit.ts       # Rate limiting
+│   ├── models/
+│   │   ├── User.ts            # User model with Joi validation
+│   │   ├── Post.ts            # Post model with Joi validation
+│   │   └── index.ts           # Model exports
+│   ├── routes/
+│   │   ├── user.ts            # User routes with Swagger docs
+│   │   ├── post.ts            # Post routes with Swagger docs
+│   │   └── index.ts           # Centralized route management
+│   ├── services/
+│   │   ├── analyticsService.ts # Analytics service
+│   │   ├── emailService.ts     # Email service
+│   │   └── index.ts           # Service exports
+│   ├── types/
+│   │   └── api.ts             # API response types
+│   └── utils/
+│       ├── AppError.ts        # Custom error class
+│       ├── responseHelper.ts  # Response utilities
+│       └── logger.ts          # Logging utility
+├── package.json               # Enhanced dependencies
+└── server.js                  # Main server file
+```
+
+### API Features:
+- **📚 Swagger Documentation**: Available at `http://localhost:3000/api-docs`
+- **✅ Joi Validation**: All endpoints validate requests automatically
+- **🛡️ Error Handling**: Comprehensive error responses with proper status codes
+- **📊 Rate Limiting**: Built-in protection against abuse
+- **🔍 Search & Pagination**: All list endpoints support search and pagination
+- **🎯 TypeScript**: Full type safety throughout the application
 
 ## Generated Project Structure
 

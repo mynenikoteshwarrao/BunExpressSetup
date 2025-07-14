@@ -1,6 +1,11 @@
 MIT License
 
-Copyright (c) 2024 Koti CLI
+Copyright (c) 2024 mynenikoteshwarrao
+
+DEVELOPMENT VERSION DISCLAIMER:
+This is version 1.0.3 - an initial development release. This software may contain 
+errors, bugs, or security vulnerabilities. Use at your own discretion and risk.
+Always review generated code before production use.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -17,19 +17,22 @@ const colors = {
   bold: (text) => `\x1b[1m${text}\x1b[0m`
 };
 
-// Available Mongoose data types
+// Available Mongoose data types with TypeScript equivalents
 const availableDataTypes = [
-  'String',
-  'Number',
-  'Date',
-  'Boolean', 
-  'ObjectId',
-  'Array',
-  'Mixed',
-  'Decimal128',
-  'Map',
-  'Schema'
+  { mongoose: 'String', typescript: 'string' },
+  { mongoose: 'Number', typescript: 'number' },
+  { mongoose: 'Date', typescript: 'Date' },
+  { mongoose: 'Boolean', typescript: 'boolean' },
+  { mongoose: 'ObjectId', typescript: 'Types.ObjectId' },
+  { mongoose: 'Array', typescript: 'Array' },
+  { mongoose: 'Mixed', typescript: 'any' },
+  { mongoose: 'Decimal128', typescript: 'Types.Decimal128' },
+  { mongoose: 'Map', typescript: 'Map<string, any>' },
+  { mongoose: 'Schema', typescript: 'Schema' }
 ];
+
+// Available enum types for generation
+const enumTypes = ['string', 'number'];
 
 // Helper function to create readline interface
 const createReadlineInterface = () => {
@@ -51,6 +54,57 @@ const askQuestion = (rl, question) => {
 // Helper function to capitalize first letter
 const capitalize = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+// Helper function to convert to camelCase
+const toCamelCase = (str) => {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+};
+
+// Helper function to convert to kebab-case
+const toKebabCase = (str) => {
+  return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+};
+
+// Helper function to read existing schemas
+const readExistingSchemas = async (projectPath) => {
+  const schemasPath = path.join(projectPath, 'src', 'schemas');
+  if (!await fs.pathExists(schemasPath)) {
+    return [];
+  }
+  
+  const indexPath = path.join(schemasPath, 'index.ts');
+  if (!await fs.pathExists(indexPath)) {
+    return [];
+  }
+  
+  const indexContent = await fs.readFile(indexPath, 'utf-8');
+  const schemaMatches = indexContent.match(/export \{ default as (\w+) \}/g);
+  
+  return schemaMatches ? schemaMatches.map(match => {
+    const name = match.match(/export \{ default as (\w+) \}/)[1];
+    return name.replace('Schema', '');
+  }) : [];
+};
+
+// Helper function to read existing enums
+const readExistingEnums = async (projectPath) => {
+  const enumsPath = path.join(projectPath, 'src', 'enums');
+  if (!await fs.pathExists(enumsPath)) {
+    return [];
+  }
+  
+  const indexPath = path.join(enumsPath, 'index.ts');
+  if (!await fs.pathExists(indexPath)) {
+    return [];
+  }
+  
+  const indexContent = await fs.readFile(indexPath, 'utf-8');
+  const enumMatches = indexContent.match(/export \{ (\w+) \}/g);
+  
+  return enumMatches ? enumMatches.map(match => {
+    return match.match(/export \{ (\w+) \}/)[1];
+  }) : [];
 };
 
 // Helper function to generate model schema fields
@@ -100,6 +154,66 @@ const generateSchemaFields = (fields) => {
     
     return fieldDef;
   }).join(',\n');
+};
+
+// Helper function to generate TypeScript schema fields
+const generateTypescriptSchemaFields = (fields) => {
+  return fields.map(field => {
+    let fieldDef = `  ${field.name}: {\n`;
+    
+    if (field.type === 'ObjectId' && field.ref) {
+      fieldDef += `    type: Schema.Types.ObjectId,\n`;
+      fieldDef += `    ref: '${field.ref}',\n`;
+    } else if (field.type === 'Array' && field.arrayType) {
+      if (field.arrayType === 'ObjectId' && field.ref) {
+        fieldDef += `    type: [{\n`;
+        fieldDef += `      type: Schema.Types.ObjectId,\n`;
+        fieldDef += `      ref: '${field.ref}'\n`;
+        fieldDef += `    }],\n`;
+      } else {
+        fieldDef += `    type: [${field.arrayType}],\n`;
+      }
+    } else {
+      fieldDef += `    type: ${field.type},\n`;
+    }
+    
+    if (field.required) fieldDef += `    required: true,\n`;
+    if (field.unique) fieldDef += `    unique: true,\n`;
+    if (field.default !== undefined) fieldDef += `    default: ${typeof field.default === 'string' ? `'${field.default}'` : field.default},\n`;
+    if (field.minLength) fieldDef += `    minlength: ${field.minLength},\n`;
+    if (field.maxLength) fieldDef += `    maxlength: ${field.maxLength},\n`;
+    if (field.min) fieldDef += `    min: ${field.min},\n`;
+    if (field.max) fieldDef += `    max: ${field.max},\n`;
+    if (field.trim && field.type === 'String') fieldDef += `    trim: true,\n`;
+    if (field.lowercase && field.type === 'String') fieldDef += `    lowercase: true,\n`;
+    if (field.uppercase && field.type === 'String') fieldDef += `    uppercase: true,\n`;
+    
+    fieldDef = fieldDef.slice(0, -2) + '\n'; // Remove trailing comma
+    fieldDef += `  }`;
+    
+    return fieldDef;
+  }).join(',\n');
+};
+
+// Helper function to generate TypeScript interface
+const generateTypescriptInterface = (fields) => {
+  return fields.map(field => {
+    let fieldType = availableDataTypes.find(dt => dt.mongoose === field.type)?.typescript || 'any';
+    
+    if (field.type === 'ObjectId' && field.ref) {
+      fieldType = `Types.ObjectId | string`;
+    } else if (field.type === 'Array' && field.arrayType) {
+      if (field.arrayType === 'ObjectId' && field.ref) {
+        fieldType = `(Types.ObjectId | string)[]`;
+      } else {
+        const arrayType = availableDataTypes.find(dt => dt.mongoose === field.arrayType)?.typescript || 'any';
+        fieldType = `${arrayType}[]`;
+      }
+    }
+    
+    const optional = field.required ? '' : '?';
+    return `  ${field.name}${optional}: ${fieldType};`;
+  }).join('\n');
 };
 
 // Helper function to find existing models in project
@@ -480,7 +594,1902 @@ router.delete('/:id', auth, ${controllerName}.delete${modelNameCap});
 module.exports = router;`;
 };
 
-// Main interactive model creation function
+// TypeScript template generators for enhanced CLI
+const generateTypescriptSchemaTemplate = (modelName, fields) => {
+  const modelNameCap = capitalize(modelName);
+  const modelNameLower = modelName.toLowerCase();
+  const schemaFields = generateTypescriptSchemaFields(fields);
+  const interfaceFields = generateTypescriptInterface(fields);
+  const joiValidation = generateJoiValidationSchema(fields);
+  const swaggerDoc = generateSwaggerModelDoc(modelNameCap, fields);
+
+  return `import mongoose, { Document, Schema, Types } from 'mongoose';
+import Joi from 'joi';
+
+// Interface for the ${modelNameCap} document
+export interface I${modelNameCap} extends Document {
+${interfaceFields}
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Create Interface (without timestamps)
+export interface I${modelNameCap}Create {
+${interfaceFields}
+}
+
+// Update Interface (all fields optional)
+export interface I${modelNameCap}Update {
+${interfaceFields.replace(/: /g, '?: ')}
+}
+
+${joiValidation}
+
+${swaggerDoc}
+
+// Schema definition
+const ${modelNameCap}Schema: Schema<I${modelNameCap}> = new Schema({
+${schemaFields}
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Indexes
+${modelNameCap}Schema.index({ createdAt: -1 });
+${fields.filter(f => f.index).map(f => `${modelNameCap}Schema.index({ ${f.name}: 1 });`).join('\n')}
+
+// Virtual for ID
+${modelNameCap}Schema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+// Instance method to return public data
+${modelNameCap}Schema.methods.toPublicJSON = function() {
+  const publicData = this.toObject();
+  delete publicData.__v;
+  return publicData;
+};
+
+// Static method to find active records
+${modelNameCap}Schema.statics.findActive = function() {
+  return this.find({ active: { $ne: false } });
+};
+
+// Static method for paginated search
+${modelNameCap}Schema.statics.paginate = function(filter = {}, options = {}) {
+  const page = parseInt(options.page) || 1;
+  const limit = parseInt(options.limit) || 10;
+  const skip = (page - 1) * limit;
+  const sort = options.sort || { createdAt: -1 };
+
+  return Promise.all([
+    this.find(filter).skip(skip).limit(limit).sort(sort),
+    this.countDocuments(filter)
+  ]).then(([docs, total]) => ({
+    docs,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    limit,
+    hasNext: page < Math.ceil(total / limit),
+    hasPrev: page > 1
+  }));
+};
+
+export default mongoose.model<I${modelNameCap}>('${modelNameCap}', ${modelNameCap}Schema);`;
+};
+
+// Generate Joi validation schema
+const generateJoiValidationSchema = (fields) => {
+  let joiFields = '';
+  
+  fields.forEach(field => {
+    let joiDef = `  ${field.name}: `;
+    
+    switch (field.type) {
+      case 'String':
+        joiDef += 'Joi.string()';
+        if (field.minLength) joiDef += `.min(${field.minLength})`;
+        if (field.maxLength) joiDef += `.max(${field.maxLength})`;
+        if (field.trim) joiDef += '.trim()';
+        break;
+      case 'Number':
+        joiDef += 'Joi.number()';
+        if (field.min !== undefined) joiDef += `.min(${field.min})`;
+        if (field.max !== undefined) joiDef += `.max(${field.max})`;
+        break;
+      case 'Boolean':
+        joiDef += 'Joi.boolean()';
+        break;
+      case 'Date':
+        joiDef += 'Joi.date()';
+        break;
+      case 'ObjectId':
+        joiDef += 'Joi.string().regex(/^[0-9a-fA-F]{24}$/).messages({ "string.pattern.base": "Invalid ObjectId format" })';
+        break;
+      case 'Array':
+        if (field.arrayType === 'ObjectId') {
+          joiDef += 'Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))';
+        } else if (field.arrayType === 'String') {
+          joiDef += 'Joi.array().items(Joi.string())';
+        } else if (field.arrayType === 'Number') {
+          joiDef += 'Joi.array().items(Joi.number())';
+        } else {
+          joiDef += 'Joi.array()';
+        }
+        break;
+      default:
+        joiDef += 'Joi.any()';
+    }
+    
+    if (field.required) {
+      joiDef += '.required()';
+    } else {
+      joiDef += '.optional()';
+    }
+    
+    joiFields += `${joiDef},\n`;
+  });
+
+  return `// Joi Validation Schemas
+export const createValidationSchema = Joi.object({
+${joiFields}});
+
+export const updateValidationSchema = Joi.object({
+${joiFields.replace(/\.required\(\)/g, '.optional()')}}).min(1);
+
+export const queryValidationSchema = Joi.object({
+  page: Joi.number().min(1).default(1),
+  limit: Joi.number().min(1).max(100).default(10),
+  sort: Joi.string().default('createdAt'),
+  order: Joi.string().valid('asc', 'desc').default('desc'),
+  q: Joi.string().allow('').optional()
+});`;
+};
+
+// Generate Swagger documentation
+const generateSwaggerModelDoc = (modelName, fields) => {
+  let swaggerProperties = '';
+  let requiredFields = [];
+  
+  fields.forEach(field => {
+    let propDef = `    ${field.name}:\n      type: `;
+    
+    switch (field.type) {
+      case 'String':
+        propDef += 'string';
+        if (field.minLength) propDef += `\n      minLength: ${field.minLength}`;
+        if (field.maxLength) propDef += `\n      maxLength: ${field.maxLength}`;
+        break;
+      case 'Number':
+        propDef += 'number';
+        if (field.min !== undefined) propDef += `\n      minimum: ${field.min}`;
+        if (field.max !== undefined) propDef += `\n      maximum: ${field.max}`;
+        break;
+      case 'Boolean':
+        propDef += 'boolean';
+        break;
+      case 'Date':
+        propDef += 'string\n      format: date-time';
+        break;
+      case 'ObjectId':
+        propDef += 'string\n      pattern: "^[0-9a-fA-F]{24}$"\n      example: "507f1f77bcf86cd799439011"';
+        break;
+      case 'Array':
+        propDef += 'array\n      items:\n        type: ';
+        if (field.arrayType === 'ObjectId') {
+          propDef += 'string\n        pattern: "^[0-9a-fA-F]{24}$"';
+        } else {
+          propDef += field.arrayType.toLowerCase();
+        }
+        break;
+      default:
+        propDef += 'object';
+    }
+    
+    if (field.required) {
+      requiredFields.push(field.name);
+    }
+    
+    propDef += '\n';
+    swaggerProperties += `${propDef}`;
+  });
+
+  return `/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ${modelName}:
+ *       type: object
+ *       required:
+${requiredFields.map(field => `       *         - ${field}`).join('\n')}
+ *       properties:
+${swaggerProperties} *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           readOnly: true
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           readOnly: true
+ *         id:
+ *           type: string
+ *           readOnly: true
+ *           example: "507f1f77bcf86cd799439011"
+ *     ${modelName}Create:
+ *       type: object
+ *       required:
+${requiredFields.map(field => `       *         - ${field}`).join('\n')}
+ *       properties:
+${swaggerProperties} *     ${modelName}Update:
+ *       type: object
+ *       properties:
+${swaggerProperties.replace(/required:/g, 'optional:')} */`;
+};
+
+// Generate TypeScript enum template
+const generateEnumTemplate = (enumName, values, enumType) => {
+  const enumNameCap = capitalize(enumName);
+  
+  if (enumType === 'string') {
+    const enumValues = values.map(value => `  ${value.toUpperCase()} = '${value}'`).join(',\n');
+    return `export enum ${enumNameCap} {
+${enumValues}
+}
+
+export const ${enumNameCap}Values = Object.values(${enumNameCap});
+export type ${enumNameCap}Type = keyof typeof ${enumNameCap};`;
+  } else {
+    const enumValues = values.map((value, index) => `  ${value.toUpperCase()} = ${index}`).join(',\n');
+    return `export enum ${enumNameCap} {
+${enumValues}
+}
+
+export const ${enumNameCap}Values = Object.values(${enumNameCap});
+export type ${enumNameCap}Type = keyof typeof ${enumNameCap};`;
+  }
+};
+
+// Generate TypeScript controller template
+const generateTsControllerTemplate = (name, modelName = null) => {
+  const nameCap = capitalize(name);
+  const nameSpace = name.toLowerCase();
+  const modelImport = modelName ? `import ${modelName}Model, { createValidationSchema, updateValidationSchema, queryValidationSchema } from '../models/${modelName}';` : '';
+  
+  return `import { Request, Response, NextFunction } from 'express';
+import { ApiResponse, PaginatedResponse, IDParams, SearchQuery } from '../types/api';
+import { AppError } from '../utils/AppError';
+import { validateRequest } from '../middleware/validation';
+${modelImport}
+
+/**
+ * @swagger
+ * tags:
+ *   name: ${nameCap}
+ *   description: ${nameCap} management endpoints
+ */
+
+export class ${nameCap}Controller {
+  /**
+   * @swagger
+   * /api/${nameSpace}s:
+   *   get:
+   *     summary: Get all ${nameSpace}s with pagination
+   *     tags: [${nameCap}]
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 10
+   *       - in: query
+   *         name: sort
+   *         schema:
+   *           type: string
+   *           default: createdAt
+   *       - in: query
+   *         name: order
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
+   *           default: desc
+   *       - in: query
+   *         name: q
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PaginatedResponse'
+   *       500:
+   *         description: Internal server error
+   */
+  public async index(req: Request<{}, PaginatedResponse, {}, SearchQuery>, res: Response<PaginatedResponse>, next: NextFunction): Promise<void> {
+    try {
+      const validatedQuery = validateRequest(queryValidationSchema, req.query);
+      const { page, limit, sort, order, q } = validatedQuery;
+      
+      // Build filter based on search query
+      const filter = q ? { 
+        $or: [
+          // Add searchable fields here based on your model
+        ]
+      } : {};
+      
+      const options = {
+        page,
+        limit,
+        sort: { [sort]: order === 'asc' ? 1 : -1 }
+      };
+      
+      ${modelName ? `const result = await ${modelName}Model.paginate(filter, options);` : `// Implement pagination logic here
+      const result = { docs: [], total: 0, page: 1, pages: 0, limit: 10, hasNext: false, hasPrev: false };`}
+      
+      res.status(200).json({
+        success: true,
+        data: result.docs,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.pages,
+          hasNext: result.hasNext,
+          hasPrev: result.hasPrev
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/${nameSpace}s:
+   *   post:
+   *     summary: Create a new ${nameSpace}
+   *     tags: [${nameCap}]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/${nameCap}Create'
+   *     responses:
+   *       201:
+   *         description: ${nameCap} created successfully
+   *       400:
+   *         description: Validation error
+   *       500:
+   *         description: Internal server error
+   */
+  public async create(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const validatedData = validateRequest(createValidationSchema, req.body);
+      
+      ${modelName ? `const ${nameSpace} = new ${modelName}Model(validatedData);
+      const saved${nameCap} = await ${nameSpace}.save();` : `// Implement creation logic here
+      const saved${nameCap} = validatedData;`}
+      
+      res.status(201).json({
+        success: true,
+        message: '${nameCap} created successfully',
+        data: ${modelName ? `saved${nameCap}.toPublicJSON()` : `saved${nameCap}`}
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        next(new AppError('Duplicate field value', 400));
+      } else {
+        next(error);
+      }
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/${nameSpace}s/{id}:
+   *   get:
+   *     summary: Get ${nameSpace} by ID
+   *     tags: [${nameCap}]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: "^[0-9a-fA-F]{24}$"
+   *     responses:
+   *       200:
+   *         description: Success
+   *       404:
+   *         description: ${nameCap} not found
+   *       500:
+   *         description: Internal server error
+   */
+  public async show(req: Request<IDParams>, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      
+      ${modelName ? `const ${nameSpace} = await ${modelName}Model.findById(id);
+      
+      if (!${nameSpace}) {
+        throw new AppError('${nameCap} not found', 404);
+      }` : `// Implement find by ID logic here
+      const ${nameSpace} = null;
+      
+      if (!${nameSpace}) {
+        throw new AppError('${nameCap} not found', 404);
+      }`}
+      
+      res.status(200).json({
+        success: true,
+        message: '${nameCap} retrieved successfully',
+        data: ${modelName ? `${nameSpace}.toPublicJSON()` : `${nameSpace}`}
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/${nameSpace}s/{id}:
+   *   put:
+   *     summary: Update ${nameSpace} by ID
+   *     tags: [${nameCap}]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: "^[0-9a-fA-F]{24}$"
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/${nameCap}Update'
+   *     responses:
+   *       200:
+   *         description: ${nameCap} updated successfully
+   *       400:
+   *         description: Validation error
+   *       404:
+   *         description: ${nameCap} not found
+   *       500:
+   *         description: Internal server error
+   */
+  public async update(req: Request<IDParams>, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const validatedData = validateRequest(updateValidationSchema, req.body);
+      
+      ${modelName ? `const updated${nameCap} = await ${modelName}Model.findByIdAndUpdate(
+        id,
+        validatedData,
+        { new: true, runValidators: true }
+      );
+      
+      if (!updated${nameCap}) {
+        throw new AppError('${nameCap} not found', 404);
+      }` : `// Implement update logic here
+      const updated${nameCap} = null;
+      
+      if (!updated${nameCap}) {
+        throw new AppError('${nameCap} not found', 404);
+      }`}
+      
+      res.status(200).json({
+        success: true,
+        message: '${nameCap} updated successfully',
+        data: ${modelName ? `updated${nameCap}.toPublicJSON()` : `updated${nameCap}`}
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/${nameSpace}s/{id}:
+   *   delete:
+   *     summary: Delete ${nameSpace} by ID
+   *     tags: [${nameCap}]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: "^[0-9a-fA-F]{24}$"
+   *     responses:
+   *       200:
+   *         description: ${nameCap} deleted successfully
+   *       404:
+   *         description: ${nameCap} not found
+   *       500:
+   *         description: Internal server error
+   */
+  public async destroy(req: Request<IDParams>, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      
+      ${modelName ? `const deleted${nameCap} = await ${modelName}Model.findByIdAndDelete(id);
+      
+      if (!deleted${nameCap}) {
+        throw new AppError('${nameCap} not found', 404);
+      }` : `// Implement delete logic here
+      const deleted${nameCap} = null;
+      
+      if (!deleted${nameCap}) {
+        throw new AppError('${nameCap} not found', 404);
+      }`}
+      
+      res.status(200).json({
+        success: true,
+        message: '${nameCap} deleted successfully',
+        data: null
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/${nameSpace}s/search:
+   *   get:
+   *     summary: Search ${nameSpace}s
+   *     tags: [${nameCap}]
+   *     parameters:
+   *       - in: query
+   *         name: q
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 10
+   *     responses:
+   *       200:
+   *         description: Search results
+   *       400:
+   *         description: Missing search query
+   *       500:
+   *         description: Internal server error
+   */
+  public async search(req: Request<{}, PaginatedResponse, {}, SearchQuery>, res: Response<PaginatedResponse>, next: NextFunction): Promise<void> {
+    try {
+      const validatedQuery = validateRequest(queryValidationSchema, req.query);
+      const { q, page, limit } = validatedQuery;
+      
+      if (!q || q.trim() === '') {
+        throw new AppError('Search query is required', 400);
+      }
+      
+      // Build search filter
+      const searchFilter = {
+        $or: [
+          // Add searchable fields here based on your model
+        ]
+      };
+      
+      const options = { page, limit, sort: { createdAt: -1 } };
+      
+      ${modelName ? `const result = await ${modelName}Model.paginate(searchFilter, options);` : `// Implement search logic here
+      const result = { docs: [], total: 0, page: 1, pages: 0, limit: 10, hasNext: false, hasPrev: false };`}
+      
+      res.status(200).json({
+        success: true,
+        data: result.docs,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.pages,
+          hasNext: result.hasNext,
+          hasPrev: result.hasPrev
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export default new ${nameCap}Controller();`;
+};
+
+// Generate TypeScript service template
+const generateTsServiceTemplate = (name, modelName = null) => {
+  const nameCap = capitalize(name);
+  const modelImport = modelName ? `import ${modelName}Model, { I${modelName} } from '../models/${modelName}';` : '';
+  
+  return `import { Types } from 'mongoose';
+${modelImport}
+
+export class ${nameCap}Service {
+  // Example method - customize as needed
+  public async findAll(filters: any = {}): Promise<any[]> {
+    try {
+      // Implementation here
+      return [];
+    } catch (error) {
+      throw new Error(\`Error fetching ${name.toLowerCase()}s: \${error.message}\`);
+    }
+  }
+
+  public async findById(id: string): Promise<any | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid ID format');
+      }
+      
+      // Implementation here
+      return null;
+    } catch (error) {
+      throw new Error(\`Error fetching ${name.toLowerCase()}: \${error.message}\`);
+    }
+  }
+
+  public async create(data: any): Promise<any> {
+    try {
+      // Implementation here
+      return null;
+    } catch (error) {
+      throw new Error(\`Error creating ${name.toLowerCase()}: \${error.message}\`);
+    }
+  }
+
+  public async update(id: string, data: any): Promise<any | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid ID format');
+      }
+      
+      // Implementation here
+      return null;
+    } catch (error) {
+      throw new Error(\`Error updating ${name.toLowerCase()}: \${error.message}\`);
+    }
+  }
+
+  public async delete(id: string): Promise<boolean> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid ID format');
+      }
+      
+      // Implementation here
+      return true;
+    } catch (error) {
+      throw new Error(\`Error deleting ${name.toLowerCase()}: \${error.message}\`);
+    }
+  }
+}
+
+export default new ${nameCap}Service();`;
+};
+
+// Generate TypeScript middleware template
+const generateTsMiddlewareTemplate = (name) => {
+  const nameCap = capitalize(name);
+  
+  return `import { Request, Response, NextFunction } from 'express';
+import { ApiResponse } from '../types/api';
+
+export interface ${nameCap}Request extends Request {
+  // Add custom properties if needed
+}
+
+export const ${toCamelCase(name)}Middleware = (
+  req: ${nameCap}Request,
+  res: Response<ApiResponse>,
+  next: NextFunction
+): void => {
+  try {
+    // Middleware logic here
+    console.log(\`${nameCap} middleware executed\`);
+    next();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: \`${nameCap} middleware error: \${error.message}\`,
+      data: null
+    });
+  }
+};
+
+export default ${toCamelCase(name)}Middleware;`;
+};
+
+// Generate TypeScript route template
+const generateTsRouteTemplate = (modelName) => {
+  const modelNameCap = capitalize(modelName);
+  const modelNameLower = modelName.toLowerCase();
+  const controllerName = `${modelNameLower}Controller`;
+  
+  return `import express from 'express';
+import ${controllerName} from '../controllers/${controllerName}';
+import authMiddleware from '../middleware/auth';
+
+const router = express.Router();
+
+// @route   GET /api/${modelNameLower}s/search
+// @desc    Search ${modelNameLower}s
+// @access  Private
+router.get('/search', authMiddleware, ${controllerName}.search);
+
+// @route   POST /api/${modelNameLower}s
+// @desc    Create new ${modelNameLower}
+// @access  Private
+router.post('/', authMiddleware, ${controllerName}.create);
+
+// @route   GET /api/${modelNameLower}s
+// @desc    Get all ${modelNameLower}s
+// @access  Private
+router.get('/', authMiddleware, ${controllerName}.index);
+
+// @route   GET /api/${modelNameLower}s/:id
+// @desc    Get single ${modelNameLower}
+// @access  Private
+router.get('/:id', authMiddleware, ${controllerName}.show);
+
+// @route   PUT /api/${modelNameLower}s/:id
+// @desc    Update ${modelNameLower}
+// @access  Private
+router.put('/:id', authMiddleware, ${controllerName}.update);
+
+// @route   DELETE /api/${modelNameLower}s/:id
+// @desc    Delete ${modelNameLower}
+// @access  Private
+router.delete('/:id', authMiddleware, ${controllerName}.destroy);
+
+export default router;`;
+};
+
+// Enhanced TypeScript CLI Functions
+
+// Create TypeScript model with schema registry
+const createTypescriptModel = async (modelName) => {
+  const rl = createReadlineInterface();
+  const fields = [];
+  
+  try {
+    // Check if we're in a valid project directory
+    const currentPath = process.cwd();
+    const packageJsonPath = path.join(currentPath, 'package.json');
+    
+    if (!await fs.pathExists(packageJsonPath)) {
+      console.log(colors.red('❌ This command must be run inside a project directory.'));
+      console.log(colors.yellow('💡 Create a new project first: koti new my-project'));
+      process.exit(1);
+    }
+
+    // Create TypeScript project structure
+    const srcPath = path.join(currentPath, 'src');
+    await fs.ensureDir(srcPath);
+    
+    // Create necessary directories
+    const directories = ['models', 'schemas', 'controllers', 'services', 'middleware', 'routes', 'types', 'enums'];
+    for (const dir of directories) {
+      await fs.ensureDir(path.join(srcPath, dir));
+    }
+
+    // Create API types file if it doesn't exist
+    await createApiTypesFile(srcPath);
+    
+    // Create utility files
+    await createUtilityFiles(srcPath);
+    
+    // Create enhanced middleware files
+    await createEnhancedMiddleware(srcPath);
+    
+    // Create Swagger configuration
+    await createSwaggerConfig(srcPath);
+
+    // Get existing schemas for reference options
+    const existingSchemas = await readExistingSchemas(currentPath);
+    
+    console.log(colors.bold(`\n🏗️  Creating TypeScript model: ${colors.cyan(capitalize(modelName))}\n`));
+    console.log(colors.yellow('Available data types:'));
+    
+    // Show available data types
+    availableDataTypes.forEach((type, index) => {
+      console.log(`  ${colors.cyan(index + 1)}. ${type.mongoose.padEnd(12)} ${colors.dim('(' + type.typescript + ')')}`);
+    });
+    
+    console.log(colors.yellow('\n📝 Add fields to your model (press Enter without field name to finish):\n'));
+    
+    let fieldIndex = 1;
+    
+    while (true) {
+      console.log(colors.bold(`--- Field ${fieldIndex} ---`));
+      
+      // Get field name
+      const fieldName = await askQuestion(rl, 'Field name: ');
+      if (!fieldName) break;
+      
+      // Get data type
+      const typeChoice = await askQuestion(rl, `Data type (1-${availableDataTypes.length}): `);
+      const typeIndex = parseInt(typeChoice) - 1;
+      
+      if (typeIndex < 0 || typeIndex >= availableDataTypes.length) {
+        console.log(colors.red('❌ Invalid data type selection'));
+        continue;
+      }
+      
+      const selectedType = availableDataTypes[typeIndex];
+      const field = {
+        name: fieldName,
+        type: selectedType.mongoose,
+        typescript: selectedType.typescript
+      };
+      
+      // Handle ObjectId references
+      if (selectedType.mongoose === 'ObjectId') {
+        if (existingSchemas.length > 0) {
+          console.log(colors.yellow('Available schemas for reference:'));
+          existingSchemas.forEach((schema, index) => {
+            console.log(`  ${index + 1}. ${schema}`);
+          });
+          
+          const refChoice = await askQuestion(rl, `Reference model (1-${existingSchemas.length}) or custom name: `);
+          const refIndex = parseInt(refChoice) - 1;
+          
+          if (refIndex >= 0 && refIndex < existingSchemas.length) {
+            field.ref = existingSchemas[refIndex];
+          } else {
+            field.ref = refChoice;
+          }
+        } else {
+          field.ref = await askQuestion(rl, 'Reference model name: ');
+        }
+      }
+      
+      // Handle Array type
+      if (selectedType.mongoose === 'Array') {
+        const arrayTypeChoice = await askQuestion(rl, `Array element type (1-${availableDataTypes.length}): `);
+        const arrayTypeIndex = parseInt(arrayTypeChoice) - 1;
+        
+        if (arrayTypeIndex >= 0 && arrayTypeIndex < availableDataTypes.length) {
+          field.arrayType = availableDataTypes[arrayTypeIndex].mongoose;
+          field.arrayTypeScript = availableDataTypes[arrayTypeIndex].typescript;
+          
+          if (field.arrayType === 'ObjectId') {
+            field.ref = await askQuestion(rl, 'Reference model name: ');
+          }
+        }
+      }
+      
+      // Field validation options
+      const required = await askQuestion(rl, 'Required? (y/N): ');
+      field.required = required.toLowerCase() === 'y';
+      
+      const unique = await askQuestion(rl, 'Unique? (y/N): ');
+      field.unique = unique.toLowerCase() === 'y';
+      
+      const index = await askQuestion(rl, 'Create index? (y/N): ');
+      field.index = index.toLowerCase() === 'y';
+      
+      // Type-specific validations
+      if (selectedType.mongoose === 'String') {
+        const minLength = await askQuestion(rl, 'Minimum length (optional): ');
+        if (minLength) field.minLength = parseInt(minLength);
+        
+        const maxLength = await askQuestion(rl, 'Maximum length (optional): ');
+        if (maxLength) field.maxLength = parseInt(maxLength);
+        
+        const trim = await askQuestion(rl, 'Trim whitespace? (Y/n): ');
+        field.trim = trim.toLowerCase() !== 'n';
+      }
+      
+      if (selectedType.mongoose === 'Number') {
+        const min = await askQuestion(rl, 'Minimum value (optional): ');
+        if (min) field.min = parseFloat(min);
+        
+        const max = await askQuestion(rl, 'Maximum value (optional): ');
+        if (max) field.max = parseFloat(max);
+      }
+      
+      fields.push(field);
+      fieldIndex++;
+      console.log('');
+    }
+    
+    if (fields.length === 0) {
+      console.log(colors.yellow('⚠️  No fields added. Model creation cancelled.'));
+      rl.close();
+      return;
+    }
+    
+    // Generate TypeScript files
+    const modelContent = generateTypescriptSchemaTemplate(modelName, fields);
+    const serviceContent = generateTsServiceTemplate(modelName, modelName);
+    const controllerContent = generateTsControllerTemplate(modelName, modelName);
+    const routeContent = generateTsRouteTemplate(modelName);
+    
+    // Write files
+    const modelPath = path.join(srcPath, 'models', `${capitalize(modelName)}.ts`);
+    const servicePath = path.join(srcPath, 'services', `${toCamelCase(modelName)}Service.ts`);
+    const controllerPath = path.join(srcPath, 'controllers', `${toCamelCase(modelName)}Controller.ts`);
+    const routePath = path.join(srcPath, 'routes', `${toCamelCase(modelName)}.ts`);
+    
+    await fs.writeFile(modelPath, modelContent);
+    await fs.writeFile(servicePath, serviceContent);
+    await fs.writeFile(controllerPath, controllerContent);
+    await fs.writeFile(routePath, routeContent);
+    
+    // Update schema registry
+    await updateSchemaRegistry(currentPath, modelName);
+    
+    // Update route index
+    await updateRouteIndex(currentPath, modelName);
+    
+    console.log(colors.green(`✅ Created TypeScript model: ${capitalize(modelName)}`));
+    console.log(colors.green(`✅ Created service: ${toCamelCase(modelName)}Service.ts`));
+    console.log(colors.green(`✅ Created controller: ${toCamelCase(modelName)}Controller.ts`));
+    console.log(colors.green(`✅ Created routes: ${toCamelCase(modelName)}.ts`));
+    console.log(colors.green(`✅ Updated schema registry`));
+    console.log(colors.green(`✅ Updated route index`));
+    
+    rl.close();
+  } catch (error) {
+    rl.close();
+    throw error;
+  }
+};
+
+// Create TypeScript enum
+const createTypescriptEnum = async (enumName) => {
+  const rl = createReadlineInterface();
+  
+  try {
+    const currentPath = process.cwd();
+    const srcPath = path.join(currentPath, 'src');
+    await fs.ensureDir(path.join(srcPath, 'enums'));
+    
+    console.log(colors.bold(`\n🏗️  Creating TypeScript enum: ${colors.cyan(capitalize(enumName))}\n`));
+    
+    // Get enum type
+    console.log(colors.yellow('Enum type:'));
+    console.log('  1. String');
+    console.log('  2. Number');
+    
+    const typeChoice = await askQuestion(rl, 'Enum type (1-2): ');
+    const enumType = typeChoice === '2' ? 'number' : 'string';
+    
+    console.log(colors.yellow('\n📝 Add enum values (press Enter without value to finish):\n'));
+    
+    const values = [];
+    let valueIndex = 1;
+    
+    while (true) {
+      const value = await askQuestion(rl, `Value ${valueIndex}: `);
+      if (!value) break;
+      
+      values.push(value);
+      valueIndex++;
+    }
+    
+    if (values.length === 0) {
+      console.log(colors.yellow('⚠️  No values added. Enum creation cancelled.'));
+      rl.close();
+      return;
+    }
+    
+    // Generate enum file
+    const enumContent = generateEnumTemplate(enumName, values, enumType);
+    const enumPath = path.join(srcPath, 'enums', `${capitalize(enumName)}.ts`);
+    
+    await fs.writeFile(enumPath, enumContent);
+    
+    // Update enum index
+    await updateEnumIndex(currentPath, enumName);
+    
+    console.log(colors.green(`✅ Created TypeScript enum: ${capitalize(enumName)}.ts`));
+    console.log(colors.green(`✅ Updated enum index`));
+    
+    rl.close();
+  } catch (error) {
+    rl.close();
+    throw error;
+  }
+};
+
+// Create TypeScript controller
+const createTypescriptController = async (controllerName) => {
+  try {
+    const currentPath = process.cwd();
+    const srcPath = path.join(currentPath, 'src');
+    await fs.ensureDir(path.join(srcPath, 'controllers'));
+    
+    console.log(colors.bold(`\n🏗️  Creating TypeScript controller: ${colors.cyan(capitalize(controllerName))}\n`));
+    
+    // Generate controller file
+    const controllerContent = generateTsControllerTemplate(controllerName);
+    const controllerPath = path.join(srcPath, 'controllers', `${toCamelCase(controllerName)}Controller.ts`);
+    
+    await fs.writeFile(controllerPath, controllerContent);
+    
+    // Update controller index
+    await updateControllerIndex(currentPath, controllerName);
+    
+    console.log(colors.green(`✅ Created TypeScript controller: ${toCamelCase(controllerName)}Controller.ts`));
+    console.log(colors.green(`✅ Updated controller index`));
+    
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Create TypeScript service
+const createTypescriptService = async (serviceName) => {
+  try {
+    const currentPath = process.cwd();
+    const srcPath = path.join(currentPath, 'src');
+    await fs.ensureDir(path.join(srcPath, 'services'));
+    
+    console.log(colors.bold(`\n🏗️  Creating TypeScript service: ${colors.cyan(capitalize(serviceName))}\n`));
+    
+    // Generate service file
+    const serviceContent = generateTsServiceTemplate(serviceName);
+    const servicePath = path.join(srcPath, 'services', `${toCamelCase(serviceName)}Service.ts`);
+    
+    await fs.writeFile(servicePath, serviceContent);
+    
+    // Update service index
+    await updateServiceIndex(currentPath, serviceName);
+    
+    console.log(colors.green(`✅ Created TypeScript service: ${toCamelCase(serviceName)}Service.ts`));
+    console.log(colors.green(`✅ Updated service index`));
+    
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Create TypeScript middleware
+const createTypescriptMiddleware = async (middlewareName) => {
+  try {
+    const currentPath = process.cwd();
+    const srcPath = path.join(currentPath, 'src');
+    await fs.ensureDir(path.join(srcPath, 'middleware'));
+    
+    console.log(colors.bold(`\n🏗️  Creating TypeScript middleware: ${colors.cyan(capitalize(middlewareName))}\n`));
+    
+    // Generate middleware file
+    const middlewareContent = generateTsMiddlewareTemplate(middlewareName);
+    const middlewarePath = path.join(srcPath, 'middleware', `${toCamelCase(middlewareName)}.ts`);
+    
+    await fs.writeFile(middlewarePath, middlewareContent);
+    
+    // Update middleware index
+    await updateMiddlewareIndex(currentPath, middlewareName);
+    
+    console.log(colors.green(`✅ Created TypeScript middleware: ${toCamelCase(middlewareName)}.ts`));
+    console.log(colors.green(`✅ Updated middleware index`));
+    
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Helper functions to update index files
+const updateSchemaRegistry = async (projectPath, modelName) => {
+  const schemasPath = path.join(projectPath, 'src', 'schemas');
+  await fs.ensureDir(schemasPath);
+  
+  const indexPath = path.join(schemasPath, 'index.ts');
+  const modelNameCap = capitalize(modelName);
+  
+  let indexContent = '';
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  // Check if already exists
+  if (!indexContent.includes(`${modelNameCap}Schema`)) {
+    indexContent += `export { default as ${modelNameCap}Schema } from '../models/${modelNameCap}';\n`;
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+const updateRouteIndex = async (projectPath, modelName) => {
+  const routesPath = path.join(projectPath, 'src', 'routes');
+  await fs.ensureDir(routesPath);
+  
+  const indexPath = path.join(routesPath, 'index.ts');
+  const modelNameCamel = toCamelCase(modelName);
+  
+  let indexContent = `import express from 'express';\n\nconst router = express.Router();\n\n`;
+  
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  // Check if already exists
+  if (!indexContent.includes(`${modelNameCamel}Routes`)) {
+    // Add import
+    const importLine = `import ${modelNameCamel}Routes from './${modelNameCamel}';\n`;
+    if (!indexContent.includes(importLine.trim())) {
+      indexContent = indexContent.replace('import express', `${importLine}import express`);
+    }
+    
+    // Add route usage
+    const routeLine = `router.use('/${modelName.toLowerCase()}s', ${modelNameCamel}Routes);\n`;
+    if (!indexContent.includes(routeLine.trim())) {
+      indexContent = indexContent.replace('export default router;', `${routeLine}\nexport default router;`);
+    }
+    
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+const updateEnumIndex = async (projectPath, enumName) => {
+  const enumsPath = path.join(projectPath, 'src', 'enums');
+  const indexPath = path.join(enumsPath, 'index.ts');
+  const enumNameCap = capitalize(enumName);
+  
+  let indexContent = '';
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  if (!indexContent.includes(`${enumNameCap}`)) {
+    indexContent += `export { ${enumNameCap} } from './${enumNameCap}';\n`;
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+const updateControllerIndex = async (projectPath, controllerName) => {
+  const controllersPath = path.join(projectPath, 'src', 'controllers');
+  const indexPath = path.join(controllersPath, 'index.ts');
+  const controllerNameCamel = toCamelCase(controllerName);
+  
+  let indexContent = '';
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  if (!indexContent.includes(`${controllerNameCamel}Controller`)) {
+    indexContent += `export { default as ${controllerNameCamel}Controller } from './${controllerNameCamel}Controller';\n`;
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+const updateServiceIndex = async (projectPath, serviceName) => {
+  const servicesPath = path.join(projectPath, 'src', 'services');
+  const indexPath = path.join(servicesPath, 'index.ts');
+  const serviceNameCamel = toCamelCase(serviceName);
+  
+  let indexContent = '';
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  if (!indexContent.includes(`${serviceNameCamel}Service`)) {
+    indexContent += `export { default as ${serviceNameCamel}Service } from './${serviceNameCamel}Service';\n`;
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+const updateMiddlewareIndex = async (projectPath, middlewareName) => {
+  const middlewarePath = path.join(projectPath, 'src', 'middleware');
+  const indexPath = path.join(middlewarePath, 'index.ts');
+  const middlewareNameCamel = toCamelCase(middlewareName);
+  
+  let indexContent = '';
+  if (await fs.pathExists(indexPath)) {
+    indexContent = await fs.readFile(indexPath, 'utf-8');
+  }
+  
+  if (!indexContent.includes(`${middlewareNameCamel}Middleware`)) {
+    indexContent += `export { default as ${middlewareNameCamel}Middleware } from './${middlewareNameCamel}';\n`;
+    await fs.writeFile(indexPath, indexContent);
+  }
+};
+
+// Create API types file
+const createApiTypesFile = async (srcPath) => {
+  const typesPath = path.join(srcPath, 'types', 'api.ts');
+  
+  if (await fs.pathExists(typesPath)) {
+    return; // Already exists
+  }
+  
+  const apiTypesContent = `// API Response Types
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  error?: string;
+}
+
+export interface PaginatedResponse<T = any> {
+  success: boolean;
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ErrorResponse {
+  success: false;
+  message: string;
+  errors?: ValidationError[];
+}
+
+// Common request types
+export interface SearchQuery {
+  q?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface IDParams {
+  id: string;
+}
+
+// Auth related types
+export interface AuthUser {
+  id: string;
+  email: string;
+  username?: string;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  username?: string;
+}
+
+export interface AuthResponse {
+  success: true;
+  message: string;
+  data: {
+    user: AuthUser;
+    token: string;
+  };
+}`;
+
+  await fs.writeFile(typesPath, apiTypesContent);
+};
+
+// Create utility files for error handling and validation
+const createUtilityFiles = async (srcPath) => {
+  const utilsPath = path.join(srcPath, 'utils');
+  await fs.ensureDir(utilsPath);
+  
+  // AppError class
+  const appErrorPath = path.join(utilsPath, 'AppError.ts');
+  if (!(await fs.pathExists(appErrorPath))) {
+    const appErrorContent = `export class AppError extends Error {
+  public statusCode: number;
+  public isOperational: boolean;
+
+  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+
+    Object.setPrototypeOf(this, AppError.prototype);
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+export default AppError;`;
+    await fs.writeFile(appErrorPath, appErrorContent);
+  }
+
+  // Response helper
+  const responseHelperPath = path.join(utilsPath, 'responseHelper.ts');
+  if (!(await fs.pathExists(responseHelperPath))) {
+    const responseHelperContent = `import { Response } from 'express';
+import { ApiResponse, PaginatedResponse } from '../types/api';
+
+export const sendSuccess = <T = any>(
+  res: Response<ApiResponse<T>>,
+  data: T,
+  message: string = 'Success',
+  statusCode: number = 200
+): void => {
+  res.status(statusCode).json({
+    success: true,
+    message,
+    data
+  });
+};
+
+export const sendError = (
+  res: Response<ApiResponse>,
+  message: string = 'Internal Server Error',
+  statusCode: number = 500,
+  error?: string
+): void => {
+  res.status(statusCode).json({
+    success: false,
+    message,
+    error
+  });
+};
+
+export const sendPaginatedResponse = <T = any>(
+  res: Response<PaginatedResponse<T>>,
+  data: T[],
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  },
+  statusCode: number = 200
+): void => {
+  res.status(statusCode).json({
+    success: true,
+    data,
+    pagination
+  });
+};`;
+    await fs.writeFile(responseHelperPath, responseHelperContent);
+  }
+
+  // Logger utility
+  const loggerPath = path.join(utilsPath, 'logger.ts');
+  if (!(await fs.pathExists(loggerPath))) {
+    const loggerContent = `type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+
+interface LogEntry {
+  timestamp: string;
+  level: LogLevel;
+  message: string;
+  meta?: any;
+}
+
+class Logger {
+  private formatTimestamp(): string {
+    return new Date().toISOString();
+  }
+
+  private log(level: LogLevel, message: string, meta?: any): void {
+    const entry: LogEntry = {
+      timestamp: this.formatTimestamp(),
+      level,
+      message,
+      ...(meta && { meta })
+    };
+
+    const colorMap = {
+      info: '\\x1b[36m',    // Cyan
+      warn: '\\x1b[33m',    // Yellow
+      error: '\\x1b[31m',   // Red
+      debug: '\\x1b[35m'    // Magenta
+    };
+
+    const reset = '\\x1b[0m';
+    const color = colorMap[level];
+
+    console.log(\`\${color}[\${entry.timestamp}] \${level.toUpperCase()}: \${message}\${reset}\`);
+    
+    if (meta) {
+      console.log(\`\${color}Meta:\${reset}\`, meta);
+    }
+  }
+
+  info(message: string, meta?: any): void {
+    this.log('info', message, meta);
+  }
+
+  warn(message: string, meta?: any): void {
+    this.log('warn', message, meta);
+  }
+
+  error(message: string, meta?: any): void {
+    this.log('error', message, meta);
+  }
+
+  debug(message: string, meta?: any): void {
+    if (process.env.NODE_ENV === 'development') {
+      this.log('debug', message, meta);
+    }
+  }
+}
+
+export const logger = new Logger();
+export default logger;`;
+    await fs.writeFile(loggerPath, loggerContent);
+  }
+};
+
+// Create enhanced middleware files
+const createEnhancedMiddleware = async (srcPath) => {
+  const middlewarePath = path.join(srcPath, 'middleware');
+  await fs.ensureDir(middlewarePath);
+  
+  // Validation middleware
+  const validationPath = path.join(middlewarePath, 'validation.ts');
+  if (!(await fs.pathExists(validationPath))) {
+    const validationContent = `import Joi from 'joi';
+import { AppError } from '../utils/AppError';
+
+export const validateRequest = <T = any>(schema: Joi.ObjectSchema, data: any): T => {
+  const { error, value } = schema.validate(data, {
+    abortEarly: false,
+    stripUnknown: true
+  });
+
+  if (error) {
+    const validationErrors = error.details.map(detail => ({
+      field: detail.path.join('.'),
+      message: detail.message
+    }));
+
+    throw new AppError(
+      \`Validation failed: \${validationErrors.map(e => e.message).join(', ')}\`,
+      400
+    );
+  }
+
+  return value;
+};
+
+export const validationMiddleware = (schema: Joi.ObjectSchema, property: 'body' | 'query' | 'params' = 'body') => {
+  return (req: any, res: any, next: any) => {
+    try {
+      req[property] = validateRequest(schema, req[property]);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};`;
+    await fs.writeFile(validationPath, validationContent);
+  }
+
+  // Enhanced error handler
+  const errorHandlerPath = path.join(middlewarePath, 'errorHandler.ts');
+  if (!(await fs.pathExists(errorHandlerPath))) {
+    const errorHandlerContent = `import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/AppError';
+import { logger } from '../utils/logger';
+
+interface ErrorResponse {
+  success: false;
+  message: string;
+  error?: string;
+  stack?: string;
+  statusCode?: number;
+}
+
+export const errorHandler = (
+  err: Error | AppError,
+  req: Request,
+  res: Response<ErrorResponse>,
+  next: NextFunction
+): void => {
+  let error = { ...err } as AppError;
+  error.message = err.message;
+
+  // Log error
+  logger.error(\`Error \${req.method} \${req.originalUrl}\`, {
+    message: err.message,
+    stack: err.stack,
+    user: req.user || 'Anonymous',
+    ip: req.ip,
+    userAgent: req.get('User-Agent')
+  });
+
+  // Mongoose bad ObjectId
+  if (err.name === 'CastError') {
+    const message = 'Resource not found';
+    error = new AppError(message, 404);
+  }
+
+  // Mongoose duplicate key
+  if ((err as any).code === 11000) {
+    const message = 'Duplicate field value entered';
+    error = new AppError(message, 400);
+  }
+
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const message = Object.values((err as any).errors).map((val: any) => val.message).join(', ');
+    error = new AppError(message, 400);
+  }
+
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    const message = 'Invalid token. Please log in again!';
+    error = new AppError(message, 401);
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    const message = 'Your token has expired! Please log in again.';
+    error = new AppError(message, 401);
+  }
+
+  const response: ErrorResponse = {
+    success: false,
+    message: error.message || 'Internal Server Error',
+    statusCode: error.statusCode || 500
+  };
+
+  // Include stack trace in development
+  if (process.env.NODE_ENV === 'development') {
+    response.stack = err.stack;
+    response.error = err.name;
+  }
+
+  res.status(error.statusCode || 500).json(response);
+};
+
+export default errorHandler;`;
+    await fs.writeFile(errorHandlerPath, errorHandlerContent);
+  }
+
+  // Rate limiting middleware
+  const rateLimitPath = path.join(middlewarePath, 'rateLimit.ts');
+  if (!(await fs.pathExists(rateLimitPath))) {
+    const rateLimitContent = `import { Request, Response, NextFunction } from 'express';
+
+interface RateLimitOptions {
+  windowMs: number; // Time window in milliseconds
+  max: number; // Max requests per window
+  message?: string;
+  skipSuccessfulRequests?: boolean;
+  skipFailedRequests?: boolean;
+}
+
+interface RateLimitInfo {
+  count: number;
+  resetTime: number;
+}
+
+class InMemoryStore {
+  private store: Map<string, RateLimitInfo> = new Map();
+
+  incr(key: string, windowMs: number): { totalHits: number; resetTime: number } {
+    const now = Date.now();
+    const resetTime = now + windowMs;
+    
+    const current = this.store.get(key);
+    
+    if (!current || current.resetTime <= now) {
+      // Reset or create new entry
+      this.store.set(key, { count: 1, resetTime });
+      return { totalHits: 1, resetTime };
+    }
+    
+    // Increment existing entry
+    current.count++;
+    this.store.set(key, current);
+    
+    return { totalHits: current.count, resetTime: current.resetTime };
+  }
+
+  decrement(key: string): void {
+    const current = this.store.get(key);
+    if (current && current.count > 0) {
+      current.count--;
+      this.store.set(key, current);
+    }
+  }
+
+  resetKey(key: string): void {
+    this.store.delete(key);
+  }
+}
+
+const store = new InMemoryStore();
+
+export const rateLimit = (options: RateLimitOptions) => {
+  const {
+    windowMs = 15 * 60 * 1000, // 15 minutes
+    max = 100,
+    message = 'Too many requests from this IP, please try again later.',
+    skipSuccessfulRequests = false,
+    skipFailedRequests = false
+  } = options;
+
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const key = req.ip || req.connection.remoteAddress || 'unknown';
+    
+    const { totalHits, resetTime } = store.incr(key, windowMs);
+    
+    // Set rate limit headers
+    res.set({
+      'X-RateLimit-Limit': max.toString(),
+      'X-RateLimit-Remaining': Math.max(0, max - totalHits).toString(),
+      'X-RateLimit-Reset': new Date(resetTime).toISOString()
+    });
+
+    if (totalHits > max) {
+      res.status(429).json({
+        success: false,
+        message,
+        retryAfter: Math.ceil((resetTime - Date.now()) / 1000)
+      });
+      return;
+    }
+
+    // Handle response for decrementing on success/failure
+    const originalSend = res.send;
+    res.send = function(body) {
+      const statusCode = res.statusCode;
+      
+      if (
+        (skipSuccessfulRequests && statusCode < 400) ||
+        (skipFailedRequests && statusCode >= 400)
+      ) {
+        store.decrement(key);
+      }
+      
+      return originalSend.call(this, body);
+    };
+
+    next();
+  };
+};
+
+export default rateLimit;`;
+    await fs.writeFile(rateLimitPath, rateLimitContent);
+  }
+};
+
+// Create Swagger configuration
+const createSwaggerConfig = async (srcPath) => {
+  const configPath = path.join(srcPath, 'config');
+  await fs.ensureDir(configPath);
+  
+  const swaggerPath = path.join(configPath, 'swagger.ts');
+  if (!(await fs.pathExists(swaggerPath))) {
+    const swaggerContent = `import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { Express } from 'express';
+
+const options: swaggerJsdoc.Options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Documentation',
+      version: '1.0.0',
+      description: 'Comprehensive API documentation for the application',
+      contact: {
+        name: 'API Support',
+        email: 'support@example.com'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
+      }
+    },
+    servers: [
+      {
+        url: process.env.API_URL || 'http://localhost:3000',
+        description: 'Development server'
+      },
+      {
+        url: 'https://api.production.com',
+        description: 'Production server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        },
+        apiKey: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key'
+        }
+      },
+      schemas: {
+        ApiResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            message: {
+              type: 'string',
+              example: 'Operation completed successfully'
+            },
+            data: {
+              type: 'object',
+              description: 'Response data'
+            },
+            error: {
+              type: 'string',
+              description: 'Error message if success is false'
+            }
+          }
+        },
+        PaginatedResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            data: {
+              type: 'array',
+              items: {
+                type: 'object'
+              }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                page: {
+                  type: 'integer',
+                  example: 1
+                },
+                limit: {
+                  type: 'integer',
+                  example: 10
+                },
+                total: {
+                  type: 'integer',
+                  example: 100
+                },
+                totalPages: {
+                  type: 'integer',
+                  example: 10
+                },
+                hasNext: {
+                  type: 'boolean',
+                  example: true
+                },
+                hasPrev: {
+                  type: 'boolean',
+                  example: false
+                }
+              }
+            }
+          }
+        },
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false
+            },
+            message: {
+              type: 'string',
+              example: 'An error occurred'
+            },
+            error: {
+              type: 'string',
+              example: 'ValidationError'
+            },
+            statusCode: {
+              type: 'integer',
+              example: 400
+            }
+          }
+        },
+        ValidationError: {
+          type: 'object',
+          properties: {
+            field: {
+              type: 'string',
+              example: 'email'
+            },
+            message: {
+              type: 'string',
+              example: 'Email is required'
+            }
+          }
+        }
+      }
+    },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ],
+    tags: [
+      {
+        name: 'Authentication',
+        description: 'User authentication and authorization'
+      },
+      {
+        name: 'Health',
+        description: 'API health check endpoints'
+      }
+    ]
+  },
+  apis: [
+    './src/routes/*.ts',
+    './src/controllers/*.ts',
+    './src/models/*.ts'
+  ]
+};
+
+const specs = swaggerJsdoc(options);
+
+export const setupSwagger = (app: Express): void => {
+  // Swagger page
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      defaultModelsExpandDepth: 2,
+      defaultModelExpandDepth: 2
+    }
+  }));
+
+  // Swagger JSON
+  app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+  });
+};
+
+export { specs };
+export default setupSwagger;`;
+    await fs.writeFile(swaggerPath, swaggerContent);
+  }
+};
+
+// Main interactive model creation function (legacy)
 const createInteractiveModel = async (modelName) => {
   const rl = createReadlineInterface();
   const fields = [];
@@ -1963,10 +3972,137 @@ program
     }
   });
 
-// Model command for interactive model creation
+// Enhanced TypeScript CLI Commands
+
+// Create:Model command for TypeScript schema generation
+program
+  .command('create:model <model-name>')
+  .description('Create a new TypeScript model with schema registry')
+  .action(async (modelName) => {
+    try {
+      // Validate model name
+      if (!modelName || modelName.trim() === '') {
+        console.error(colors.red('❌ Error: Model name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid model name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modelName)) {
+        console.error(colors.red('❌ Error: Model name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createTypescriptModel(modelName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating model:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Create:Enum command
+program
+  .command('create:enum <enum-name>')
+  .description('Create a new TypeScript enum')
+  .action(async (enumName) => {
+    try {
+      // Validate enum name
+      if (!enumName || enumName.trim() === '') {
+        console.error(colors.red('❌ Error: Enum name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid enum name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(enumName)) {
+        console.error(colors.red('❌ Error: Enum name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createTypescriptEnum(enumName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating enum:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Create:Controller command
+program
+  .command('create:controller <controller-name>')
+  .description('Create a new TypeScript controller')
+  .action(async (controllerName) => {
+    try {
+      // Validate controller name
+      if (!controllerName || controllerName.trim() === '') {
+        console.error(colors.red('❌ Error: Controller name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid controller name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(controllerName)) {
+        console.error(colors.red('❌ Error: Controller name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createTypescriptController(controllerName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating controller:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Create:Service command
+program
+  .command('create:service <service-name>')
+  .description('Create a new TypeScript service')
+  .action(async (serviceName) => {
+    try {
+      // Validate service name
+      if (!serviceName || serviceName.trim() === '') {
+        console.error(colors.red('❌ Error: Service name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid service name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(serviceName)) {
+        console.error(colors.red('❌ Error: Service name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createTypescriptService(serviceName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating service:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Create:Middleware command
+program
+  .command('create:middleware <middleware-name>')
+  .description('Create a new TypeScript middleware')
+  .action(async (middlewareName) => {
+    try {
+      // Validate middleware name
+      if (!middlewareName || middlewareName.trim() === '') {
+        console.error(colors.red('❌ Error: Middleware name is required'));
+        process.exit(1);
+      }
+
+      // Check for valid middleware name format
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(middlewareName)) {
+        console.error(colors.red('❌ Error: Middleware name must start with a letter and contain only letters, numbers, and underscores'));
+        process.exit(1);
+      }
+
+      await createTypescriptMiddleware(middlewareName);
+    } catch (error) {
+      console.error(colors.red('❌ Error creating middleware:'), error.message);
+      process.exit(1);
+    }
+  });
+
+// Legacy Model command for backward compatibility
 program
   .command('model <model-name>')
-  .description('Create a new model with interactive setup')
+  .description('Create a new model with interactive setup (legacy)')
   .action(async (modelName) => {
     try {
       // Validate model name

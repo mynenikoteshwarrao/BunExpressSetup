@@ -2,7 +2,7 @@
 
 ## For Users (Installing Koti CLI)
 
-Once published to npm, users can install and use Koti CLI with:
+The Koti CLI is now published to npm! Install and use it with:
 
 ```bash
 # Install globally

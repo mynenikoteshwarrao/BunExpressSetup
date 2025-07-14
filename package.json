@@ -1,17 +1,55 @@
 {
-  "name": "workspace",
+  "name": "koti",
   "version": "1.0.0",
-  "main": "cli.js",
+  "description": "CLI tool to generate Bun API projects with Express and MongoDB",
+  "main": "koti",
+  "bin": {
+    "koti": "./koti"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.0.13",
     "chalk": "^5.4.1",
-    "commander": "^14.0.0",
-    "fs-extra": "^11.3.0"
-  }
+    "commander": "^11.1.0",
+    "fs-extra": "^11.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "bun",
+    "express",
+    "mongodb",
+    "api",
+    "cli",
+    "generator",
+    "scaffold",
+    "boilerplate",
+    "javascript",
+    "nodejs"
+  ],
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mynenikoteshwarrao/BunExpressSetup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mynenikoteshwarrao/BunExpressSetup/issues"
+  },
+  "homepage": "https://github.com/mynenikoteshwarrao/BunExpressSetup#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "koti",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ]
 }
