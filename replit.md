@@ -21,7 +21,7 @@ CLI Command Format:
 
 ## Recent Changes
 
-**July 14, 2025**: Version 1.0.3 - Complete TypeScript Conversion
+**July 14, 2025**: Version 1.0.3 - Complete TypeScript Conversion + Enhanced CRUD Generation
 - **Full TypeScript Conversion**: Converted entire CLI project from JavaScript to TypeScript
 - **TypeScript CLI Implementation**: Created new src/cli.ts with full type safety and modern TypeScript features
 - **Enhanced TypeScript Templates**: Added comprehensive TypeScript template files for generated projects
@@ -32,6 +32,16 @@ CLI Command Format:
 - **Development Tools**: Added TypeScript compilation and development scripts
 - **Backward Compatibility**: Maintained all existing CLI commands with TypeScript implementation
 - **Enhanced Error Handling**: Improved type safety and error handling throughout CLI
+- **Automatic Installation**: Added automatic `bun install` execution with npm fallback after project creation
+- **Robust Installation**: Comprehensive error handling for dependency installation with clear user feedback
+- **Enhanced CRUD Generation**: Complete CRUD system generation with controller, service, and routes
+- **Interactive Model Creation**: Numbered datatype selection (1-8) with String, Number, Date, Boolean, ObjectId, Array, Mixed, JSON
+- **Advanced Field Options**: Required, unique, indexed, and default value configuration for model fields
+- **Automatic Route Registration**: Generated routes are automatically registered in routes/index.ts
+- **Pagination Support**: Built-in pagination with configurable DEFAULT_PAGE_LIMIT in .env (default: 10)
+- **Search & Filtering**: Automatic search functionality across String fields with sorting options
+- **Swagger Documentation**: Complete OpenAPI documentation for generated CRUD endpoints
+- **User Choice**: Optional CRUD generation - user can choose to generate only model or full CRUD system
 
 **July 13, 2025**: Version 1.0.3 - Development Release with Disclaimers & Enhanced Features
 - Added comprehensive TypeScript code generation system
