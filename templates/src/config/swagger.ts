@@ -169,27 +169,47 @@ const options: swaggerJsdoc.Options = {
 const specs = swaggerJsdoc(options);
 
 export const setupSwagger = (app: Express): void => {
-  // Swagger page
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  const swaggerOptions = {
     explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'API Documentation',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info .title { color: #3b82f6; }
+      .swagger-ui .scheme-container { background: #f8fafc; padding: 10px; border-radius: 4px; }
+    `,
+    customSiteTitle: '{{PROJECT_NAME}} API Documentation',
     swaggerOptions: {
       persistAuthorization: true,
       displayRequestDuration: true,
-      docExpansion: 'none',
+      docExpansion: 'list',
       filter: true,
       showExtensions: true,
       showCommonExtensions: true,
       defaultModelsExpandDepth: 2,
-      defaultModelExpandDepth: 2
+      defaultModelExpandDepth: 2,
+      tryItOutEnabled: true
     }
-  }));
+  };
 
-  // Swagger JSON
+  // Primary documentation endpoint - /docs/api
+  app.use('/docs/api', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
+  
+  // Legacy endpoint for backward compatibility
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
+
+  // Swagger JSON endpoints
+  app.get('/docs/api.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+  });
+  
   app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(specs);
+  });
+
+  // Documentation redirect routes
+  app.get('/docs', (req, res) => {
+    res.redirect('/docs/api');
   });
 };
 

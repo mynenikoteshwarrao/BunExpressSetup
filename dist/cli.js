@@ -1302,7 +1302,108 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
- * /api/auth/me:
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset instructions sent
+ *       404:
+ *         description: User not found
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid token or password
+ */
+router.post('/reset-password', authController.resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid refresh token
+ */
+router.post('/refresh-token', authController.refreshToken);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', authController.logout);
+
+/**
+ * @swagger
+ * /api/auth/profile:
  *   get:
  *     summary: Get current user profile
  *     tags: [Authentication]
@@ -1314,65 +1415,179 @@ router.post('/login', authController.login);
  *       401:
  *         description: Unauthorized
  */
-router.get('/me', auth, authController.getProfile);
+router.get('/profile', auth, authController.getProfile);
 
 export default router;`;
     await fs.writeFile(path.join(srcPath, 'routes', 'index.ts'), indexRouteContent);
     await fs.writeFile(path.join(srcPath, 'routes', 'auth.ts'), authRouteContent);
     console.log(colors.green('✅ Created file: src/routes/index.ts'));
     console.log(colors.green('✅ Created file: src/routes/auth.ts'));
-    // Generate basic auth controller
+    // Generate enhanced auth controller with service layer
     const authControllerContent = `import { Request, Response, NextFunction } from 'express';
 import { ApiResponse, AuthenticatedRequest, LoginRequest, RegisterRequest } from '../types/api';
 import { AppError } from '../utils/AppError';
+import * as authService from '../services/authService';
+
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+interface RefreshTokenRequest {
+  refreshToken: string;
+}
 
 class AuthController {
   /**
    * Register new user
+   * @route POST /api/auth/register
    */
   public async register(req: Request<{}, any, RegisterRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { username, email, password } = req.body;
+      const userData = req.body;
+      const result = await authService.signup(userData);
+      
+      if (result.message) {
+        const response: ApiResponse = {
+          success: true,
+          message: result.message,
+          data: null
+        };
+        return res.status(200).json(response);
+      }
 
-      // TODO: Implement user registration logic
       const response: ApiResponse = {
         success: true,
         message: 'User registered successfully',
-        data: { username, email }
+        data: result.user
       };
 
       res.status(201).json(response);
-    } catch (error) {
-      next(new AppError('Registration failed', 400));
+    } catch (error: any) {
+      next(new AppError(error.message || 'Registration failed', 400));
     }
   }
 
   /**
    * Login user
+   * @route POST /api/auth/login
    */
   public async login(req: Request<{}, any, LoginRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
+      const result = await authService.login(email, password);
 
-      // TODO: Implement login logic
       const response: ApiResponse = {
         success: true,
         message: 'Login successful',
-        data: { token: 'jwt-token-here' }
+        data: result
       };
 
       res.status(200).json(response);
-    } catch (error) {
-      next(new AppError('Login failed', 401));
+    } catch (error: any) {
+      next(new AppError(error.message || 'Invalid email or password', 401));
+    }
+  }
+
+  /**
+   * Forgot password
+   * @route POST /api/auth/forgot-password
+   */
+  public async forgotPassword(req: Request<{}, any, ForgotPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      const resetToken = await authService.forgotPassword(email);
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Password reset instructions sent to your email',
+        data: { resetToken: resetToken }
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      next(new AppError(error.message || 'Failed to process forgot password request', 500));
+    }
+  }
+
+  /**
+   * Reset password
+   * @route POST /api/auth/reset-password
+   */
+  public async resetPassword(req: Request<{}, any, ResetPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token, newPassword } = req.body;
+      await authService.resetPassword(token, newPassword);
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Password has been reset successfully',
+        data: null
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      next(new AppError(error.message || 'Password reset failed', 400));
+    }
+  }
+
+  /**
+   * Refresh access token
+   * @route POST /api/auth/refresh-token
+   */
+  public async refreshToken(req: Request<{}, any, RefreshTokenRequest>, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { refreshToken } = req.body;
+      const newAccessToken = await authService.refreshAccessToken(refreshToken);
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Token refreshed successfully',
+        data: { accessToken: newAccessToken }
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      next(new AppError(error.message || 'Token refresh failed', 401));
+    }
+  }
+
+  /**
+   * Logout user
+   * @route POST /api/auth/logout
+   */
+  public async logout(req: Request<{}, any, RefreshTokenRequest>, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { refreshToken } = req.body;
+      await authService.logout(refreshToken);
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Logged out successfully',
+        data: null
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      next(new AppError(error.message || 'Logout failed', 500));
     }
   }
 
   /**
    * Get user profile
+   * @route GET /api/auth/profile
    */
   public async getProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user;
+      
+      if (!user) {
+        return next(new AppError('User not authenticated', 401));
+      }
 
       const response: ApiResponse = {
         success: true,
@@ -1381,36 +1596,37 @@ class AuthController {
       };
 
       res.status(200).json(response);
-    } catch (error) {
-      next(new AppError('Failed to get profile', 500));
+    } catch (error: any) {
+      next(new AppError(error.message || 'Failed to get profile', 500));
     }
   }
 }
 
 export default new AuthController();`;
     const authMiddlewareContent = `import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../types/api';
 import { AppError } from '../utils/AppError';
+import { verifyAccessToken } from '../utils/tokenUtils';
 
-export const auth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const auth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
-      return next(new AppError('Access denied. No token provided.', 401));
+    const authHeader = req.header('Authorization');
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return next(new AppError('Unauthorized: No token provided', 401));
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      return next(new AppError('JWT secret not configured', 500));
+    const token = authHeader.split(' ')[1];
+    const decoded = await verifyAccessToken(token);
+    
+    if (!decoded) {
+      return next(new AppError('Unauthorized: Invalid token', 401));
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as any;
     req.user = decoded;
     next();
-  } catch (error) {
-    next(new AppError('Invalid token', 401));
+  } catch (error: any) {
+    next(new AppError('Unauthorized: Invalid token', 401));
   }
 };
 
@@ -1436,16 +1652,39 @@ export const errorHandler = (
   const response: ErrorResponse = {
     success: false,
     message,
-    error: error.name,
-    statusCode
+    error: error.name || 'UnknownError',
+    statusCode,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
   };
 
-  // Log error in development
+  // Log error details in development
   if (process.env.NODE_ENV === 'development') {
-    console.error('Error:', error);
+    console.error('🚨 Error Details:', {
+      message: error.message,
+      stack: error.stack,
+      url: req.url,
+      method: req.method,
+      body: req.body,
+      params: req.params,
+      query: req.query
+    });
+  } else {
+    // Log only essential info in production
+    console.error('Error:', error.message);
   }
 
   res.status(statusCode).json(response);
+};
+
+export const notFound = (req: Request, res: Response): void => {
+  const response: ErrorResponse = {
+    success: false,
+    message: \`Not Found - [\${req.method}] \${req.url}\`,
+    error: 'NotFound',
+    statusCode: 404
+  };
+
+  res.status(404).json(response);
 };
 
 export default errorHandler;`;
@@ -1458,7 +1697,9 @@ MONGODB_URI=mongodb://localhost:27017/${projectName}
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=your-super-secret-jwt-refresh-key-change-this-in-production
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:5000
@@ -1469,13 +1710,173 @@ API_URL=http://localhost:8000
 # Pagination Configuration
 DEFAULT_PAGE_LIMIT=10
 MAX_PAGE_LIMIT=100`;
+    // Generate auth service layer
+    const authServiceContent = `import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { Types } from 'mongoose';
+import User from '../models/User';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/tokenUtils';
+import { AppError } from '../utils/AppError';
+
+export interface IUser {
+  _id?: string;
+  username: string;
+  email: string;
+  password?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export const login = async (email: string, password: string) => {
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new AppError('Invalid email or password', 401);
+  }
+
+  const passwordMatches = await bcrypt.compare(password, user.password);
+  if (!passwordMatches) {
+    throw new AppError('Invalid email or password', 401);
+  }
+
+  const userId = (user._id as Types.ObjectId).toString();
+
+  const accessToken = await generateAccessToken({ userId });
+  const refreshToken = await generateRefreshToken({ userId });
+
+  // TODO: Store refresh token in database
+  // await new RefreshToken({ userId, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }).save();
+
+  const { password: _, ...userWithoutPassword } = user;
+  return { accessToken, refreshToken, user: userWithoutPassword };
+};
+
+export const signup = async (userData: IUser & { password: string }) => {
+  try {
+    const existingUser = await User.findOne({ email: userData.email }).lean();
+    if (existingUser) {
+      return { message: 'User already exists with this email' };
+    }
+
+    const hashedPassword = await bcrypt.hash(userData.password, 12);
+    const newUser = new User({ ...userData, password: hashedPassword });
+
+    await newUser.save();
+    const { password: _, ...userWithoutPassword } = newUser.toObject();
+    return { user: userWithoutPassword };
+  } catch (error: any) {
+    throw new AppError('Signup failed: ' + error.message, 400);
+  }
+};
+
+export const forgotPassword = async (email: string): Promise<string> => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError('No user found with that email address', 404);
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+  // TODO: Store reset token in database with expiration
+  // await new PasswordReset({ userId: user._id, token: hashedToken, expiresAt: Date.now() + 10 * 60 * 1000 }).save();
+
+  return resetToken;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  // Validate password strength
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$/.test(newPassword)) {
+    throw new AppError('Password must be at least 8 characters long and contain lowercase, uppercase, number, and special character', 400);
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  // TODO: Find and validate reset token
+  // const resetRecord = await PasswordReset.findOne({ token: hashedToken, expiresAt: { $gt: Date.now() } });
+  // if (!resetRecord) throw new AppError('Invalid or expired reset token', 400);
+
+  // TODO: Update user password
+  // const user = await User.findById(resetRecord.userId);
+  // if (!user) throw new AppError('User not found', 404);
+  // user.password = await bcrypt.hash(newPassword, 12);
+  // await user.save();
+  // await PasswordReset.deleteOne({ _id: resetRecord._id });
+
+  return 'Password has been reset successfully';
+};
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  try {
+    const decoded = await verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      throw new AppError('Invalid refresh token', 401);
+    }
+
+    // TODO: Validate stored refresh token
+    // const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    // if (!storedToken) throw new AppError('Invalid refresh token', 401);
+
+    return await generateAccessToken({ userId: decoded.userId });
+  } catch (error) {
+    throw new AppError('Invalid or expired refresh token', 401);
+  }
+};
+
+export const logout = async (refreshToken: string) => {
+  // TODO: Remove refresh token from database
+  // await RefreshToken.deleteOne({ token: refreshToken });
+  return true;
+};`;
+    // Generate token utilities
+    const tokenUtilsContent = `import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET!;
+
+export interface TokenPayload {
+  userId: string;
+  exp?: number;
+}
+
+export const generateAccessToken = async (payload: TokenPayload): Promise<string> => {
+  const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '15m';
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: accessTokenExpiry });
+};
+
+export const generateRefreshToken = async (payload: TokenPayload): Promise<string> => {
+  const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: refreshTokenExpiry });
+};
+
+export const verifyAccessToken = async (token: string): Promise<TokenPayload | null> => {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+};
+
+export const verifyRefreshToken = async (token: string): Promise<TokenPayload | null> => {
+  try {
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as TokenPayload;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+};`;
     await fs.writeFile(path.join(srcPath, 'controllers', 'authController.ts'), authControllerContent);
     await fs.writeFile(path.join(srcPath, 'middleware', 'auth.ts'), authMiddlewareContent);
     await fs.writeFile(path.join(srcPath, 'middleware', 'errorHandler.ts'), errorHandlerContent);
+    await fs.writeFile(path.join(srcPath, 'services', 'authService.ts'), authServiceContent);
+    await fs.writeFile(path.join(srcPath, 'utils', 'tokenUtils.ts'), tokenUtilsContent);
     await fs.writeFile(path.join(projectPath, '.env'), envContent);
     console.log(colors.green('✅ Created file: src/controllers/authController.ts'));
     console.log(colors.green('✅ Created file: src/middleware/auth.ts'));
     console.log(colors.green('✅ Created file: src/middleware/errorHandler.ts'));
+    console.log(colors.green('✅ Created file: src/services/authService.ts'));
+    console.log(colors.green('✅ Created file: src/utils/tokenUtils.ts'));
     console.log(colors.green('✅ Created file: .env'));
 };
 // Generate TypeScript server template

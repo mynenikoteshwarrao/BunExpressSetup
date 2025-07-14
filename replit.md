@@ -4,7 +4,7 @@
 
 This repository contains a fully functional TypeScript CLI tool that generates Bun-based API project templates. The CLI creates complete TypeScript project structures with Express.js and MongoDB integration, including authentication, security middleware, and proper project organization. The generated projects are designed to run on Bun runtime for improved performance while maintaining full TypeScript support and Node.js ecosystem compatibility.
 
-**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.3 - Development Release)
+**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.4 - Development Release)
 
 ## User Preferences
 
@@ -21,7 +21,35 @@ CLI Command Format:
 
 ## Recent Changes
 
-**July 14, 2025**: Version 1.0.3 - Complete TypeScript Conversion + Enhanced CRUD Generation
+**July 14, 2025**: Version 1.0.5 - Comprehensive File Upload System + User Document Management
+- **Complete Google OAuth Integration**: Optional Google authentication with Passport.js strategy
+- **Email Service System**: Comprehensive nodemailer integration with welcome, reset, and verification templates
+- **TinyURL Implementation**: Complete URL shortening service with crypto-secure IDs and TTL
+- **Enhanced Authentication**: Email verification, password reset, refresh token management
+- **Production Dependencies**: Added passport, nodemailer, express-session, and OAuth packages
+- **Configurable Features**: Google OAuth and email services configurable via environment variables
+- **Advanced Security**: Token-based email verification and password reset workflows
+- **Service Layer Enhancement**: Improved authentication service with Google account linking
+- **Enhanced Swagger Documentation**: Comprehensive API documentation available under `/docs/api`
+- **CRUD Documentation**: Complete OpenAPI 3.0 specs auto-generated for all CRUD operations
+- **Interactive Documentation**: Swagger UI with authentication testing and API exploration
+- **Multiple Documentation Endpoints**: Primary `/docs/api` with legacy `/api-docs` compatibility
+- **Comprehensive File Upload System**: Dual storage support (local uploads + optional S3)
+- **User Document Management**: Complete CRUD operations for user-specific documents
+- **Profile Image Upload**: Dedicated profile image management with automatic user updates
+- **S3 Integration**: Configurable AWS S3 support with automatic fallback to local storage
+- **Advanced File Management**: Upload, download, view, delete, and metadata management
+- **Security Features**: User-specific document isolation and authentication requirements
+- **File Type Validation**: Image validation for profile uploads, general file support for documents
+- **Comprehensive Audit System**: Complete audit logging for all CRUD operations with user tracking
+- **Change Tracking**: Detailed field-level change tracking with before/after values
+- **Soft Delete System**: No hard deletes - all records use soft delete with audit trail
+- **Audit Queries**: Rich audit API with entity history, user actions, and statistics
+- **Automatic Logging**: All CRUD operations automatically log changes with user and metadata
+- **Restore Functionality**: Ability to restore soft-deleted records with audit trail
+- **Security Audit**: IP address, user agent, and session tracking for all changes
+
+**July 14, 2025**: Version 1.0.3 - Enhanced Authentication System + Improved Code Quality
 - **Full TypeScript Conversion**: Converted entire CLI project from JavaScript to TypeScript
 - **TypeScript CLI Implementation**: Created new src/cli.ts with full type safety and modern TypeScript features
 - **Enhanced TypeScript Templates**: Added comprehensive TypeScript template files for generated projects
@@ -42,6 +70,22 @@ CLI Command Format:
 - **Search & Filtering**: Automatic search functionality across String fields with sorting options
 - **Swagger Documentation**: Complete OpenAPI documentation for generated CRUD endpoints
 - **User Choice**: Optional CRUD generation - user can choose to generate only model or full CRUD system
+- **Enhanced Authentication System**: Complete authentication with service layer separation
+- **Advanced Token Management**: Access/refresh token system with proper JWT utilities
+- **Comprehensive Auth Endpoints**: Login, register, forgot password, reset password, refresh token, logout
+- **Improved Error Handling**: Enhanced error handling with development/production logging
+- **Password Security**: Strong password validation and bcrypt hashing with salt rounds
+- **Service Layer Architecture**: Proper separation of concerns with dedicated auth service
+- **Token Utilities**: Dedicated JWT token generation and verification utilities
+- **Better Middleware**: Async auth middleware with proper Bearer token handling
+- **Google OAuth Integration**: Optional Google authentication with .env configuration (ENABLE_GOOGLE_AUTH)
+- **Email Service Support**: Comprehensive email configuration with nodemailer integration
+- **Email Templates**: Welcome, password reset, and verification email templates
+- **TinyURL Functionality**: Complete URL shortening service with model, controller, and routes
+- **Enhanced User Model**: Google OAuth fields, email verification, password reset tokens
+- **Advanced Authentication**: Email verification, password reset, refresh token management
+- **OAuth Passport Integration**: Google OAuth 2.0 strategy with user linking
+- **Production Dependencies**: Added passport, nodemailer, express-session packages
 
 **July 13, 2025**: Version 1.0.3 - Development Release with Disclaimers & Enhanced Features
 - Added comprehensive TypeScript code generation system

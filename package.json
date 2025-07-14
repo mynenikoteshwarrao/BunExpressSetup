@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@types/fs-extra": "^11.0.4",
+    "@types/memoizee": "^0.4.12",
     "@types/node": "^24.0.13",
     "chalk": "^5.4.1",
     "commander": "^11.1.0",
     "fs-extra": "^11.3.0",
+    "memoizee": "^0.4.17",
+    "openid-client": "^6.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
