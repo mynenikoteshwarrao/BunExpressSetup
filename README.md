@@ -34,7 +34,7 @@ This software is provided "as-is" without warranty of any kind. Always review an
 Install globally via npm:
 
 ```bash
-npm install -g koti
+npm install -g koti@1.0.4
 ```
 
 ### Development Setup

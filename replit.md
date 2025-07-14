@@ -21,7 +21,7 @@ CLI Command Format:
 
 ## Recent Changes
 
-**July 14, 2025**: Version 1.0.5 - Comprehensive File Upload System + User Document Management
+**July 14, 2025**: Version 1.0.4 - Comprehensive Audit System + Soft Delete Functionality
 - **Complete Google OAuth Integration**: Optional Google authentication with Passport.js strategy
 - **Email Service System**: Comprehensive nodemailer integration with welcome, reset, and verification templates
 - **TinyURL Implementation**: Complete URL shortening service with crypto-secure IDs and TTL
@@ -49,7 +49,28 @@ CLI Command Format:
 - **Restore Functionality**: Ability to restore soft-deleted records with audit trail
 - **Security Audit**: IP address, user agent, and session tracking for all changes
 
-**July 14, 2025**: Version 1.0.3 - Enhanced Authentication System + Improved Code Quality
+**July 14, 2025**: Version 1.0.3 - Comprehensive File Upload System + User Document Management
+- **Complete Google OAuth Integration**: Optional Google authentication with Passport.js strategy
+- **Email Service System**: Comprehensive nodemailer integration with welcome, reset, and verification templates
+- **TinyURL Implementation**: Complete URL shortening service with crypto-secure IDs and TTL
+- **Enhanced Authentication**: Email verification, password reset, refresh token management
+- **Production Dependencies**: Added passport, nodemailer, express-session, and OAuth packages
+- **Configurable Features**: Google OAuth and email services configurable via environment variables
+- **Advanced Security**: Token-based email verification and password reset workflows
+- **Service Layer Enhancement**: Improved authentication service with Google account linking
+- **Enhanced Swagger Documentation**: Comprehensive API documentation available under `/docs/api`
+- **CRUD Documentation**: Complete OpenAPI 3.0 specs auto-generated for all CRUD operations
+- **Interactive Documentation**: Swagger UI with authentication testing and API exploration
+- **Multiple Documentation Endpoints**: Primary `/docs/api` with legacy `/api-docs` compatibility
+- **Comprehensive File Upload System**: Dual storage support (local uploads + optional S3)
+- **User Document Management**: Complete CRUD operations for user-specific documents
+- **Profile Image Upload**: Dedicated profile image management with automatic user updates
+- **S3 Integration**: Configurable AWS S3 support with automatic fallback to local storage
+- **Advanced File Management**: Upload, download, view, delete, and metadata management
+- **Security Features**: User-specific document isolation and authentication requirements
+- **File Type Validation**: Image validation for profile uploads, general file support for documents
+
+**July 14, 2025**: Version 1.0.2 - Enhanced Authentication System + Improved Code Quality
 - **Full TypeScript Conversion**: Converted entire CLI project from JavaScript to TypeScript
 - **TypeScript CLI Implementation**: Created new src/cli.ts with full type safety and modern TypeScript features
 - **Enhanced TypeScript Templates**: Added comprehensive TypeScript template files for generated projects
@@ -87,7 +108,7 @@ CLI Command Format:
 - **OAuth Passport Integration**: Google OAuth 2.0 strategy with user linking
 - **Production Dependencies**: Added passport, nodemailer, express-session packages
 
-**July 13, 2025**: Version 1.0.3 - Development Release with Disclaimers & Enhanced Features
+**July 13, 2025**: Version 1.0.1 - Development Release with Disclaimers & Enhanced Features
 - Added comprehensive TypeScript code generation system
 - Implemented centralized schema registry with automatic updates
 - Created new commands: create:model, create:enum, create:controller, create:service, create:middleware
@@ -102,7 +123,7 @@ CLI Command Format:
 - **Enhanced Dependencies**: Added joi, swagger-jsdoc, swagger-ui-express, TypeScript types
 - **Development Disclaimers**: Added comprehensive disclaimers and warnings throughout CLI and generated projects
 - **Updated Licensing**: Enhanced MIT license with development version warnings
-- **Version 1.0.3**: Updated to reflect development status with proper user warnings
+- **Version 1.0.1**: Updated to reflect development status with proper user warnings
 - Maintained backward compatibility with legacy JavaScript model command
 - Published to npm with enhanced TypeScript features and development disclaimers
 
