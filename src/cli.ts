@@ -2340,10 +2340,6 @@ program
         console.log(colors.green('✅ Created file: README.md'));
       }
 
-      // Generate TypeScript server file
-      const serverContent = generateServerTemplate(projectName);
-      await fs.writeFile(path.join(srcPath, 'server.ts'), serverContent);
-      console.log(colors.green('✅ Created file: src/server.ts'));
 
       // Copy all TypeScript template files
       const templatePath = path.join(__dirname, '..', 'templates');
