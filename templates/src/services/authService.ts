@@ -50,7 +50,7 @@ export const signup = async (userData: IUser & { password: string }) => {
     const newUser = new User({ ...userData, password: hashedPassword });
 
     await newUser.save();
-    const userWithoutPassword = newUser.toPublicJSON();
+    const { password: _, ...userWithoutPassword } = newUser.toObject();
     return { user: userWithoutPassword };
   } catch (error: any) {
     throw new AppError('Signup failed: ' + error.message, 400);
