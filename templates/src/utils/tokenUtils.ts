@@ -18,7 +18,7 @@ export const generateRefreshToken = (payload: TokenPayload): string => {
   return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: refreshTokenExpiry });
 };
 
-export const verifyAccessToken = async (token: string): Promise<TokenPayload | null> => {
+export const verifyAccessToken = (token: string): TokenPayload | null => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     return decoded;
@@ -27,7 +27,7 @@ export const verifyAccessToken = async (token: string): Promise<TokenPayload | n
   }
 };
 
-export const verifyRefreshToken = async (token: string): Promise<TokenPayload | null> => {
+export const verifyRefreshToken = (token: string): TokenPayload | null => {
   try {
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as TokenPayload;
     return decoded;
