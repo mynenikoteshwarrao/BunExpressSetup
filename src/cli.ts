@@ -2322,12 +2322,22 @@ program
         console.log(colors.green(`✅ Created directory: src/${dir}/`));
       }
 
-      // Generate files from templates
-      for (const [fileName, content] of Object.entries(projectTemplates)) {
-        const filePath = path.join(projectPath, fileName);
-        const processedContent = content.replace(/{{PROJECT_NAME}}/g, projectName);
-        await fs.writeFile(filePath, processedContent);
-        console.log(colors.green(`✅ Created file: ${fileName}`));
+      // Copy package.json and README from templates
+      const packageJsonPath = path.join(templatePath, 'package.json');
+      const readmePath = path.join(templatePath, 'README.md');
+      
+      if (await fs.pathExists(packageJsonPath)) {
+        let content = await fs.readFile(packageJsonPath, 'utf-8');
+        content = content.replace(/{{PROJECT_NAME}}/g, projectName);
+        await fs.writeFile(path.join(projectPath, 'package.json'), content);
+        console.log(colors.green('✅ Created file: package.json'));
+      }
+      
+      if (await fs.pathExists(readmePath)) {
+        let content = await fs.readFile(readmePath, 'utf-8');
+        content = content.replace(/{{PROJECT_NAME}}/g, projectName);
+        await fs.writeFile(path.join(projectPath, 'README.md'), content);
+        console.log(colors.green('✅ Created file: README.md'));
       }
 
       // Generate TypeScript server file
