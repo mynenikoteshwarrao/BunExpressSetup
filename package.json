@@ -1,6 +1,6 @@
 {
   "name": "koti",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "⚠️ DEVELOPMENT VERSION: CLI tool to generate Bun API projects with Express and MongoDB. This is an initial development release and may contain errors or bugs. Use at your own discretion.",
   "main": "dist/cli.js",
   "bin": {
@@ -35,7 +35,8 @@
     "scaffold",
     "boilerplate",
     "javascript",
-    "nodejs"
+    "nodejs",
+    "typescript"
   ],
   "author": {
     "name": "mynenikoteshwarrao",
@@ -54,9 +55,10 @@
     "node": ">=16.0.0"
   },
   "files": [
-    "koti",
+    "dist/",
     "templates/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "version.json"
   ]
 }
