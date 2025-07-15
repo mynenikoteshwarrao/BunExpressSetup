@@ -95,9 +95,9 @@ export const resetPassword = async (token: string, newPassword: string) => {
   return 'Password has been reset successfully';
 };
 
-export const refreshAccessToken = async (refreshToken: string) => {
+export const refreshAccessToken = (refreshToken: string) => {
   try {
-    const decoded = await verifyRefreshToken(refreshToken);
+    const decoded = verifyRefreshToken(refreshToken);
     if (!decoded) {
       throw new AppError('Invalid refresh token', 401);
     }
@@ -106,7 +106,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
     // const storedToken = await RefreshToken.findOne({ token: refreshToken });
     // if (!storedToken) throw new AppError('Invalid refresh token', 401);
 
-    return await generateAccessToken({ userId: decoded.userId });
+    return generateAccessToken({ userId: decoded.userId });
   } catch (error) {
     throw new AppError('Invalid or expired refresh token', 401);
   }
