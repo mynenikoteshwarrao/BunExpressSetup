@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from '../types/api';
 import { AppError } from '../utils/AppError';
 import { verifyAccessToken } from '../utils/tokenUtils';
 
-export const auth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const auth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.header('Authorization');
     
@@ -12,7 +12,7 @@ export const auth = async (req: AuthenticatedRequest, res: Response, next: NextF
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = await verifyAccessToken(token);
+    const decoded = verifyAccessToken(token);
     
     if (!decoded) {
       return next(new AppError('Unauthorized: Invalid token', 401));
