@@ -2310,6 +2310,9 @@ program
       // Create project directory
       await fs.ensureDir(projectPath);
       
+      // Get template path
+      const templatePath = path.join(__dirname, '..', 'templates');
+      
       // Create src directory structure
       const srcPath = path.join(projectPath, 'src');
       const directories = [
