@@ -1,100 +1,59 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { Schema, model, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface IUser extends Document {
-  _id: Types.ObjectId;
+  userId: string;
   username: string;
   email: string;
-  password?: string;
-  firstName?: string;
-  lastName?: string;
-  profilePicture?: string;
-  profileImageUrl?: string;
-  googleId?: string;
-  authProvider: 'local' | 'google';
-  isEmailVerified: boolean;
-  emailVerificationToken?: string;
-  passwordResetToken?: string;
-  passwordResetExpires?: Date;
-  refreshTokens: string[];
+  password: string;
+  role: 'user' | 'admin';
   isActive: boolean;
   lastLogin?: Date;
-  isDeleted: boolean;
-  deletedAt?: Date;
-  deletedBy?: Types.ObjectId;
+  lastLogout?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
+  emailVerified: boolean;
+  emailVerificationToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const UserSchema = new Schema<IUser>({
+  userId: {
+    type: String,
+    default: uuidv4,
+    unique: true,
+    required: true
+  },
   username: {
     type: String,
-    required: true,
-    unique: true,
+    required: [true, 'Please provide a username'],
     trim: true,
-    minlength: 3,
-    maxlength: 30
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [30, 'Username cannot be more than 30 characters'],
+    unique: true
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Please provide an email'],
     unique: true,
     lowercase: true,
-    trim: true
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please provide a valid email'
+    ]
   },
   password: {
     type: String,
-    minlength: 6,
-    select: false // Don't include password in queries by default
-  },
-  firstName: {
-    type: String,
-    trim: true,
-    maxlength: 50
-  },
-  lastName: {
-    type: String,
-    trim: true,
-    maxlength: 50
-  },
-  profilePicture: {
-    type: String,
-    trim: true
-  },
-  profileImageUrl: {
-    type: String,
-    trim: true
-  },
-  googleId: {
-    type: String,
-    unique: true,
-    sparse: true // Allow null values
-  },
-  authProvider: {
-    type: String,
-    enum: ['local', 'google'],
-    default: 'local'
-  },
-  isEmailVerified: {
-    type: Boolean,
-    default: false
-  },
-  emailVerificationToken: {
-    type: String,
+    required: [true, 'Please provide a password'],
+    minlength: [8, 'Password must be at least 8 characters'],
     select: false
   },
-  passwordResetToken: {
+  role: {
     type: String,
-    select: false
+    enum: ['user', 'admin'],
+    default: 'user'
   },
-  passwordResetExpires: {
-    type: Date,
-    select: false
-  },
-  refreshTokens: [{
-    type: String,
-    select: false
-  }],
   isActive: {
     type: Boolean,
     default: true
@@ -102,107 +61,82 @@ const UserSchema = new Schema<IUser>({
   lastLogin: {
     type: Date
   },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  deletedAt: {
+  lastLogout: {
     type: Date
   },
-  deletedBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: String
 }, {
   timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      delete ret.password;
-      delete ret.passwordResetToken;
-      delete ret.passwordResetExpires;
-      delete ret.emailVerificationToken;
-      delete ret.refreshTokens;
-      return ret;
-    }
-  },
+  toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
 // Indexes for better performance
 UserSchema.index({ email: 1 });
+UserSchema.index({ userId: 1 });
 UserSchema.index({ username: 1 });
-UserSchema.index({ googleId: 1 });
-UserSchema.index({ passwordResetToken: 1 });
-UserSchema.index({ emailVerificationToken: 1 });
+UserSchema.index({ createdAt: -1 });
 
-// Virtual for full name
-UserSchema.virtual('fullName').get(function() {
-  if (this.firstName && this.lastName) {
-    return `${this.firstName} ${this.lastName}`;
-  }
-  return this.firstName || this.lastName || this.username;
+// Virtual for user's public profile
+UserSchema.virtual('profile').get(function(this: IUser) {
+  return {
+    userId: this.userId,
+    username: this.username,
+    email: this.email,
+    role: this.role,
+    isActive: this.isActive,
+    lastLogin: this.lastLogin,
+    emailVerified: this.emailVerified,
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt
+  };
 });
 
-// Pre-save middleware to hash password
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password') || !this.password) {
-    return next();
+// Pre-save middleware
+UserSchema.pre('save', function(this: IUser, next) {
+  if (this.isModified('email')) {
+    this.email = this.email.toLowerCase();
   }
-
-  try {
-    const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_ROUNDS || '12'));
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
+  
+  if (this.isNew && !this.userId) {
+    this.userId = uuidv4();
   }
+  
+  next();
 });
 
-// Instance method to compare password
-UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
+// Instance methods
+UserSchema.methods.isAdmin = function(this: IUser): boolean {
+  return this.role === 'admin';
 };
 
-// Instance method to generate password reset token
-UserSchema.methods.createPasswordResetToken = function(): string {
-  const resetToken = require('crypto').randomBytes(32).toString('hex');
-  
-  this.passwordResetToken = require('crypto')
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-  
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-  
-  return resetToken;
+UserSchema.methods.toPublicJSON = function(this: IUser) {
+  return {
+    userId: this.userId,
+    username: this.username,
+    email: this.email,
+    role: this.role,
+    isActive: this.isActive,
+    emailVerified: this.emailVerified,
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt
+  };
 };
 
-// Instance method to generate email verification token
-UserSchema.methods.createEmailVerificationToken = function(): string {
-  const verificationToken = require('crypto').randomBytes(32).toString('hex');
-  
-  this.emailVerificationToken = require('crypto')
-    .createHash('sha256')
-    .update(verificationToken)
-    .digest('hex');
-  
-  return verificationToken;
-};
-
-// Static method to find by email with password
-UserSchema.statics.findByEmailWithPassword = function(email: string) {
-  return this.findOne({ email }).select('+password +refreshTokens');
-};
-
-// Static method to find active users
+// Static methods
 UserSchema.statics.findActive = function() {
   return this.find({ isActive: true });
 };
 
-export default mongoose.model<IUser>('User', UserSchema);
+UserSchema.statics.findByUserId = function(userId: string) {
+  return this.findOne({ userId });
+};
+
+export const User = model<IUser>('User', UserSchema);
+export default User;
