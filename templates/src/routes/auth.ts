@@ -1,27 +1,52 @@
 import { Router } from 'express';
-import multer from 'multer';
 import authController from '../controllers/authController';
 import { auth } from '../middleware/auth';
-import passport from '../config/passport';
+import { validate, registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../middleware/validation';
 
 const router = Router();
 
-// Configure multer for profile image uploads
-const storage = multer.memoryStorage();
-const profileUpload = multer({
-  storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for profile images
-    files: 1
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed for profile pictures'), false);
-    }
-  }
-});
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - username
+ *         - email
+ *         - password
+ *       properties:
+ *         userId:
+ *           type: string
+ *           description: The auto-generated user ID
+ *         username:
+ *           type: string
+ *           description: User's username
+ *         email:
+ *           type: string
+ *           description: User's email address
+ *         password:
+ *           type: string
+ *           description: User's password (min 8 chars, must contain uppercase, lowercase, number, special char)
+ *         role:
+ *           type: string
+ *           enum: [user, admin]
+ *           description: User's role
+ *         isActive:
+ *           type: boolean
+ *           description: Whether user is active
+ *         emailVerified:
+ *           type: boolean
+ *           description: Whether email is verified
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Account creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ */
 
 /**
  * @swagger
@@ -42,21 +67,27 @@ const profileUpload = multer({
  *             properties:
  *               username:
  *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
  *               email:
  *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
- *               firstName:
- *                 type: string
- *               lastName:
- *                 type: string
+ *                 minLength: 8
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
  *       400:
  *         description: Validation error
+ *       409:
+ *         description: User already exists
  */
-router.post('/register', authController.register);
+router.post('/register', validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -76,15 +107,40 @@ router.post('/register', authController.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', authController.login);
+router.post('/login', validate(loginSchema), authController.login);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/profile', auth, authController.getProfile);
 
 /**
  * @swagger
@@ -103,17 +159,24 @@ router.post('/login', authController.login);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *     responses:
  *       200:
- *         description: Reset email sent
+ *         description: Password reset instructions sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       404:
+ *         description: User not found
  */
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
  * /api/auth/reset-password:
  *   post:
- *     summary: Reset password using token
+ *     summary: Reset password with token
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -129,15 +192,22 @@ router.post('/forgot-password', authController.forgotPassword);
  *                 type: string
  *               newPassword:
  *                 type: string
+ *                 minLength: 8
  *     responses:
  *       200:
  *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       400:
+ *         description: Invalid token or password
  */
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger
- * /api/auth/refresh:
+ * /api/auth/refresh-token:
  *   post:
  *     summary: Refresh access token
  *     tags: [Authentication]
@@ -154,11 +224,15 @@ router.post('/reset-password', authController.resetPassword);
  *                 type: string
  *     responses:
  *       200:
- *         description: Token refreshed
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
  *       401:
  *         description: Invalid refresh token
  */
-router.post('/refresh', authController.refreshToken);
+router.post('/refresh-token', authController.refreshToken);
 
 /**
  * @swagger
@@ -166,141 +240,29 @@ router.post('/refresh', authController.refreshToken);
  *   post:
  *     summary: Logout user
  *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - refreshToken
  *             properties:
  *               refreshToken:
  *                 type: string
  *     responses:
  *       200:
- *         description: Logged out successfully
- */
-router.post('/logout', authController.logout);
-
-/**
- * @swagger
- * /api/auth/profile:
- *   get:
- *     summary: Get current user profile
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
  *       401:
  *         description: Unauthorized
  */
-router.get('/profile', auth, authController.getProfile);
-
-// Google OAuth routes (only enabled if ENABLE_GOOGLE_AUTH=true)
-if (process.env.ENABLE_GOOGLE_AUTH === 'true') {
-  /**
-   * @swagger
-   * /api/auth/google:
-   *   get:
-   *     summary: Google OAuth login
-   *     tags: [Authentication]
-   *     responses:
-   *       302:
-   *         description: Redirect to Google OAuth
-   */
-  router.get('/google', authController.googleAuth);
-
-  /**
-   * @swagger
-   * /api/auth/google/callback:
-   *   get:
-   *     summary: Google OAuth callback
-   *     tags: [Authentication]
-   *     responses:
-   *       302:
-   *         description: Redirect to frontend with tokens
-   */
-  router.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login' }),
-    authController.googleCallback
-  );
-}
-
-/**
- * @swagger
- * /api/auth/verify-email:
- *   post:
- *     summary: Verify email address
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *             properties:
- *               token:
- *                 type: string
- *     responses:
- *       200:
- *         description: Email verified successfully
- */
-router.post('/verify-email', authController.verifyEmail);
-
-/**
- * @swagger
- * /api/auth/resend-verification:
- *   post:
- *     summary: Resend email verification
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: Verification email sent
- */
-router.post('/resend-verification', authController.resendVerification);
-
-/**
- * @swagger
- * /api/auth/profile-image:
- *   post:
- *     summary: Upload profile image
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               profileImage:
- *                 type: string
- *                 format: binary
- *                 description: Profile image file
- *             required:
- *               - profileImage
- *     responses:
- *       200:
- *         description: Profile image uploaded successfully
- *       400:
- *         description: No file provided or invalid file type
- *       401:
- *         description: Unauthorized
- */
-router.post('/profile-image', auth, profileUpload.single('profileImage'), authController.uploadProfileImage);
+router.post('/logout', auth, authController.logout);
 
 export default router;

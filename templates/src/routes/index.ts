@@ -1,86 +1,60 @@
 import { Router } from 'express';
-import authRoutes from './auth';
-import tinyUrlRoutes from './tinyUrl';
-import documentRoutes from './document';
-import auditRoutes from './audit';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/health:
+ * /:
  *   get:
- *     summary: Health check endpoint
- *     tags: [System]
+ *     summary: Welcome message
+ *     tags: [General]
  *     responses:
  *       200:
- *         description: API is healthy
+ *         description: Welcome message
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     status:
- *                       type: string
- *                     timestamp:
- *                       type: string
- *                     uptime:
- *                       type: number
- */
-router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: '{{PROJECT_NAME}} API is running',
-    data: {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0'
-    }
-  });
-});
-
-/**
- * @swagger
- * /api:
- *   get:
- *     summary: API information
- *     tags: [System]
- *     responses:
- *       200:
- *         description: API information
+ *               $ref: '#/components/schemas/ApiResponse'
  */
 router.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'Welcome to {{PROJECT_NAME}} API',
     data: {
-      name: '{{PROJECT_NAME}}',
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      documentation: '/docs/api',
-      endpoints: {
-        auth: '/api/auth',
-        tinyUrl: '/api/tiny',
-        documents: '/api/documents',
-        health: '/api/health'
-      }
+      version: '1.0.6',
+      timestamp: new Date().toISOString(),
+      documentation: '/api-docs'
     }
   });
 });
 
-// Mount route modules
-router.use('/auth', authRoutes);
-router.use('/tiny', tinyUrlRoutes);
-router.use('/documents', documentRoutes);
-router.use('/audit', auditRoutes);
+/**
+ * @swagger
+ * /status:
+ *   get:
+ *     summary: API status information
+ *     tags: [General]
+ *     responses:
+ *       200:
+ *         description: API status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ */
+router.get('/status', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is operational',
+    data: {
+      status: 'operational',
+      database: 'connected',
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      nodeVersion: process.version,
+      environment: process.env.NODE_ENV || 'development'
+    }
+  });
+});
 
 export default router;
