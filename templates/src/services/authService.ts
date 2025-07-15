@@ -24,8 +24,8 @@ export const login = async (email: string, password: string) => {
     throw new AppError('Invalid email or password', 401);
   }
 
-  const accessToken = await generateAccessToken({ userId: user.userId });
-  const refreshToken = await generateRefreshToken({ userId: user.userId });
+  const accessToken = generateAccessToken({ userId: user.userId });
+  const refreshToken = generateRefreshToken({ userId: user.userId });
 
   // TODO: Store refresh token in database
   // await new RefreshToken({ userId: user.userId, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }).save();
