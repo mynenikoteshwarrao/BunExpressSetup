@@ -2345,7 +2345,6 @@ program
 
 
       // Copy all TypeScript template files
-      const templatePath = path.join(__dirname, '..', 'templates');
       const templateSrcPath = path.join(templatePath, 'src');
       const projectSrcPath = path.join(projectPath, 'src');
       
