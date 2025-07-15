@@ -32,7 +32,8 @@ class AuthController {
           message: result.message,
           data: null
         };
-        return res.status(200).json(response);
+        res.status(200).json(response);
+        return;
       }
 
       const response: ApiResponse = {
