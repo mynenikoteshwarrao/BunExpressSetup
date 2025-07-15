@@ -2335,23 +2335,33 @@ program
       await fs.writeFile(path.join(srcPath, 'server.ts'), serverContent);
       console.log(colors.green('✅ Created file: src/server.ts'));
 
-      // Copy TypeScript template files
+      // Copy all TypeScript template files
       const templatePath = path.join(__dirname, '..', 'templates');
-      const tsTemplateFiles = [
-        { from: 'src/config/database.ts', to: 'src/config/database.ts' },
-        { from: 'src/config/swagger.ts', to: 'src/config/swagger.ts' },
-        { from: 'src/types/api.ts', to: 'src/types/api.ts' },
-        { from: 'src/utils/AppError.ts', to: 'src/utils/AppError.ts' }
+      const templateSrcPath = path.join(templatePath, 'src');
+      const projectSrcPath = path.join(projectPath, 'src');
+      
+      // Copy the entire src directory structure
+      if (await fs.pathExists(templateSrcPath)) {
+        await fs.copy(templateSrcPath, projectSrcPath);
+        console.log(colors.green('✅ Copied TypeScript source files'));
+      }
+      
+      // Copy additional template files
+      const additionalFiles = [
+        'tsconfig.json',
+        '.env',
+        '.gitignore'
       ];
-
-      for (const file of tsTemplateFiles) {
-        const templateFilePath = path.join(templatePath, file.from);
-        const projectFilePath = path.join(projectPath, file.to);
+      
+      for (const fileName of additionalFiles) {
+        const templateFilePath = path.join(templatePath, fileName);
+        const projectFilePath = path.join(projectPath, fileName);
         
         if (await fs.pathExists(templateFilePath)) {
-          await fs.ensureDir(path.dirname(projectFilePath));
-          await fs.copy(templateFilePath, projectFilePath);
-          console.log(colors.green(`✅ Created file: ${file.to}`));
+          let content = await fs.readFile(templateFilePath, 'utf-8');
+          content = content.replace(/{{PROJECT_NAME}}/g, projectName);
+          await fs.writeFile(projectFilePath, content);
+          console.log(colors.green(`✅ Created file: ${fileName}`));
         }
       }
 
