@@ -8,12 +8,12 @@ export interface TokenPayload {
   exp?: number;
 }
 
-export const generateAccessToken = async (payload: TokenPayload): Promise<string> => {
+export const generateAccessToken = (payload: TokenPayload): string => {
   const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '15m';
   return jwt.sign(payload, JWT_SECRET, { expiresIn: accessTokenExpiry });
 };
 
-export const generateRefreshToken = async (payload: TokenPayload): Promise<string> => {
+export const generateRefreshToken = (payload: TokenPayload): string => {
   const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
   return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: refreshTokenExpiry });
 };
