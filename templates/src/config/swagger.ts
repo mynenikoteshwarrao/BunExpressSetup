@@ -1,17 +1,17 @@
-import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { Application } from 'express';
+import { Express } from 'express';
 
-const options = {
+const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: '{{PROJECT_NAME}} API',
-      version: '1.0.6',
-      description: 'A modern TypeScript API built with Bun, Express.js, and MongoDB',
+      title: 'API Documentation',
+      version: '1.0.0',
+      description: 'Comprehensive API documentation for the TypeScript application',
       contact: {
         name: 'API Support',
-        email: 'support@{{PROJECT_NAME}}.com'
+        email: 'support@example.com'
       },
       license: {
         name: 'MIT',
@@ -22,6 +22,10 @@ const options = {
       {
         url: process.env.API_URL || 'http://localhost:8000',
         description: 'Development server'
+      },
+      {
+        url: 'https://api.production.com',
+        description: 'Production server'
       }
     ],
     components: {
@@ -30,30 +34,14 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT'
+        },
+        apiKey: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key'
         }
       },
       schemas: {
-        Error: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              example: false
-            },
-            message: {
-              type: 'string',
-              example: 'Error message'
-            },
-            error: {
-              type: 'string',
-              example: 'ErrorType'
-            },
-            statusCode: {
-              type: 'integer',
-              example: 400
-            }
-          }
-        },
         ApiResponse: {
           type: 'object',
           properties: {
@@ -63,10 +51,15 @@ const options = {
             },
             message: {
               type: 'string',
-              example: 'Success message'
+              example: 'Operation completed successfully'
             },
             data: {
-              type: 'object'
+              type: 'object',
+              description: 'Response data'
+            },
+            error: {
+              type: 'string',
+              description: 'Error message if success is false'
             }
           }
         },
@@ -77,13 +70,11 @@ const options = {
               type: 'boolean',
               example: true
             },
-            message: {
-              type: 'string',
-              example: 'Data retrieved successfully'
-            },
             data: {
               type: 'array',
-              items: {}
+              items: {
+                type: 'object'
+              }
             },
             pagination: {
               type: 'object',
@@ -115,19 +106,112 @@ const options = {
               }
             }
           }
+        },
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false
+            },
+            message: {
+              type: 'string',
+              example: 'An error occurred'
+            },
+            error: {
+              type: 'string',
+              example: 'ValidationError'
+            },
+            statusCode: {
+              type: 'integer',
+              example: 400
+            }
+          }
+        },
+        ValidationError: {
+          type: 'object',
+          properties: {
+            field: {
+              type: 'string',
+              example: 'email'
+            },
+            message: {
+              type: 'string',
+              example: 'Email is required'
+            }
+          }
         }
       }
-    }
+    },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ],
+    tags: [
+      {
+        name: 'Authentication',
+        description: 'User authentication and authorization'
+      },
+      {
+        name: 'Health',
+        description: 'API health check endpoints'
+      }
+    ]
   },
-  apis: ['./src/routes/*.ts', './src/models/*.ts']
+  apis: [
+    './src/routes/*.ts',
+    './src/controllers/*.ts',
+    './src/models/*.ts'
+  ]
 };
 
-const specs = swaggerJSDoc(options);
+const specs = swaggerJsdoc(options);
 
-export const setupSwagger = (app: Application): void => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+export const setupSwagger = (app: Express): void => {
+  const swaggerOptions = {
     explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: '{{PROJECT_NAME}} API Documentation'
-  }));
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info .title { color: #3b82f6; }
+      .swagger-ui .scheme-container { background: #f8fafc; padding: 10px; border-radius: 4px; }
+    `,
+    customSiteTitle: '{{PROJECT_NAME}} API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'list',
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      defaultModelsExpandDepth: 2,
+      defaultModelExpandDepth: 2,
+      tryItOutEnabled: true
+    }
+  };
+
+  // Primary documentation endpoint - /docs/api
+  app.use('/docs/api', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
+  
+  // Legacy endpoint for backward compatibility
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
+
+  // Swagger JSON endpoints
+  app.get('/docs/api.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+  });
+  
+  app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+  });
+
+  // Documentation redirect routes
+  app.get('/docs', (req, res) => {
+    res.redirect('/docs/api');
+  });
 };
+
+export { specs };
+export default setupSwagger;

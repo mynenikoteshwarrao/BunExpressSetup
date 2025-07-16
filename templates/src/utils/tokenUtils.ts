@@ -1,26 +1,25 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET!;
-
-export interface TokenPayload {
+interface TokenPayload {
   userId: string;
-  exp?: number;
+  email?: string;
+  username?: string;
 }
 
-export const generateAccessToken = (payload: TokenPayload): string => {
-  const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '15m';
-  const options: SignOptions = { expiresIn: accessTokenExpiry };
-  return jwt.sign(payload, JWT_SECRET, options);
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret';
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+
+export const generateAccessToken = async (payload: TokenPayload): Promise<string> => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
-export const generateRefreshToken = (payload: TokenPayload): string => {
-  const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-  const options: SignOptions = { expiresIn: refreshTokenExpiry };
-  return jwt.sign(payload, JWT_REFRESH_SECRET, options);
+export const generateRefreshToken = async (payload: TokenPayload): Promise<string> => {
+  return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
 };
 
-export const verifyAccessToken = (token: string): TokenPayload | null => {
+export const verifyAccessToken = async (token: string): Promise<TokenPayload | null> => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     return decoded;
@@ -29,9 +28,9 @@ export const verifyAccessToken = (token: string): TokenPayload | null => {
   }
 };
 
-export const verifyRefreshToken = (token: string): TokenPayload | null => {
+export const verifyRefreshToken = async (token: string): Promise<TokenPayload | null> => {
   try {
-    const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as TokenPayload;
     return decoded;
   } catch (error) {
     return null;

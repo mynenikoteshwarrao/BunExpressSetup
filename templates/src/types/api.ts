@@ -4,14 +4,13 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
   data?: T;
+  error?: string;
 }
 
-export interface ErrorResponse {
-  success: false;
-  message: string;
-  error: string;
-  statusCode: number;
-  stack?: string;
+export interface PaginationOptions {
+  page: number;
+  limit: number;
+  skip: number;
 }
 
 export interface PaginationResult {
@@ -23,25 +22,15 @@ export interface PaginationResult {
   hasPrev: boolean;
 }
 
-export interface PaginatedResponse<T = any> {
-  success: boolean;
-  message: string;
-  data: T[];
+export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   pagination: PaginationResult;
-}
-
-export interface QueryOptions {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
 }
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    userId: string;
-    [key: string]: any;
+    id: string;
+    email: string;
+    username: string;
   };
 }
 
@@ -55,3 +44,34 @@ export interface RegisterRequest {
   email: string;
   password: string;
 }
+
+export interface QueryOptions {
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface ValidationErrorDetail {
+  field: string;
+  message: string;
+}
+
+export interface ErrorResponse extends ApiResponse {
+  success: false;
+  statusCode: number;
+  errors?: ValidationErrorDetail[];
+}
+
+export type RequestHandler<TRequest = any, TResponse = any> = (
+  req: Request<any, TResponse, TRequest>,
+  res: any,
+  next: any
+) => Promise<void> | void;
+
+export type AuthenticatedRequestHandler<TRequest = any, TResponse = any> = (
+  req: AuthenticatedRequest & Request<any, TResponse, TRequest>,
+  res: any,
+  next: any
+) => Promise<void> | void;

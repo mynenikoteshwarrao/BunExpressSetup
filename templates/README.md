@@ -1,10 +1,10 @@
 # {{PROJECT_NAME}}
 
-A modern TypeScript API built with Bun, Express.js, and MongoDB.
+A modern API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.6)**
+**This project was generated using Koti CLI (Development Version 1.0.8)**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -17,15 +17,13 @@ Generated code is provided "as-is" without warranty of any kind.
 
 ## 🚀 Features
 
-- **TypeScript**: Full type safety and modern JavaScript features
 - **Bun Runtime**: Lightning-fast JavaScript runtime
 - **Express.js**: Minimal and flexible web framework
 - **MongoDB**: NoSQL database with Mongoose ODM
 - **Authentication**: JWT-based authentication system
 - **Security**: Helmet, CORS, rate limiting
 - **Error Handling**: Centralized error handling
-- **Validation**: Joi request validation and sanitization
-- **API Documentation**: Swagger/OpenAPI 3.0 documentation
+- **Validation**: Request validation and sanitization
 - **Environment Config**: Environment-based configuration
 
 ## 📋 Prerequisites
@@ -33,7 +31,6 @@ Generated code is provided "as-is" without warranty of any kind.
 - [Bun](https://bun.sh/) installed
 - [MongoDB](https://www.mongodb.com/) installed and running
 - Node.js 16+ (for development tools)
-- TypeScript knowledge recommended
 
 ## 🛠️ Installation
 
@@ -58,7 +55,7 @@ Generated code is provided "as-is" without warranty of any kind.
    NODE_ENV=development
    PORT=8000
    MONGODB_URI=mongodb://localhost:27017/{{PROJECT_NAME}}
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   JWT_SECRET=your-super-secret-jwt-key
    ```
 
 4. **Start MongoDB**
@@ -68,82 +65,121 @@ Generated code is provided "as-is" without warranty of any kind.
    
    # On Linux
    sudo systemctl start mongod
+   
+   # On Windows
+   net start MongoDB
    ```
 
-## 🚀 Usage
+5. **Start the development server**
+   ```bash
+   bun run dev
+   ```
 
-### Development
-
-```bash
-# Development with Bun (recommended)
-bun run dev
-
-# Development with TypeScript compilation
-npm run dev:ts
-
-# Build TypeScript
-npm run build
-
-# Production
-npm start
-```
-
-### API Documentation
-
-- **Swagger UI**: http://localhost:8000/api-docs
-- **Health Check**: http://localhost:8000/health
-- **API Status**: http://localhost:8000/api/status
-
-### Default Endpoints
-
-- `GET /health` - Health check
-- `GET /api/` - API welcome message
-- `GET /api/status` - API status information
-- `GET /api-docs` - Interactive API documentation
-
-### Authentication Endpoints
-
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user profile
-
-## 📁 Project Structure
+## 🏗️BUN Project Structure
 
 ```
 {{PROJECT_NAME}}/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts         # MongoDB connection
-│   │   └── swagger.ts          # Swagger configuration
+│   │   ├── database.ts         # MongoDB connection setup
+│   │   ├── email.ts            # Email configuration (nodemailer)
+│   │   ├── logger.ts           # Logger configuration
+│   │   ├── passport.ts         # Google OAuth Passport.js setup
+│   │   ├── s3.ts               # AWS S3 configuration
+│   │   └── swagger.ts          # Swagger/OpenAPI 3.0 setup
 │   ├── controllers/
-│   │   ├── authController.ts   # Authentication logic
+│   │   ├── auditController.ts  # Audit logging controller
+│   │   ├── authController.ts   # Authentication controllers
+│   │   ├── documentController.ts # Document management controller
+│   │   ├── tinyUrlController.ts # URL shortening controller
 │   │   └── index.ts           # Controller exports
 │   ├── middleware/
-│   │   ├── auth.ts            # JWT authentication
-│   │   ├── errorHandler.ts    # Error handling
-│   │   ├── rateLimit.ts       # Rate limiting
-│   │   └── validation.ts      # Joi validation
+│   │   ├── auditMiddleware.ts  # Audit trail middleware
+│   │   ├── auth.ts            # JWT authentication middleware
+│   │   ├── errorHandler.ts    # Error handling middleware
+│   │   ├── validation.ts      # Joi validation middleware
+│   │   └── index.ts           # Middleware exports
 │   ├── models/
-│   │   ├── User.ts            # User model
+│   │   ├── AuditLog.ts        # Audit logging model
+│   │   ├── Document.ts        # Document management model
+│   │   ├── TinyUrl.ts         # URL shortening model
+│   │   ├── User.ts            # User model with Mongoose
 │   │   └── index.ts           # Model exports
 │   ├── routes/
-│   │   ├── auth.ts            # Auth routes
-│   │   ├── index.ts           # Main routes
-│   │   └── api.ts             # API routes
+│   │   ├── audit.ts           # Audit logging routes
+│   │   ├── auth.ts            # Authentication routes
+│   │   ├── document.ts        # Document management routes
+│   │   ├── tinyUrl.ts         # URL shortening routes
+│   │   └── index.ts           # General API routes
+│   ├── services/
+│   │   ├── auditService.ts    # Audit logging service
+│   │   ├── authService.ts     # Authentication service
+│   │   ├── documentService.ts # Document management service
+│   │   ├── tinyUrlService.ts  # URL shortening service
+│   │   └── index.ts           # Service exports
 │   ├── types/
-│   │   └── api.ts             # TypeScript definitions
+│   │   └── api.ts             # TypeScript type definitions
 │   ├── utils/
 │   │   ├── AppError.ts        # Custom error class
 │   │   ├── logger.ts          # Logging utility
-│   │   └── responseHelper.ts  # Response helpers
+│   │   ├── responseHelper.ts  # Response helpers
+│   │   ├── tokenUtils.ts      # JWT utilities
+│   │   └── index.ts           # Utility exports
 │   └── server.ts              # Main server file
 ├── dist/                      # Compiled JavaScript
+├── uploads/                   # File upload storage
 ├── .env                       # Environment variables
-├── .gitignore                 # Git ignore rules
-├── package.json               # Dependencies
-├── tsconfig.json              # TypeScript config
-└── README.md                  # This file
+├── .env.example              # Environment template
+├── .gitignore                # Git ignore rules
+├── package.json              # Dependencies and scripts
+├── tsconfig.json             # TypeScript configuration
+├── bun.lockb                 # Bun lock file
+└── README.md                 # Project documentation
 ```
+
+## 📡 API Endpoints
+
+### Health Check
+- `GET /health` - Server health status
+
+### General API
+- `GET /api/` - API welcome message
+- `GET /api/status` - Detailed API status
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get current user profile (protected)
+- `POST /api/auth/refresh-token` - Refresh access token
+- `PUT /api/auth/profile` - Update user profile (protected)
+- `POST /api/auth/logout` - User logout (protected)
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
+- `GET /api/auth/google` - Google OAuth login (if enabled)
+
+### Document Management
+- `POST /api/documents` - Upload document (protected)
+- `GET /api/documents` - Get user documents (protected)
+- `GET /api/documents/:id` - Get specific document (protected)
+- `DELETE /api/documents/:id` - Delete document (protected)
+- `POST /api/documents/profile-image` - Upload profile image (protected)
+
+### URL Shortening
+- `POST /api/tinyurl` - Create short URL
+- `GET /api/tinyurl/:shortCode` - Redirect to original URL
+- `GET /api/tinyurl` - Get user's URLs (protected)
+- `DELETE /api/tinyurl/:id` - Delete short URL (protected)
+
+### Audit Logging
+- `GET /api/audit` - Get audit logs (admin only)
+- `GET /api/audit/:entityId` - Get entity audit history (admin only)
+- `GET /api/audit/users/:userId` - Get user audit history (admin only)
+
+### Documentation
+- `GET /api-docs` - Interactive Swagger UI documentation
+
+
+
 
 ## 🔧 Development
 
@@ -167,64 +203,6 @@ koti create:middleware Logger
 # Create new enum
 koti create:enum Status
 ```
-
-### TypeScript Features
-
-- **Full Type Safety**: All code is written in TypeScript
-- **Interface Definitions**: Clear contracts for all data structures
-- **Enum Support**: Type-safe enumerations
-- **Generic Types**: Reusable type definitions
-- **Decorators**: Support for experimental decorators
-
-## 🛡️ Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **Rate Limiting**: Protection against brute force attacks
-- **CORS**: Cross-origin resource sharing configuration
-- **Helmet**: Security headers middleware
-- **Input Validation**: Joi validation for all inputs
-
-## 📊 Monitoring & Logging
-
-- **Health Checks**: Built-in health check endpoints
-- **Request Logging**: Detailed request/response logging
-- **Error Tracking**: Comprehensive error logging
-- **Performance Monitoring**: Request timing and metrics
-
-## 🧪 Testing
-
-```bash
-# Run tests (when implemented)
-npm test
-
-# Type checking
-npx tsc --noEmit
-
-# Linting (when configured)
-npm run lint
-```
-
-## 🚀 Deployment
-
-### Production Build
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Environment Variables
-
-Set the following environment variables for production:
-
-- `NODE_ENV=production`
-- `PORT=8000`
-- `MONGODB_URI=your-production-mongodb-uri`
-- `JWT_SECRET=your-secure-jwt-secret`
 
 ## 📄 License
 
