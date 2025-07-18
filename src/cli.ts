@@ -12,7 +12,7 @@ const getVersion = (): string => {
     const { version } = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
     return version;
   } catch (error) {
-    return '1.0.6'; // fallback version
+    return '1.0.8'; // fallback version
   }
 };
 

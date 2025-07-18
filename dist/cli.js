@@ -46,7 +46,7 @@ const getVersion = () => {
         return version;
     }
     catch (error) {
-        return '1.0.6'; // fallback version
+        return '1.0.8'; // fallback version
     }
 };
 const program = new commander_1.Command();
