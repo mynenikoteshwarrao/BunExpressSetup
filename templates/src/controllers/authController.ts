@@ -33,27 +33,25 @@ class AuthController {
    */
   public async register(req: Request<{}, any, RegisterRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userData = req.body;
-      const result = await authService.signup(userData);
-      
-      if (result.message) {
-        const response: ApiResponse = {
-          success: true,
-          message: result.message,
-          data: null
-        };
-        return res.status(200).json(response);
+      const { username, email, password, firstName, lastName } = req.body;
+
+      if (!username || !email || !password) {
+        return next(new AppError('Username, email, and password are required', 400));
       }
 
-      const response: ApiResponse = {
-        success: true,
-        message: 'User registered successfully. Please check your email for verification.',
-        data: result.user
-      };
+      const result = await authService.signup({ username, email, password, firstName, lastName });
 
-      res.status(201).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Registration failed', 400));
+      if (result.message) {
+        return next(new AppError(result.message, 400));
+      }
+
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        data: { user: result.user }
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -64,17 +62,20 @@ class AuthController {
   public async login(req: Request<{}, any, LoginRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
+
+      if (!email || !password) {
+        return next(new AppError('Email and password are required', 400));
+      }
+
       const result = await authService.login(email, password);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
         message: 'Login successful',
         data: result
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Invalid email or password', 401));
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -98,21 +99,19 @@ class AuthController {
         return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
       }
 
-      const googleUserData = {
-        googleId: user.googleId || user.id,
+      const result = await authService.googleAuth({
+        googleId: user.googleId,
         email: user.email,
-        username: user.displayName || user.email?.split('@')[0] || 'user',
-        firstName: user.given_name || user.name?.givenName,
-        lastName: user.family_name || user.name?.familyName,
-        profilePicture: user.picture || user.photos?.[0]?.value
-      };
-
-      const result = await authService.googleAuth(googleUserData);
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profilePicture: user.profilePicture
+      });
 
       // Redirect to frontend with tokens
       const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}&refresh=${result.refreshToken}`;
       res.redirect(redirectUrl);
-    } catch (error: any) {
+    } catch (error) {
       res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
     }
   }
@@ -124,17 +123,19 @@ class AuthController {
   public async forgotPassword(req: Request<{}, any, ForgotPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
+
+      if (!email) {
+        return next(new AppError('Email is required', 400));
+      }
+
       await authService.forgotPassword(email);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
-        message: 'If an account with that email exists, a password reset link has been sent.',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to process password reset request', 500));
+        message: 'Password reset instructions sent to your email'
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -145,17 +146,19 @@ class AuthController {
   public async resetPassword(req: Request<{}, any, ResetPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return next(new AppError('Token and new password are required', 400));
+      }
+
       await authService.resetPassword(token, newPassword);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
-        message: 'Password has been reset successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to reset password', 400));
+        message: 'Password reset successful'
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -173,15 +176,13 @@ class AuthController {
 
       const result = await authService.refreshAccessToken(refreshToken);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
         message: 'Token refreshed successfully',
         data: result
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Invalid refresh token', 401));
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -197,15 +198,12 @@ class AuthController {
         await authService.logout(refreshToken);
       }
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
-        message: 'Logged out successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Logout failed', 500));
+        message: 'Logged out successfully'
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -215,21 +213,19 @@ class AuthController {
    */
   public async getProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await authService.getUserById(req.user.userId);
+      const user = await authService.getUserById(req.user.id);
 
       if (!user) {
         return next(new AppError('User not found', 404));
       }
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
         message: 'Profile retrieved successfully',
-        data: user
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to get profile', 500));
+        data: { user }
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -240,17 +236,19 @@ class AuthController {
   public async verifyEmail(req: Request<{}, any, VerifyEmailRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token } = req.body;
+
+      if (!token) {
+        return next(new AppError('Token is required', 400));
+      }
+
       await authService.verifyEmailToken(token);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
-        message: 'Email verified successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Email verification failed', 400));
+        message: 'Email verified successfully'
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -261,19 +259,22 @@ class AuthController {
   public async resendVerification(req: Request<{}, any, ResendVerificationRequest>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
+
+      if (!email) {
+        return next(new AppError('Email is required', 400));
+      }
+
       await authService.resendEmailVerification(email);
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
-        message: 'Verification email sent successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to send verification email', 500));
+        message: 'Verification email sent'
+      });
+    } catch (error) {
+      next(error);
     }
   }
+
   /**
    * Upload profile image
    * @route POST /api/auth/profile-image
@@ -284,11 +285,6 @@ class AuthController {
         return next(new AppError('No file provided', 400));
       }
 
-      // Validate file type
-      if (!req.file.mimetype.startsWith('image/')) {
-        return next(new AppError('Only image files are allowed for profile pictures', 400));
-      }
-
       const userId = req.user.id;
       const result = await documentService.uploadProfileImage(userId, req.file);
 
@@ -297,16 +293,11 @@ class AuthController {
         profileImageUrl: result.profileImageUrl 
       });
 
-      const response: ApiResponse = {
+      res.json({
         success: true,
         message: 'Profile image uploaded successfully',
-        data: {
-          profileImageUrl: result.profileImageUrl,
-          document: result.document
-        }
-      };
-
-      res.status(200).json(response);
+        data: result
+      });
     } catch (error) {
       next(error);
     }

@@ -21,7 +21,7 @@ const createEmailTransporter = () => {
     }
   };
 
-  return nodemailer.createTransporter(config);
+  return nodemailer.createTransport(config);
 };
 
 export const transporter = createEmailTransporter();
