@@ -4,7 +4,7 @@
 
 This repository contains a fully functional TypeScript CLI tool that generates Bun-based API project templates. The CLI creates complete TypeScript project structures with Express.js and MongoDB integration, including authentication, security middleware, and proper project organization. The generated projects are designed to run on Bun runtime for improved performance while maintaining full TypeScript support and Node.js ecosystem compatibility.
 
-**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.8 - Latest Release)
+**Status**: Published to npm! ✅ Available at `npm install -g koti` (Version 1.0.9 - Latest Release)
 
 ## User Preferences
 
@@ -21,7 +21,7 @@ CLI Command Format:
 
 ## Recent Changes
 
-**Version 1.0.8**: Latest Release - Enhanced Features & Bug Fixes
+**Version 1.0.9**: Latest Release - Enhanced Features & Bug Fixes
 - **Centralized Version Management**: Single source of truth for version control across all files
 - **Enhanced Error Handling**: Improved error messages and debugging capabilities
 - **Performance Optimizations**: Better code generation and template processing

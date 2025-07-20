@@ -12,7 +12,7 @@ const getVersion = (): string => {
     const { version } = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
     return version;
   } catch (error) {
-    return '1.0.8'; // fallback version
+    return '1.0.9'; // fallback version
   }
 };
 
@@ -192,7 +192,7 @@ A modern TypeScript API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.3)**
+**This project was generated using Koti CLI (Development Version 1.0.9)**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -445,7 +445,7 @@ const generateTypeScriptModel = (modelName: string, fields: any[]): string => {
     if (field.unique) options.push('unique: true');
     if (field.default) options.push(`default: ${field.type === 'String' ? `'${field.default}'` : field.default}`);
     
-    const optionsString = options.length > 0 ? `, { ${options.join(', ')} }` : '';
+    const optionsString = options.length > 0 ? `,  ${options.join(', ')} ` : '';
     return `  ${field.name}: { type: ${field.type}${optionsString} }`;
   }).join(',\n');
 
@@ -1918,13 +1918,6 @@ export const verifyRefreshToken = async (token: string): Promise<TokenPayload | 
   await fs.writeFile(path.join(srcPath, 'services', 'authService.ts'), authServiceContent);
   await fs.writeFile(path.join(srcPath, 'utils', 'tokenUtils.ts'), tokenUtilsContent);
   await fs.writeFile(path.join(projectPath, '.env'), envContent);
-  
-  console.log(colors.green('✅ Created file: src/controllers/authController.ts'));
-  console.log(colors.green('✅ Created file: src/middleware/auth.ts'));
-  console.log(colors.green('✅ Created file: src/middleware/errorHandler.ts'));
-  console.log(colors.green('✅ Created file: src/services/authService.ts'));
-  console.log(colors.green('✅ Created file: src/utils/tokenUtils.ts'));
-  console.log(colors.green('✅ Created file: .env'));
 };
 
 // Generate TypeScript server template

@@ -4,7 +4,7 @@ A modern API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.8)**
+**This project was generated using Koti CLI (Development Version 1.0.9)**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production

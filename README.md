@@ -4,7 +4,7 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 
 ## ⚠️ Development Version Disclaimer
 
-**Current Version: 1.0.8 - Latest Release**
+**Current Version: 1.0.9 - Latest Release**
 
 This is a development version with significant improvements and may contain errors, bugs, or security vulnerabilities. Please use with caution:
 
@@ -16,7 +16,7 @@ This is a development version with significant improvements and may contain erro
 
 This software is provided "as-is" without warranty of any kind. Always review and validate generated code before production use.
 
-## 🚀 New Features in v1.0.8
+## 🚀 New Features in v1.0.9
 
 ### ✨ **Latest Improvements**
 - **Enhanced Stability**: Improved error handling and bug fixes
@@ -357,4 +357,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Generated with ❤️ by [Koti CLI](https://www.npmjs.com/package/koti) v1.0.8**
+**Generated with ❤️ by [Koti CLI](https://www.npmjs.com/package/koti) v1.0.9**
