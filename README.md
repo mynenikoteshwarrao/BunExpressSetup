@@ -54,7 +54,7 @@ This software is provided "as-is" without warranty of any kind. Always review an
 Install globally via npm:
 
 ```bash
-npm install -g koti@2.0.0-beta.1
+npm install -g koti@2.0.0-beta.1-beta.1
 ```
 
 ### Development Setup
