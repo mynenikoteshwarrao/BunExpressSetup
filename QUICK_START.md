@@ -6,7 +6,7 @@ The Koti CLI is now published to npm! Install and use it with:
 
 ```bash
 # Install globally
-npm install -g koti@1.0.9
+npm install -g koti@2.0.0-beta.1
 
 # Create a new Bun API project
 koti new my-awesome-api
@@ -388,4 +388,4 @@ For issues or questions:
 
 ---
 
-**Koti CLI v1.0.9 - Latest Release**
+**Koti CLI v2.0.0-beta.1 - Beta Release**
