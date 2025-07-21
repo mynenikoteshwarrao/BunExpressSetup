@@ -95,38 +95,38 @@ koti create my-awesome-api
 
 **Create TypeScript models with UUIDs:**
 ```bash
-koti create:model Product
+koti model Product
 # Interactive prompt for fields, types, validation rules
 # Generates model with UUID primary key, proper TypeScript interfaces
 ```
 
 **Create TypeScript enums:**
 ```bash
-koti create:enum Status
+koti enum Status
 # Interactive prompt for enum type (string/number) and values
 ```
 
 **Create TypeScript controllers:**
 ```bash
-koti create:controller Product
+koti controller Product
 # Generates controller with CRUD operations and proper error handling
 ```
 
 **Create TypeScript services:**
 ```bash
-koti create:service Product
+koti service Product
 # Generates service layer with business logic
 ```
 
 **Create TypeScript middleware:**
 ```bash
-koti create:middleware Auth
+koti middleware Auth
 # Generates middleware with proper TypeScript types
 ```
 
 **CRUD Generation:**
 ```bash
-koti create:model Product
+koti model Product
 # When prompted, choose 'y' for CRUD generation
 # Automatically creates model, controller, service, and routes
 ```

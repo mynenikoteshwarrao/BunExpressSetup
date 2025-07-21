@@ -17,9 +17,9 @@ bun install
 bun run dev
 
 # Create interactive models (inside project directory)
-koti create:model Product
-koti create:model Category
-koti create:model Order
+koti model Product
+koti model Category
+koti model Order
 ```
 
 ### Enhanced TypeScript Code Generation
@@ -28,19 +28,19 @@ The latest version provides comprehensive TypeScript code generation:
 
 ```bash
 # Create TypeScript models with UUIDs
-koti create:model Product
+koti model Product
 
 # Create TypeScript enums
-koti create:enum Status
+koti enum Status
 
 # Create TypeScript controllers
-koti create:controller Product
+koti controller Product
 
 # Create TypeScript services
-koti create:service Product
+koti service Product
 
 # Create TypeScript middleware
-koti create:middleware Auth
+koti middleware Auth
 ```
 
 ## Generated Project Structure
@@ -169,18 +169,18 @@ Open your browser and visit:
 
 ```bash
 # Create a blog post model with full CRUD
-koti create:model Post
+koti model Post
 # Follow prompts to add fields like title, content, authorId
 
 # Create status enum
-koti create:enum PostStatus
+koti enum PostStatus
 # Add values like: draft, published, archived
 
 # Create custom middleware
-koti create:middleware RoleAuth
+koti middleware RoleAuth
 
 # Create custom service
-koti create:service EmailService
+koti service EmailService
 ```
 
 ## Features Included
@@ -247,21 +247,21 @@ koti create:service EmailService
 
 ```bash
 # Step 1: Create your data models
-koti create:model User
-koti create:model Product
-koti create:model Order
+koti model User
+koti model Product
+koti model Order
 
 # Step 2: Create enums for constants
-koti create:enum OrderStatus
-koti create:enum UserRole
+koti enum OrderStatus
+koti enum UserRole
 
 # Step 3: Create custom services
-koti create:service PaymentService
-koti create:service NotificationService
+koti service PaymentService
+koti service NotificationService
 
 # Step 4: Create custom middleware
-koti create:middleware RoleAuth
-koti create:middleware AuditLogger
+koti middleware RoleAuth
+koti middleware AuditLogger
 ```
 
 ### 2. Testing Your API

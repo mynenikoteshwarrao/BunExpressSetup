@@ -46,7 +46,8 @@ const getVersion = () => {
         return version;
     }
     catch (error) {
-        return '1.0.9'; // fallback version
+        console.error('Failed to read version file');
+        process.exit(1);
     }
 };
 const program = new commander_1.Command();
@@ -193,7 +194,7 @@ A modern TypeScript API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.9)**
+**This project was generated using Koti CLI v${getVersion()}**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -342,19 +343,19 @@ Use the Koti CLI to generate new components:
 
 \`\`\`bash
 # Create new model
-koti create:model Product
+koti model Product
 
 # Create new controller
-koti create:controller Product
+koti controller Product
 
 # Create new service
-koti create:service Email
+koti service Email
 
 # Create new middleware
-koti create:middleware Logger
+koti middleware Logger
 
 # Create new enum
-koti create:enum Status
+koti enum Status
 \`\`\`
 
 ### TypeScript Features
@@ -1972,7 +1973,7 @@ program
     .version(getVersion());
 // TypeScript Model Generation Command
 program
-    .command('create:model')
+    .command('model')
     .argument('<model-name>', 'Name of the model to create')
     .description('Create a new TypeScript model with schema registry')
     .action(async (modelName) => {
@@ -2066,7 +2067,7 @@ program
             console.log(colors.cyan('\n📚 Model created successfully!'));
             console.log(colors.yellow('🔧 Next steps:'));
             console.log('   • Import the model in your controllers');
-            console.log('   • Use "koti create:controller", "koti create:service" for CRUD operations');
+            console.log('   • Use "koti controller", "koti service" for CRUD operations');
             console.log('   • Run TypeScript compilation: npm run build');
         }
     }
@@ -2077,7 +2078,7 @@ program
 });
 // TypeScript Enum Generation Command
 program
-    .command('create:enum')
+    .command('enum')
     .argument('<enum-name>', 'Name of the enum to create')
     .description('Create a new TypeScript enum')
     .action(async (enumName) => {
@@ -2126,7 +2127,7 @@ program
 });
 // TypeScript Controller Generation Command
 program
-    .command('create:controller')
+    .command('controller')
     .argument('<controller-name>', 'Name of the controller to create')
     .description('Create a new TypeScript controller')
     .action(async (controllerName) => {
@@ -2145,7 +2146,7 @@ program
 });
 // TypeScript Service Generation Command
 program
-    .command('create:service')
+    .command('service')
     .argument('<service-name>', 'Name of the service to create')
     .description('Create a new TypeScript service')
     .action(async (serviceName) => {
@@ -2164,7 +2165,7 @@ program
 });
 // TypeScript Middleware Generation Command
 program
-    .command('create:middleware')
+    .command('middleware')
     .argument('<middleware-name>', 'Name of the middleware to create')
     .description('Create a new TypeScript middleware')
     .action(async (middlewareName) => {
@@ -2178,23 +2179,6 @@ program
     }
     catch (error) {
         console.error(colors.red('❌ Error creating middleware:'), error.message);
-        process.exit(1);
-    }
-});
-// Legacy JavaScript Model Command (for backward compatibility)
-program
-    .command('model')
-    .argument('<model-name>', 'Name of the model to create')
-    .description('Create a new model with interactive setup (legacy)')
-    .action(async (modelName) => {
-    try {
-        console.log(colors.yellow('⚠️ Using legacy JavaScript model generation'));
-        console.log(colors.blue(`🏗️ Creating model: ${capitalize(modelName)}`));
-        // Legacy implementation would go here - simplified for TypeScript conversion
-        console.log(colors.dim('Use "koti create:model" for TypeScript models'));
-    }
-    catch (error) {
-        console.error(colors.red('❌ Error creating model:'), error.message);
         process.exit(1);
     }
 });

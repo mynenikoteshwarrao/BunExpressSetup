@@ -4,7 +4,7 @@ A modern API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.9)**
+**This project was generated using Koti CLI v2.0.0-beta.1**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -189,19 +189,19 @@ Use the Koti CLI to generate new components:
 
 ```bash
 # Create new model
-koti create:model Product
+koti model Product
 
 # Create new controller
-koti create:controller Product
+koti controller Product
 
 # Create new service
-koti create:service Email
+koti service Email
 
 # Create new middleware
-koti create:middleware Logger
+koti middleware Logger
 
 # Create new enum
-koti create:enum Status
+koti enum Status
 ```
 
 ## 📄 License
