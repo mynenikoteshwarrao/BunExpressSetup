@@ -191,6 +191,9 @@ Use the Koti CLI to generate new components:
 # Create new model
 koti model Product
 
+# Edit existing model
+koti model:edit Product
+
 # Create new controller
 koti controller Product
 

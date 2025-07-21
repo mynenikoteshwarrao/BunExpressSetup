@@ -100,6 +100,14 @@ koti model Product
 # Generates model with UUID primary key, proper TypeScript interfaces
 ```
 
+**Edit existing TypeScript models:**
+```bash
+koti model:edit Product
+# Add or delete fields from existing models
+# Automatically updates CRUD operations if they exist
+# Previous code is preserved as commented backup for reference
+```
+
 **Create TypeScript enums:**
 ```bash
 koti enum Status

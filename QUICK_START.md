@@ -20,6 +20,9 @@ bun run dev
 koti model Product
 koti model Category
 koti model Order
+
+# Edit existing models (add/delete fields)
+koti model:edit Product
 ```
 
 ### Enhanced TypeScript Code Generation
