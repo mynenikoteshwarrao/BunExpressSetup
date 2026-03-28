@@ -1,4 +1,4 @@
 {
-  "version": "2.0.0-beta.1",
-  "description": "Beta release with major version upgrade for Koti CLI"
+  "version": "2.0.3",
+  "description": "Stable release for Koti CLI"
 }

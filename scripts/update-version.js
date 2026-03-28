@@ -23,13 +23,17 @@ readmeContent = readmeContent.replace(/npm install -g koti@[\d.]+/g, `npm instal
 fs.writeFileSync(readmePath, readmeContent);
 console.log('✓ Updated README.md');
 
-// Update replit.md
+// Update replit.md (if it exists)
 const replitMdPath = path.join(__dirname, '..', 'replit.md');
-let replitContent = fs.readFileSync(replitMdPath, 'utf8');
-replitContent = replitContent.replace(/Version [\d.]+ - Development Release/g, `Version ${version} - Development Release`);
-replitContent = replitContent.replace(/Version [\d.]+ - Comprehensive Audit System/g, `Version ${version} - Comprehensive Audit System`);
-fs.writeFileSync(replitMdPath, replitContent);
-console.log('✓ Updated replit.md');
+if (fs.existsSync(replitMdPath)) {
+  let replitContent = fs.readFileSync(replitMdPath, 'utf8');
+  replitContent = replitContent.replace(/Version [\d.]+ - Development Release/g, `Version ${version} - Development Release`);
+  replitContent = replitContent.replace(/Version [\d.]+ - Comprehensive Audit System/g, `Version ${version} - Comprehensive Audit System`);
+  fs.writeFileSync(replitMdPath, replitContent);
+  console.log('✓ Updated replit.md');
+} else {
+  console.log('⏭ Skipped replit.md (not found)');
+}
 
 console.log(`\n🎉 All files updated to version ${version}!`);
 console.log('\nNext steps:');

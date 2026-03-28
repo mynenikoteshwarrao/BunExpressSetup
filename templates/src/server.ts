@@ -3,10 +3,24 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 
+import mongoose from 'mongoose';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSwagger } from './config/swagger';
+
+// Read version from package.json
+const getAppVersion = (): string => {
+  try {
+    const pkgPath = path.join(__dirname, '..', 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+};
 
 // Import routes
 import indexRoutes from './routes/index';
@@ -53,7 +67,7 @@ app.get('/health', (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
+    version: getAppVersion()
   });
 });
 
@@ -68,6 +82,21 @@ app.use('*', (req: Request, res: Response) => {
     path: req.originalUrl
   });
 });
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+  } catch (err) {
+    console.error('Error closing MongoDB connection:', err);
+  }
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);

@@ -17,6 +17,7 @@ export interface IUser extends Document {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   refreshTokens: string[];
+  roles: Types.ObjectId[];
   isActive: boolean;
   lastLogin?: Date;
   isDeleted: boolean;
@@ -95,6 +96,10 @@ const UserSchema = new Schema<IUser>({
     type: String,
     select: false
   }],
+  roles: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Role',
+  }],
   isActive: {
     type: Boolean,
     default: true
@@ -118,7 +123,7 @@ const UserSchema = new Schema<IUser>({
   timestamps: true,
   toJSON: {
     virtuals: true,
-    transform: function(doc, ret) {
+    transform: function(doc: any, ret: any) {
       ret.id = ret._id;
       delete ret._id;
       delete ret.__v;

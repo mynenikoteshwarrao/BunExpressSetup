@@ -1,7 +1,7 @@
 {
   "name": "koti",
-  "version": "2.0.0-beta.1",
-  "description": "⚠️ DEVELOPMENT VERSION: CLI tool to generate Bun API projects with Express and MongoDB. This is an initial development release and may contain errors or bugs. Use at your own discretion.",
+  "version": "2.0.3",
+  "description": "CLI tool to generate Bun API projects with Express, MongoDB, and built-in RBAC. Scaffolds production-ready APIs with authentication, authorization, and security middleware.",
   "main": "dist/cli.js",
   "bin": {
     "koti": "./dist/cli.js"
@@ -13,7 +13,7 @@
     "update-version": "node scripts/update-version.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run update-version && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "dependencies": {
     "commander": "^11.1.0",
@@ -35,7 +35,11 @@
     "scaffold",
     "boilerplate",
     "javascript",
-    "nodejs"
+    "nodejs",
+    "rbac",
+    "authorization",
+    "role-based-access-control",
+    "typescript"
   ],
   "author": {
     "name": "mynenikoteshwarrao",
@@ -54,8 +58,9 @@
     "node": ">=16.0.0"
   },
   "files": [
-    "koti",
+    "dist/",
     "templates/",
+    "version.json",
     "README.md",
     "LICENSE"
   ]

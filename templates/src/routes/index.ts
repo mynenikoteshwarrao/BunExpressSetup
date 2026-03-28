@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth';
+import userRoutes from './user';
 import tinyUrlRoutes from './tinyUrl';
 import documentRoutes from './document';
 import auditRoutes from './audit';
@@ -70,8 +71,10 @@ router.get('/', (req, res) => {
       documentation: '/docs/api',
       endpoints: {
         auth: '/api/auth',
+        users: '/api/users',
         tinyUrl: '/api/tiny',
         documents: '/api/documents',
+        audit: '/api/audit',
         health: '/api/health'
       }
     }
@@ -80,6 +83,7 @@ router.get('/', (req, res) => {
 
 // Mount route modules
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/tiny', tinyUrlRoutes);
 router.use('/documents', documentRoutes);
 router.use('/audit', auditRoutes);
