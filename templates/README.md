@@ -4,7 +4,7 @@ A modern API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.8)**
+**This project was generated using Koti CLI v2.0.3**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -25,6 +25,11 @@ Generated code is provided "as-is" without warranty of any kind.
 - **Error Handling**: Centralized error handling
 - **Validation**: Request validation and sanitization
 - **Environment Config**: Environment-based configuration
+- **RBAC**: Role-Based Access Control with task-based permissions
+- **Independent Permission Middleware**: `checkPermission` — separate from `auth`, SUPER_ADMIN bypass
+- **User CRUD**: Built-in user management with role assignment
+- **Login Response Enrichment**: Login returns roles and tasks array for UI-level security
+- **Seed Data**: Master seed with Super Admin + Admin roles and default users
 
 ## 📋 Prerequisites
 
@@ -92,16 +97,23 @@ Generated code is provided "as-is" without warranty of any kind.
 │   │   ├── authController.ts   # Authentication controllers
 │   │   ├── documentController.ts # Document management controller
 │   │   ├── tinyUrlController.ts # URL shortening controller
+│   │   ├── userController.ts  # User CRUD controller
 │   │   └── index.ts           # Controller exports
+│   ├── enums/
+│   │   ├── Task.ts            # Task enumeration for RBAC
+│   │   └── index.ts           # Enum exports
 │   ├── middleware/
 │   │   ├── auditMiddleware.ts  # Audit trail middleware
 │   │   ├── auth.ts            # JWT authentication middleware
+│   │   ├── authorize.ts       # Authorization middleware with RBAC
+│   │   ├── checkPermission.ts # Independent permission check middleware
 │   │   ├── errorHandler.ts    # Error handling middleware
 │   │   ├── validation.ts      # Joi validation middleware
 │   │   └── index.ts           # Middleware exports
 │   ├── models/
 │   │   ├── AuditLog.ts        # Audit logging model
 │   │   ├── Document.ts        # Document management model
+│   │   ├── Role.ts            # Role model for RBAC
 │   │   ├── TinyUrl.ts         # URL shortening model
 │   │   ├── User.ts            # User model with Mongoose
 │   │   └── index.ts           # Model exports
@@ -110,12 +122,17 @@ Generated code is provided "as-is" without warranty of any kind.
 │   │   ├── auth.ts            # Authentication routes
 │   │   ├── document.ts        # Document management routes
 │   │   ├── tinyUrl.ts         # URL shortening routes
+│   │   ├── user.ts            # User CRUD routes (with checkPermission)
 │   │   └── index.ts           # General API routes
+│   ├── seeds/
+│   │   ├── seed.ts            # Master seed (roles + users)
+│   │   └── seedRoles.ts       # Role-only seed data
 │   ├── services/
 │   │   ├── auditService.ts    # Audit logging service
-│   │   ├── authService.ts     # Authentication service
+│   │   ├── authService.ts     # Authentication service (returns roles & tasks on login)
 │   │   ├── documentService.ts # Document management service
 │   │   ├── tinyUrlService.ts  # URL shortening service
+│   │   ├── userService.ts     # User CRUD service
 │   │   └── index.ts           # Service exports
 │   ├── types/
 │   │   └── api.ts             # TypeScript type definitions
@@ -125,6 +142,8 @@ Generated code is provided "as-is" without warranty of any kind.
 │   │   ├── responseHelper.ts  # Response helpers
 │   │   ├── tokenUtils.ts      # JWT utilities
 │   │   └── index.ts           # Utility exports
+│   ├── validators/
+│   │   └── # Request validation schemas
 │   └── server.ts              # Main server file
 ├── dist/                      # Compiled JavaScript
 ├── uploads/                   # File upload storage
@@ -170,6 +189,14 @@ Generated code is provided "as-is" without warranty of any kind.
 - `GET /api/tinyurl` - Get user's URLs (protected)
 - `DELETE /api/tinyurl/:id` - Delete short URL (protected)
 
+### User Management
+- `GET /api/users` - List users (protected, VIEW_USERS)
+- `GET /api/users/:id` - Get user by ID (protected, VIEW_USERS)
+- `POST /api/users` - Create user (protected, CREATE_USER)
+- `PUT /api/users/:id` - Update user (protected, UPDATE_USER)
+- `DELETE /api/users/:id` - Soft-delete user (protected, DELETE_USER)
+- `PUT /api/users/:id/roles` - Assign roles (protected, MANAGE_USER_ROLES)
+
 ### Audit Logging
 - `GET /api/audit` - Get audit logs (admin only)
 - `GET /api/audit/:entityId` - Get entity audit history (admin only)
@@ -177,8 +204,6 @@ Generated code is provided "as-is" without warranty of any kind.
 
 ### Documentation
 - `GET /api-docs` - Interactive Swagger UI documentation
-
-
 
 
 ## 🔧 Development
@@ -189,20 +214,104 @@ Use the Koti CLI to generate new components:
 
 ```bash
 # Create new model
-koti create:model Product
+koti model Product
+
+# Edit existing model
+koti model:edit Product
 
 # Create new controller
-koti create:controller Product
+koti controller Product
 
 # Create new service
-koti create:service Email
+koti service Email
 
 # Create new middleware
-koti create:middleware Logger
+koti middleware Logger
 
 # Create new enum
-koti create:enum Status
+koti enum Status
+
+# Create new task (for RBAC)
+koti task MANAGE_USERS
 ```
+
+## 🔐 Role-Based Access Control (RBAC)
+
+This project includes a built-in RBAC system for managing user permissions and access control.
+
+### Seeding Roles & Users
+
+```bash
+# Seed everything (roles + users)
+npm run seed
+
+# Seed only roles
+npm run seed:roles
+```
+
+`npm run seed` creates:
+- **Super Admin** role — `SUPER_ADMIN` task (bypasses all permission checks)
+- **Admin** role — `VIEW_USERS`, `CREATE_USER`, `UPDATE_USER`, `DELETE_USER`, `MANAGE_USER_ROLES`
+- **superadmin** user — `superadmin@app.com` / `SuperAdmin@123` → Super Admin role
+- **admin** user — `admin@app.com` / `Admin@123` → Admin role
+
+The script is idempotent — running it multiple times won't create duplicates.
+
+### Creating New Tasks
+
+Tasks define what actions users can perform. Two ways to add tasks:
+
+```bash
+# Manual: create a single task
+koti task MANAGE_ORDERS
+
+# Automatic: when creating a model with CRUD + tasks
+koti model Product
+# Answer 'y' to "Generate CRUD operations?"
+# Answer 'y' to "Add CRUD tasks for permission control?"
+# Auto-creates: VIEW_PRODUCT, CREATE_PRODUCT, UPDATE_PRODUCT, DELETE_PRODUCT
+```
+
+### Using Permission Middleware
+
+The system provides two independent middleware layers:
+- `auth` — authentication only (is the JWT token valid?)
+- `checkPermission` — authorization only (does the user have the required tasks?)
+
+```typescript
+import { checkPermission } from '../middleware/checkPermission';
+import { Task } from '../enums/Task';
+
+// Route needing only authentication
+router.get('/profile', auth, controller.getProfile);
+
+// Route needing authentication + specific permission
+router.delete('/users/:id', auth, checkPermission(Task.DELETE_USER), controller.delete);
+
+// SUPER_ADMIN users automatically bypass all checkPermission checks
+```
+
+### Login Response
+
+Login returns the user's roles and a flat deduplicated tasks array for UI-level security:
+
+```json
+{
+  "accessToken": "...",
+  "refreshToken": "...",
+  "user": { ... },
+  "roles": [{ "name": "Admin", "tasks": ["VIEW_USERS", "CREATE_USER", ...] }],
+  "tasks": ["VIEW_USERS", "CREATE_USER", "UPDATE_USER", "DELETE_USER", "MANAGE_USER_ROLES"]
+}
+```
+
+### Available Scripts
+
+- `bun run dev` - Start development server
+- `bun run build` - Build project
+- `bun run start` - Start production server
+- `npm run seed` - Seed database with roles and default users
+- `npm run seed:roles` - Seed only roles
 
 ## 📄 License
 

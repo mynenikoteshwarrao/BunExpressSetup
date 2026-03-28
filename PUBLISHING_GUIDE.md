@@ -15,9 +15,11 @@ This guide will help you publish the Koti CLI tool to npm so users can install i
 Your project should have this structure:
 ```
 koti/
-├── koti                    # Main executable file
-├── templates/
-│   └── index.js           # Template files
+├── src/                   # TypeScript source files
+├── dist/                  # Compiled JavaScript output
+├── templates/             # Template files
+├── tests/                 # Test files
+├── version.json           # Version metadata
 ├── npm-package.json       # Package configuration
 ├── README.md              # Documentation
 ├── LICENSE                # MIT License
@@ -65,7 +67,7 @@ cp npm-package.json package.json
 npm pack
 
 # This creates a .tgz file you can test with:
-npm install -g koti-1.0.0.tgz
+npm install -g koti-2.0.3.tgz
 ```
 
 ### 5. Test Your Package
@@ -136,7 +138,7 @@ When you make changes:
 1. Update version in package.json:
    ```json
    {
-     "version": "1.0.1"
+     "version": "2.0.3"
    }
    ```
 

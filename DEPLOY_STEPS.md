@@ -72,7 +72,13 @@ koti new my-awesome-api
 Your tool will generate complete API projects with:
 - Express.js server
 - MongoDB connection
-- JWT authentication
+- JWT authentication (login returns roles & tasks for UI security)
+- RBAC (Role-Based Access Control with task-based authorization)
+- Independent `checkPermission` middleware (separate from `auth`)
+- User CRUD with role assignment
+- `koti task` command + auto task generation on model creation
+- Master seed data (Super Admin + Admin roles and users)
+- Barrel file auto-updates for all CLI-generated artifacts
 - Security middleware
 - Complete folder structure
 - Environment configuration

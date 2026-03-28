@@ -4,16 +4,27 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as readline from 'readline';
+import * as crypto from 'crypto';
 
-// Read version from centralized location
+// Read version from centralized location with fallback
 const getVersion = (): string => {
-  try {
-    const versionPath = path.join(__dirname, '..', 'version.json');
-    const { version } = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
-    return version;
-  } catch (error) {
-    return '1.0.8'; // fallback version
+  const candidates = [
+    path.join(__dirname, '..', 'version.json'),
+    path.join(__dirname, '..', 'package.json'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const data = JSON.parse(fs.readFileSync(candidate, 'utf8'));
+      if (data.version) return data.version;
+    } catch {}
   }
+  console.error(colors.yellow('⚠️  Could not determine CLI version. Using fallback.'));
+  return '0.0.0-unknown';
+};
+
+// Generate a cryptographically secure random secret
+const generateSecret = (bytes: number = 64): string => {
+  return crypto.randomBytes(bytes).toString('hex');
 };
 
 interface DataType {
@@ -95,6 +106,160 @@ const toCamelCase = (str: string): string => {
 // Helper function to convert to kebab-case
 const toKebabCase = (str: string): string => {
   return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+};
+
+// Helper function to convert to UPPER_SNAKE_CASE (e.g., UserProfile → USER_PROFILE)
+const toUpperSnakeCase = (str: string): string => {
+  return str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
+};
+
+/**
+ * Insert a task entry into src/enums/Task.ts (both enum and TaskDescriptions).
+ * Returns true if the task was added, false if it already exists or the file is missing.
+ */
+const addTaskToEnum = async (taskKey: string, description: string): Promise<boolean> => {
+  const enumPath = path.join(process.cwd(), 'src', 'enums', 'Task.ts');
+
+  if (!await fs.pathExists(enumPath)) {
+    return false;
+  }
+
+  let content = await fs.readFile(enumPath, 'utf-8');
+
+  // Skip if task already exists
+  if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
+    return false;
+  }
+
+  // Insert new entry before the closing brace of the Task enum
+  const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
+  if (!enumClosingMatch) {
+    return false;
+  }
+
+  const lastEntry = enumClosingMatch[1];
+  const closingBrace = enumClosingMatch[2];
+
+  const lastEntryWithComma = lastEntry.trimEnd().endsWith(',')
+    ? lastEntry
+    : lastEntry.replace(/(\S)\s*$/, '$1,\n');
+
+  const newEnumEntry = `\n  /** ${description} */\n  ${taskKey} = '${taskKey}',\n`;
+
+  content = content.replace(
+    lastEntry + closingBrace,
+    lastEntryWithComma + newEnumEntry + closingBrace
+  );
+
+  // Insert into TaskDescriptions
+  const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
+  if (descClosingMatch) {
+    const lastDescEntry = descClosingMatch[1];
+    const descClosing = descClosingMatch[2];
+
+    const lastDescWithComma = lastDescEntry.trimEnd().endsWith(',')
+      ? lastDescEntry
+      : lastDescEntry.replace(/(\S)\s*$/, '$1,\n');
+
+    const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',\n`;
+
+    content = content.replace(
+      lastDescEntry + descClosing,
+      lastDescWithComma + newDescEntry + descClosing
+    );
+  }
+
+  await fs.writeFile(enumPath, content);
+  return true;
+};
+
+// Helper function to parse existing model schema
+const parseExistingModel = async (modelName: string): Promise<{ fields: any[]; hasSchema: boolean }> => {
+  const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
+  
+  if (!await fs.pathExists(modelPath)) {
+    return { fields: [], hasSchema: false };
+  }
+  
+  const content = await fs.readFile(modelPath, 'utf-8');
+  const fields: any[] = [];
+  
+  // Simple regex parsing to extract schema fields
+  // Match from `({` to `}, {` (the boundary between schema fields and schema options)
+  const schemaMatch = content.match(/const\s+\w+Schema\s*=\s*new\s+Schema<.*?>\(\{([\s\S]*?)\},\s*\{/);
+  
+  if (schemaMatch) {
+    const schemaContent = schemaMatch[1];
+    const fieldMatches = schemaContent.match(/(\w+):\s*\{[^}]+\}/g);
+    
+    if (fieldMatches) {
+      fieldMatches.forEach(fieldMatch => {
+        const nameMatch = fieldMatch.match(/(\w+):/);
+        const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
+        const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
+        const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+        const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
+        
+        if (nameMatch && typeMatch) {
+          fields.push({
+            name: nameMatch[1],
+            type: typeMatch[1],
+            required: requiredMatch ? requiredMatch[1] === 'true' : false,
+            unique: uniqueMatch ? uniqueMatch[1] === 'true' : false,
+            default: defaultMatch ? defaultMatch[1].replace(/['"]/g, '') : undefined
+          });
+        }
+      });
+    }
+  }
+  
+  return { fields, hasSchema: true };
+};
+
+// Helper function to check if CRUD operations exist
+const checkCRUDExists = async (modelName: string): Promise<{ controller: boolean; service: boolean; routes: boolean }> => {
+  const camelName = toCamelCase(modelName);
+  const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${camelName}Controller.ts`);
+  const servicePath = path.join(process.cwd(), 'src', 'services', `${camelName}Service.ts`);
+  const routePath = path.join(process.cwd(), 'src', 'routes', `${camelName}.ts`);
+  
+  const [controller, service, routes] = await Promise.all([
+    fs.pathExists(controllerPath),
+    fs.pathExists(servicePath),
+    fs.pathExists(routePath)
+  ]);
+  
+  return { controller, service, routes };
+};
+
+// Helper function to create commented backup with new code
+const createBackupWithNewCode = (existingCode: string, newCode: string, fileType: string): string => {
+  const timestamp = new Date().toISOString();
+  const commentedOldCode = existingCode
+    .split('\n')
+    .map(line => `// ${line}`)
+    .join('\n');
+  
+  return `/*
+====================================
+PREVIOUS ${fileType.toUpperCase()} CODE (BACKUP)
+====================================
+Updated on: ${timestamp}
+Reason: Model schema changed - fields added/removed
+Note: You can safely remove this commented section after reviewing
+====================================
+*/
+${commentedOldCode}
+
+/*
+====================================
+NEW ${fileType.toUpperCase()} CODE (AUTO-GENERATED)
+====================================
+Generated on: ${timestamp}
+Note: This code was auto-generated based on updated model schema
+====================================
+*/
+${newCode}`;
 };
 
 // Helper function to read existing schemas
@@ -192,7 +357,7 @@ A modern TypeScript API built with Bun, Express.js, and MongoDB.
 
 ## ⚠️ Development Disclaimer
 
-**This project was generated using Koti CLI (Development Version 1.0.3)**
+**This project was generated using Koti CLI v${getVersion()}**
 
 This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
 - Review all generated code before using in production
@@ -246,7 +411,7 @@ Generated code is provided "as-is" without warranty of any kind.
    NODE_ENV=development
    PORT=8000
    MONGODB_URI=mongodb://localhost:27017/{{PROJECT_NAME}}
-   JWT_SECRET=your-super-secret-jwt-key
+   # JWT secrets are auto-generated during project creation
    \`\`\`
 
 4. **Start MongoDB**
@@ -341,19 +506,22 @@ Use the Koti CLI to generate new components:
 
 \`\`\`bash
 # Create new model
-koti create:model Product
+koti model Product
+
+# Edit existing model
+koti model:edit Product
 
 # Create new controller
-koti create:controller Product
+koti controller Product
 
 # Create new service
-koti create:service Email
+koti service Email
 
 # Create new middleware
-koti create:middleware Logger
+koti middleware Logger
 
 # Create new enum
-koti create:enum Status
+koti enum Status
 \`\`\`
 
 ### TypeScript Features
@@ -445,7 +613,7 @@ const generateTypeScriptModel = (modelName: string, fields: any[]): string => {
     if (field.unique) options.push('unique: true');
     if (field.default) options.push(`default: ${field.type === 'String' ? `'${field.default}'` : field.default}`);
     
-    const optionsString = options.length > 0 ? `, { ${options.join(', ')} }` : '';
+    const optionsString = options.length > 0 ? `,  ${options.join(', ')} ` : '';
     return `  ${field.name}: { type: ${field.type}${optionsString} }`;
   }).join(',\n');
 
@@ -723,7 +891,7 @@ export default ${camelCaseName};
 // Generate CRUD Controller
 const generateCRUDController = (modelName: string, fields: any[]): string => {
   const capitalizedName = capitalize(modelName);
-  const camelCaseName = modelName.toLowerCase();
+  const camelCaseName = toCamelCase(modelName);
   
   return `import { Request, Response, NextFunction } from 'express';
 import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types/api';
@@ -866,7 +1034,7 @@ export default new ${capitalizedName}Controller();`;
 // Generate CRUD Service
 const generateCRUDService = (modelName: string, fields: any[]): string => {
   const capitalizedName = capitalize(modelName);
-  const camelCaseName = modelName.toLowerCase();
+  const camelCaseName = toCamelCase(modelName);
   
   return `import { AppError } from '../utils/AppError';
 import ${capitalizedName} from '../models/${capitalizedName}';
@@ -978,13 +1146,29 @@ export default new ${capitalizedName}Service();`;
 };
 
 // Generate CRUD Routes
-const generateCRUDRoutes = (modelName: string): string => {
+const generateCRUDRoutes = (modelName: string, fields: any[] = [], withTasks: boolean = false): string => {
   const capitalizedName = capitalize(modelName);
-  const camelCaseName = modelName.toLowerCase();
-  
+  const camelCaseName = toCamelCase(modelName);
+  const upperSnakeName = toUpperSnakeCase(modelName);
+
+  const hasValidation = fields.length > 0;
+  const validationImport = hasValidation
+    ? `\nimport { validate } from '../middleware/validation';\nimport { create${capitalizedName}Schema, update${capitalizedName}Schema } from '../validators/${camelCaseName}';`
+    : '';
+
+  const permissionImport = withTasks
+    ? `\nimport { checkPermission } from '../middleware/checkPermission';\nimport { Task } from '../enums/Task';`
+    : '';
+
+  // Permission middleware snippets for each route
+  const viewPerm = withTasks ? `checkPermission(Task.VIEW_${upperSnakeName}), ` : '';
+  const createPerm = withTasks ? `checkPermission(Task.CREATE_${upperSnakeName}), ` : '';
+  const updatePerm = withTasks ? `checkPermission(Task.UPDATE_${upperSnakeName}), ` : '';
+  const deletePerm = withTasks ? `checkPermission(Task.DELETE_${upperSnakeName}), ` : '';
+
   return `import { Router } from 'express';
 import ${camelCaseName}Controller from '../controllers/${camelCaseName}Controller';
-import { auth } from '../middleware/auth';
+import { auth } from '../middleware/auth';${validationImport}${permissionImport}
 
 const router = Router();
 
@@ -1053,7 +1237,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/PaginatedResponse'
  */
-router.get('/', ${camelCaseName}Controller.getAll);
+router.get('/', auth, ${viewPerm}${camelCaseName}Controller.getAll);
 
 /**
  * @swagger
@@ -1061,6 +1245,8 @@ router.get('/', ${camelCaseName}Controller.getAll);
  *   get:
  *     summary: Get ${camelCaseName} by ID
  *     tags: [${capitalizedName}]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -1074,7 +1260,7 @@ router.get('/', ${camelCaseName}Controller.getAll);
  *       404:
  *         description: ${capitalizedName} not found
  */
-router.get('/:id', ${camelCaseName}Controller.getById);
+router.get('/:id', auth, ${viewPerm}${camelCaseName}Controller.getById);
 
 /**
  * @swagger
@@ -1098,7 +1284,7 @@ router.get('/:id', ${camelCaseName}Controller.getById);
  *       401:
  *         description: Unauthorized
  */
-router.post('/', auth, ${camelCaseName}Controller.create);
+router.post('/', auth, ${createPerm}${hasValidation ? `validate(create${capitalizedName}Schema), ` : ''}${camelCaseName}Controller.create);
 
 /**
  * @swagger
@@ -1129,7 +1315,7 @@ router.post('/', auth, ${camelCaseName}Controller.create);
  *       401:
  *         description: Unauthorized
  */
-router.put('/:id', auth, ${camelCaseName}Controller.update);
+router.put('/:id', auth, ${updatePerm}${hasValidation ? `validate(update${capitalizedName}Schema), ` : ''}${camelCaseName}Controller.update);
 
 /**
  * @swagger
@@ -1154,14 +1340,89 @@ router.put('/:id', auth, ${camelCaseName}Controller.update);
  *       401:
  *         description: Unauthorized
  */
-router.delete('/:id', auth, ${camelCaseName}Controller.delete);
+router.delete('/:id', auth, ${deletePerm}${camelCaseName}Controller.delete);
 
 export default router;`;
 };
 
+// Generate Joi validation schema for a model
+const generateJoiValidation = (modelName: string, fields: any[]): string => {
+  const capitalizedName = capitalize(modelName);
+
+  const joiFields = fields.map(field => {
+    let joiType = 'Joi.string()';
+    switch (field.type) {
+      case 'String': joiType = 'Joi.string()'; break;
+      case 'Number': joiType = 'Joi.number()'; break;
+      case 'Boolean': joiType = 'Joi.boolean()'; break;
+      case 'Date': joiType = 'Joi.date()'; break;
+      case 'Array': joiType = 'Joi.array()'; break;
+      case 'ObjectId': joiType = 'Joi.string()'; break;
+      default: joiType = 'Joi.any()'; break;
+    }
+
+    const chain = [joiType];
+    if (field.required) chain.push('.required()');
+    else chain.push('.optional()');
+
+    return `  ${field.name}: ${chain.join('')}`;
+  }).join(',\n');
+
+  return `import Joi from 'joi';
+
+export const create${capitalizedName}Schema = Joi.object({
+${joiFields}
+});
+
+export const update${capitalizedName}Schema = Joi.object({
+${fields.map(field => {
+    let joiType = 'Joi.string()';
+    switch (field.type) {
+      case 'String': joiType = 'Joi.string()'; break;
+      case 'Number': joiType = 'Joi.number()'; break;
+      case 'Boolean': joiType = 'Joi.boolean()'; break;
+      case 'Date': joiType = 'Joi.date()'; break;
+      case 'Array': joiType = 'Joi.array()'; break;
+      case 'ObjectId': joiType = 'Joi.string()'; break;
+      default: joiType = 'Joi.any()'; break;
+    }
+    return `  ${field.name}: ${joiType}.optional()`;
+  }).join(',\n')}
+}).min(1);
+`;
+};
+
 // Update main routes to register new route
+/**
+ * Append an export line to an index.ts barrel file.
+ * Creates the index.ts if it doesn't exist yet.
+ * Skips silently if the export line is already present.
+ *
+ * @param dirPath  – absolute path to the directory (e.g. src/models)
+ * @param exportLine – the full export statement to add
+ */
+const updateIndexExport = async (dirPath: string, exportLine: string): Promise<void> => {
+  const indexPath = path.join(dirPath, 'index.ts');
+
+  try {
+    let content = '';
+    if (await fs.pathExists(indexPath)) {
+      content = await fs.readFile(indexPath, 'utf-8');
+    }
+
+    // Already exported
+    if (content.includes(exportLine)) return;
+
+    // Append with a newline
+    const separator = content.length > 0 && !content.endsWith('\n') ? '\n' : '';
+    await fs.writeFile(indexPath, content + separator + exportLine + '\n');
+  } catch {
+    // Non-fatal – the index file is a convenience, not a requirement
+  }
+};
+
 const updateMainRoutes = async (modelName: string): Promise<void> => {
-  const camelCaseName = modelName.toLowerCase();
+  const camelCaseName = toCamelCase(modelName);
   const routesIndexPath = path.join(process.cwd(), 'src', 'routes', 'index.ts');
   
   try {
@@ -1731,16 +1992,29 @@ export const notFound = (req: Request, res: Response): void => {
 
 export default errorHandler;`;
 
-  const envContent = `# Environment Configuration
+  const jwtSecret = generateSecret(64);
+  const jwtRefreshSecret = generateSecret(64);
+
+  // Read .env from template, replace placeholders and inject auto-generated secrets
+  const envFilePath = path.join(projectPath, '.env');
+  let envContent = '';
+
+  if (await fs.pathExists(envFilePath)) {
+    // .env was already copied from templates by the 'new' command — inject secrets
+    envContent = await fs.readFile(envFilePath, 'utf-8');
+    envContent = envContent.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+  } else {
+    // Fallback if template .env was not copied
+    envContent = `# Environment Configuration
 NODE_ENV=development
 PORT=8000
 
 # Database
 MONGODB_URI=mongodb://localhost:27017/${projectName}
 
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_REFRESH_SECRET=your-super-secret-jwt-refresh-key-change-this-in-production
+# JWT Configuration (auto-generated secure secrets)
+JWT_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
+JWT_REFRESH_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
@@ -1753,6 +2027,11 @@ API_URL=http://localhost:8000
 # Pagination Configuration
 DEFAULT_PAGE_LIMIT=10
 MAX_PAGE_LIMIT=100`;
+  }
+
+  // Inject auto-generated JWT secrets
+  envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtSecret);
+  envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtRefreshSecret);
 
   // Generate auth service layer
   const authServiceContent = `import bcrypt from 'bcryptjs';
@@ -1912,19 +2191,21 @@ export const verifyRefreshToken = async (token: string): Promise<TokenPayload | 
   }
 };`;
 
-  await fs.writeFile(path.join(srcPath, 'controllers', 'authController.ts'), authControllerContent);
-  await fs.writeFile(path.join(srcPath, 'middleware', 'auth.ts'), authMiddlewareContent);
-  await fs.writeFile(path.join(srcPath, 'middleware', 'errorHandler.ts'), errorHandlerContent);
-  await fs.writeFile(path.join(srcPath, 'services', 'authService.ts'), authServiceContent);
-  await fs.writeFile(path.join(srcPath, 'utils', 'tokenUtils.ts'), tokenUtilsContent);
+  // NOTE: Template files from templates/src/ are already copied by the 'new' command.
+  // We only generate files that need dynamic values (secrets, project name).
+  // The following files are NOT overwritten — they come from templates/src/ which has
+  // more complete implementations (Google auth, email verification, refresh token rotation, etc.):
+  //   - controllers/authController.ts
+  //   - middleware/auth.ts
+  //   - middleware/errorHandler.ts
+  //   - services/authService.ts
+  //   - utils/tokenUtils.ts
+  //   - routes/index.ts
+  //   - routes/auth.ts
+
+  // Only write .env with auto-generated secrets
   await fs.writeFile(path.join(projectPath, '.env'), envContent);
-  
-  console.log(colors.green('✅ Created file: src/controllers/authController.ts'));
-  console.log(colors.green('✅ Created file: src/middleware/auth.ts'));
-  console.log(colors.green('✅ Created file: src/middleware/errorHandler.ts'));
-  console.log(colors.green('✅ Created file: src/services/authService.ts'));
-  console.log(colors.green('✅ Created file: src/utils/tokenUtils.ts'));
-  console.log(colors.green('✅ Created file: .env'));
+  console.log(colors.green('✅ Created file: .env (with auto-generated JWT secrets)'));
 };
 
 // Generate TypeScript server template
@@ -1934,6 +2215,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import mongoose from 'mongoose';
 
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
@@ -1944,6 +2228,17 @@ import indexRoutes from './routes/index';
 import authRoutes from './routes/auth';
 
 dotenv.config();
+
+// Read version from package.json
+const getAppVersion = (): string => {
+  try {
+    const pkgPath = path.join(__dirname, '..', 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+};
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT || '8000');
@@ -1979,12 +2274,12 @@ app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    version: getVersion()
+    version: getAppVersion()
   });
 });
 
@@ -1993,12 +2288,27 @@ app.use(errorHandler);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({ 
-    success: false, 
+  res.status(404).json({
+    success: false,
     message: 'Route not found',
     path: req.originalUrl
   });
 });
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  console.log(\`\\n\${signal} received. Shutting down gracefully...\`);
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+  } catch (err) {
+    console.error('Error closing MongoDB connection:', err);
+  }
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(\`🚀 Server running on port \${PORT}\`);
@@ -2017,7 +2327,7 @@ program
 
 // TypeScript Model Generation Command
 program
-  .command('create:model')
+  .command('model')
   .argument('<model-name>', 'Name of the model to create')
   .description('Create a new TypeScript model with schema registry')
   .action(async (modelName: string) => {
@@ -2076,46 +2386,101 @@ program
 
       // Ask if user wants to generate CRUD operations
       const generateCRUD = (await askQuestion(rl, colors.cyan('\n🔧 Generate CRUD operations (controller, service, routes)? (y/n): '))).toLowerCase() === 'y';
-      
+
+      // Ask if user wants to add CRUD tasks for permission control
+      let withTasks = false;
+      if (generateCRUD) {
+        withTasks = (await askQuestion(rl, colors.cyan('🔐 Add CRUD tasks for permission control? (y/n): '))).toLowerCase() === 'y';
+      }
+
       rl.close();
 
       // Generate TypeScript model file
       const modelContent = generateTypeScriptModel(modelName, fields);
       const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
-      
+
       await fs.ensureDir(path.dirname(modelPath));
       await fs.writeFile(modelPath, modelContent);
-      
+
       console.log(colors.green(`✅ Created TypeScript model: src/models/${capitalize(modelName)}.ts`));
+
+      // Update models/index.ts
+      const modelsDir = path.join(process.cwd(), 'src', 'models');
+      await updateIndexExport(modelsDir, `export { default as ${capitalize(modelName)}, I${capitalize(modelName)} } from './${capitalize(modelName)}';`);
+      console.log(colors.green(`✅ Updated export in src/models/index.ts`));
 
       if (generateCRUD) {
 
+      const crudCamelName = toCamelCase(modelName);
+      const upperSnakeName = toUpperSnakeCase(modelName);
+
+      // Add CRUD tasks to Task enum if requested
+      if (withTasks) {
+        const taskEntries = [
+          { key: `VIEW_${upperSnakeName}`, desc: `View the list of ${toCamelCase(modelName)}s and ${toCamelCase(modelName)} details` },
+          { key: `CREATE_${upperSnakeName}`, desc: `Create new ${toCamelCase(modelName)} records` },
+          { key: `UPDATE_${upperSnakeName}`, desc: `Update existing ${toCamelCase(modelName)} records` },
+          { key: `DELETE_${upperSnakeName}`, desc: `Delete ${toCamelCase(modelName)} records` },
+        ];
+
+        let tasksAdded = 0;
+        for (const entry of taskEntries) {
+          const added = await addTaskToEnum(entry.key, entry.desc);
+          if (added) tasksAdded++;
+        }
+
+        if (tasksAdded > 0) {
+          console.log(colors.green(`✅ Added ${tasksAdded} CRUD tasks to src/enums/Task.ts`));
+          console.log(colors.dim(`   VIEW_${upperSnakeName}, CREATE_${upperSnakeName}, UPDATE_${upperSnakeName}, DELETE_${upperSnakeName}`));
+        } else {
+          console.log(colors.yellow(`⚠️  Could not add tasks (Task.ts not found or tasks already exist)`));
+          withTasks = false; // Disable permission middleware in routes since tasks weren't added
+        }
+      }
+
       // Generate CRUD Controller
       const controllerContent = generateCRUDController(modelName, fields);
-      const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${modelName}Controller.ts`);
-      
+      const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${crudCamelName}Controller.ts`);
+
       await fs.ensureDir(path.dirname(controllerPath));
       await fs.writeFile(controllerPath, controllerContent);
-      
-      console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${modelName}Controller.ts`));
+
+      console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${crudCamelName}Controller.ts`));
+
+      // Update controllers/index.ts
+      const controllersDir = path.join(process.cwd(), 'src', 'controllers');
+      await updateIndexExport(controllersDir, `export { default as ${crudCamelName}Controller } from './${crudCamelName}Controller';`);
 
       // Generate CRUD Service
       const serviceContent = generateCRUDService(modelName, fields);
-      const servicePath = path.join(process.cwd(), 'src', 'services', `${modelName}Service.ts`);
-      
+      const servicePath = path.join(process.cwd(), 'src', 'services', `${crudCamelName}Service.ts`);
+
       await fs.ensureDir(path.dirname(servicePath));
       await fs.writeFile(servicePath, serviceContent);
-      
-      console.log(colors.green(`✅ Created TypeScript service: src/services/${modelName}Service.ts`));
 
-      // Generate CRUD Routes
-      const routeContent = generateCRUDRoutes(modelName);
-      const routePath = path.join(process.cwd(), 'src', 'routes', `${modelName}.ts`);
-      
+      console.log(colors.green(`✅ Created TypeScript service: src/services/${crudCamelName}Service.ts`));
+
+      // Update services/index.ts
+      const servicesDir = path.join(process.cwd(), 'src', 'services');
+      await updateIndexExport(servicesDir, `export * from './${crudCamelName}Service';`);
+
+      // Generate Joi validation schema
+      const validationContent = generateJoiValidation(modelName, fields);
+      const validationPath = path.join(process.cwd(), 'src', 'validators', `${crudCamelName}.ts`);
+
+      await fs.ensureDir(path.dirname(validationPath));
+      await fs.writeFile(validationPath, validationContent);
+
+      console.log(colors.green(`✅ Created Joi validation: src/validators/${crudCamelName}.ts`));
+
+      // Generate CRUD Routes (with validation and optional permission checks)
+      const routeContent = generateCRUDRoutes(modelName, fields, withTasks);
+      const routePath = path.join(process.cwd(), 'src', 'routes', `${crudCamelName}.ts`);
+
       await fs.ensureDir(path.dirname(routePath));
       await fs.writeFile(routePath, routeContent);
-      
-      console.log(colors.green(`✅ Created TypeScript routes: src/routes/${modelName}.ts`));
+
+      console.log(colors.green(`✅ Created TypeScript routes: src/routes/${crudCamelName}.ts`));
 
       // Update main routes/index.ts to register the new route
       await updateMainRoutes(modelName);
@@ -2129,16 +2494,23 @@ program
       console.log('   • Routes with Swagger documentation');
       console.log('   • Pagination support (configurable in .env - DEFAULT_PAGE_LIMIT)');
       console.log('   • Automatic route registration');
-      
+      if (withTasks) {
+        console.log('   • CRUD tasks added to Task enum (VIEW, CREATE, UPDATE, DELETE)');
+        console.log('   • Routes protected with checkPermission middleware');
+      }
+
         console.log(colors.yellow('\n🔧 Next steps:'));
         console.log('   • Update .env file with DEFAULT_PAGE_LIMIT (default: 10)');
+        if (withTasks) {
+          console.log('   • Assign the new tasks to roles via your admin panel or seed script');
+        }
         console.log('   • Run TypeScript compilation: npm run build');
         console.log('   • Test the CRUD endpoints in your API');
       } else {
         console.log(colors.cyan('\n📚 Model created successfully!'));
         console.log(colors.yellow('🔧 Next steps:'));
         console.log('   • Import the model in your controllers');
-        console.log('   • Use "koti create:controller", "koti create:service" for CRUD operations');
+        console.log('   • Use "koti controller", "koti service" for CRUD operations');
         console.log('   • Run TypeScript compilation: npm run build');
       }
 
@@ -2150,7 +2522,7 @@ program
 
 // TypeScript Enum Generation Command
 program
-  .command('create:enum')
+  .command('enum')
   .argument('<enum-name>', 'Name of the enum to create')
   .description('Create a new TypeScript enum')
   .action(async (enumName: string) => {
@@ -2201,6 +2573,11 @@ program
       
       console.log(colors.green(`✅ Created TypeScript enum: src/enums/${capitalize(enumName)}.ts`));
 
+      // Update enums/index.ts
+      const enumsDir = path.join(process.cwd(), 'src', 'enums');
+      await updateIndexExport(enumsDir, `export { ${capitalize(enumName)} } from './${capitalize(enumName)}';`);
+      console.log(colors.green(`✅ Updated export in src/enums/index.ts`));
+
     } catch (error) {
       console.error(colors.red('❌ Error creating enum:'), (error as Error).message);
       process.exit(1);
@@ -2209,7 +2586,7 @@ program
 
 // TypeScript Controller Generation Command
 program
-  .command('create:controller')
+  .command('controller')
   .argument('<controller-name>', 'Name of the controller to create')
   .description('Create a new TypeScript controller')
   .action(async (controllerName: string) => {
@@ -2223,7 +2600,12 @@ program
       await fs.writeFile(controllerPath, controllerContent);
       
       console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${toCamelCase(controllerName)}Controller.ts`));
-      
+
+      // Update controllers/index.ts
+      const controllersDir = path.join(process.cwd(), 'src', 'controllers');
+      await updateIndexExport(controllersDir, `export { default as ${toCamelCase(controllerName)}Controller } from './${toCamelCase(controllerName)}Controller';`);
+      console.log(colors.green(`✅ Updated export in src/controllers/index.ts`));
+
     } catch (error) {
       console.error(colors.red('❌ Error creating controller:'), (error as Error).message);
       process.exit(1);
@@ -2232,7 +2614,7 @@ program
 
 // TypeScript Service Generation Command
 program
-  .command('create:service')
+  .command('service')
   .argument('<service-name>', 'Name of the service to create')
   .description('Create a new TypeScript service')
   .action(async (serviceName: string) => {
@@ -2246,7 +2628,12 @@ program
       await fs.writeFile(servicePath, serviceContent);
       
       console.log(colors.green(`✅ Created TypeScript service: src/services/${toCamelCase(serviceName)}Service.ts`));
-      
+
+      // Update services/index.ts
+      const servicesDir = path.join(process.cwd(), 'src', 'services');
+      await updateIndexExport(servicesDir, `export * from './${toCamelCase(serviceName)}Service';`);
+      console.log(colors.green(`✅ Updated export in src/services/index.ts`));
+
     } catch (error) {
       console.error(colors.red('❌ Error creating service:'), (error as Error).message);
       process.exit(1);
@@ -2255,7 +2642,7 @@ program
 
 // TypeScript Middleware Generation Command
 program
-  .command('create:middleware')
+  .command('middleware')
   .argument('<middleware-name>', 'Name of the middleware to create')
   .description('Create a new TypeScript middleware')
   .action(async (middlewareName: string) => {
@@ -2269,31 +2656,18 @@ program
       await fs.writeFile(middlewarePath, middlewareContent);
       
       console.log(colors.green(`✅ Created TypeScript middleware: src/middleware/${toCamelCase(middlewareName)}.ts`));
-      
+
+      // Update middleware/index.ts
+      const middlewareDir = path.join(process.cwd(), 'src', 'middleware');
+      await updateIndexExport(middlewareDir, `export { ${toCamelCase(middlewareName)} } from './${toCamelCase(middlewareName)}';`);
+      console.log(colors.green(`✅ Updated export in src/middleware/index.ts`));
+
     } catch (error) {
       console.error(colors.red('❌ Error creating middleware:'), (error as Error).message);
       process.exit(1);
     }
   });
 
-// Legacy JavaScript Model Command (for backward compatibility)
-program
-  .command('model')
-  .argument('<model-name>', 'Name of the model to create')
-  .description('Create a new model with interactive setup (legacy)')
-  .action(async (modelName: string) => {
-    try {
-      console.log(colors.yellow('⚠️ Using legacy JavaScript model generation'));
-      console.log(colors.blue(`🏗️ Creating model: ${capitalize(modelName)}`));
-      
-      // Legacy implementation would go here - simplified for TypeScript conversion
-      console.log(colors.dim('Use "koti create:model" for TypeScript models'));
-      
-    } catch (error) {
-      console.error(colors.red('❌ Error creating model:'), (error as Error).message);
-      process.exit(1);
-    }
-  });
 
 program
   .command('new')
@@ -2316,8 +2690,8 @@ program
       // Create src directory structure
       const srcPath = path.join(projectPath, 'src');
       const directories = [
-        'config', 'controllers', 'middleware', 'models', 
-        'routes', 'types', 'utils', 'services', 'schemas', 'enums'
+        'config', 'controllers', 'middleware', 'models',
+        'routes', 'types', 'utils', 'services', 'schemas', 'enums', 'validators', 'seeds'
       ];
       
       for (const dir of directories) {
@@ -2344,13 +2718,32 @@ program
       }
 
 
-      // Copy all TypeScript template files
+      // Copy all TypeScript template files and replace placeholders
       const templateSrcPath = path.join(templatePath, 'src');
       const projectSrcPath = path.join(projectPath, 'src');
-      
+
       // Copy the entire src directory structure
       if (await fs.pathExists(templateSrcPath)) {
         await fs.copy(templateSrcPath, projectSrcPath);
+
+        // Replace {{PROJECT_NAME}} in all copied .ts files
+        const replaceInDir = async (dirPath: string): Promise<void> => {
+          const entries = await fs.readdir(dirPath, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path.join(dirPath, entry.name);
+            if (entry.isDirectory()) {
+              await replaceInDir(fullPath);
+            } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.json')) {
+              let content = await fs.readFile(fullPath, 'utf-8');
+              if (content.includes('{{PROJECT_NAME}}')) {
+                content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+                await fs.writeFile(fullPath, content);
+              }
+            }
+          }
+        };
+        await replaceInDir(projectSrcPath);
+
         console.log(colors.green('✅ Copied TypeScript source files'));
       }
       
@@ -2358,6 +2751,7 @@ program
       const additionalFiles = [
         'tsconfig.json',
         '.env',
+        '.env.example',
         '.gitignore'
       ];
       
@@ -2461,6 +2855,328 @@ program
 
     } catch (error) {
       console.error(colors.red('❌ Error creating project:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// Model Edit Command
+program
+  .command('model:edit')
+  .argument('<model-name>', 'Name of the model to edit')
+  .description('Edit an existing TypeScript model (add/delete fields)')
+  .action(async (modelName: string) => {
+    try {
+      console.log(colors.blue(`✏️ Editing TypeScript model: ${capitalize(modelName)}`));
+      
+      // Check if model exists
+      const { fields: existingFields, hasSchema } = await parseExistingModel(modelName);
+      
+      if (!hasSchema) {
+        console.log(colors.red(`❌ Model ${capitalize(modelName)} not found!`));
+        console.log(colors.yellow('💡 Use "koti model <name>" to create a new model'));
+        return;
+      }
+      
+      // Check if CRUD operations exist
+      const crudExists = await checkCRUDExists(modelName);
+      const hasCRUD = crudExists.controller || crudExists.service || crudExists.routes;
+      
+      console.log(colors.green(`✅ Found model: ${capitalize(modelName)}`));
+      console.log(colors.dim(`   Fields: ${existingFields.map(f => f.name).join(', ')}`));
+      
+      if (hasCRUD) {
+        console.log(colors.cyan('🔧 CRUD operations detected:'));
+        if (crudExists.controller) console.log(colors.dim('   • Controller'));
+        if (crudExists.service) console.log(colors.dim('   • Service'));
+        if (crudExists.routes) console.log(colors.dim('   • Routes'));
+      }
+      
+      const rl = createReadlineInterface();
+      let updatedFields = [...existingFields];
+      
+      while (true) {
+        console.log(colors.cyan('\n📝 Current fields:'));
+        updatedFields.forEach((field, index) => {
+          const attrs = [];
+          if (field.required) attrs.push('required');
+          if (field.unique) attrs.push('unique');
+          if (field.default) attrs.push(`default: ${field.default}`);
+          const attrStr = attrs.length > 0 ? ` (${attrs.join(', ')})` : '';
+          console.log(colors.dim(`   ${index + 1}. ${field.name}: ${field.type}${attrStr}`));
+        });
+        
+        console.log(colors.yellow('\n🔧 Available actions:'));
+        console.log('   1. Add new field');
+        console.log('   2. Delete field');
+        console.log('   3. Save changes');
+        console.log('   4. Cancel');
+        
+        const action = await askQuestion(rl, colors.yellow('Choose action (1-4): '));
+        
+        if (action === '1') {
+          // Add new field
+          console.log(colors.cyan('\n➕ Adding new field:'));
+          console.log(colors.dim('Available data types:'));
+          console.log(colors.dim('1. String    2. Number    3. Date      4. Boolean'));
+          console.log(colors.dim('5. ObjectId  6. Array     7. Mixed     8. JSON'));
+          
+          const dataTypes = ['String', 'Number', 'Date', 'Boolean', 'ObjectId', 'Array', 'Mixed', 'JSON'];
+          
+          const fieldName = await askQuestion(rl, colors.yellow('Field name: '));
+          if (!fieldName.trim()) {
+            console.log(colors.red('❌ Field name cannot be empty'));
+            continue;
+          }
+          
+          // Check if field already exists
+          if (updatedFields.some(f => f.name === fieldName)) {
+            console.log(colors.red(`❌ Field "${fieldName}" already exists`));
+            continue;
+          }
+          
+          console.log(colors.cyan('\nSelect data type:'));
+          dataTypes.forEach((type, index) => {
+            console.log(colors.dim(`${index + 1}. ${type}`));
+          });
+          
+          const typeChoice = await askQuestion(rl, colors.yellow('Enter type number (1-8): '));
+          const typeIndex = parseInt(typeChoice) - 1;
+          
+          if (typeIndex < 0 || typeIndex >= dataTypes.length) {
+            console.log(colors.red('❌ Invalid choice. Please select 1-8.'));
+            continue;
+          }
+          
+          const fieldType = dataTypes[typeIndex];
+          const isRequired = (await askQuestion(rl, colors.yellow('Required? (y/n): '))).toLowerCase() === 'y';
+          const isUnique = (await askQuestion(rl, colors.yellow('Unique? (y/n): '))).toLowerCase() === 'y';
+          const isIndexed = (await askQuestion(rl, colors.yellow('Add index? (y/n): '))).toLowerCase() === 'y';
+          const defaultValue = await askQuestion(rl, colors.yellow('Default value (press enter to skip): '));
+          
+          updatedFields.push({
+            name: fieldName,
+            type: fieldType,
+            required: isRequired,
+            unique: isUnique || undefined,
+            indexed: isIndexed || undefined,
+            default: defaultValue || undefined
+          });
+          
+          console.log(colors.green(`✅ Added field: ${fieldName} (${fieldType})`));
+          
+        } else if (action === '2') {
+          // Delete field
+          if (updatedFields.length === 0) {
+            console.log(colors.red('❌ No fields to delete'));
+            continue;
+          }
+          
+          console.log(colors.cyan('\n🗑️ Delete field:'));
+          updatedFields.forEach((field, index) => {
+            console.log(colors.dim(`   ${index + 1}. ${field.name}: ${field.type}`));
+          });
+          
+          const deleteChoice = await askQuestion(rl, colors.yellow('Enter field number to delete (or enter to cancel): '));
+          if (!deleteChoice.trim()) continue;
+          
+          const deleteIndex = parseInt(deleteChoice) - 1;
+          if (deleteIndex >= 0 && deleteIndex < updatedFields.length) {
+            const deletedField = updatedFields.splice(deleteIndex, 1)[0];
+            console.log(colors.green(`✅ Deleted field: ${deletedField.name}`));
+          } else {
+            console.log(colors.red('❌ Invalid field number'));
+          }
+          
+        } else if (action === '3') {
+          // Save changes
+          const hasChanges = JSON.stringify(existingFields) !== JSON.stringify(updatedFields);
+          
+          if (!hasChanges) {
+            console.log(colors.yellow('ℹ️ No changes detected'));
+            break;
+          }
+          
+          console.log(colors.cyan('\n💾 Saving changes...'));
+          
+          // Regenerate model file
+          const modelContent = generateTypeScriptModel(modelName, updatedFields);
+          const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
+          await fs.writeFile(modelPath, modelContent);
+          
+          console.log(colors.green(`✅ Updated model: src/models/${capitalize(modelName)}.ts`));
+          
+          // Ask about updating CRUD operations
+          let updateCRUD = false;
+          if (hasCRUD) {
+            console.log(colors.cyan('\n🔄 CRUD operations detected'));
+            updateCRUD = (await askQuestion(rl, colors.yellow('Update CRUD operations with new schema? (y/n): '))).toLowerCase() === 'y';
+            
+            if (updateCRUD) {
+              console.log(colors.blue('🔄 Updating CRUD operations...'));
+              const editCamelName = toCamelCase(modelName);
+
+              // Regenerate controller if exists
+              if (crudExists.controller) {
+                const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${editCamelName}Controller.ts`);
+                const existingController = await fs.readFile(controllerPath, 'utf-8');
+                const newControllerContent = generateCRUDController(modelName, updatedFields);
+
+                // Save backup to .bak file, then do a clean replacement
+                await fs.writeFile(controllerPath + '.bak', existingController);
+                await fs.writeFile(controllerPath, newControllerContent);
+                console.log(colors.green(`✅ Updated controller: src/controllers/${editCamelName}Controller.ts`));
+                console.log(colors.dim(`   Backup saved: src/controllers/${editCamelName}Controller.ts.bak`));
+              }
+
+              // Regenerate service if exists
+              if (crudExists.service) {
+                const servicePath = path.join(process.cwd(), 'src', 'services', `${editCamelName}Service.ts`);
+                const existingService = await fs.readFile(servicePath, 'utf-8');
+                const newServiceContent = generateCRUDService(modelName, updatedFields);
+
+                await fs.writeFile(servicePath + '.bak', existingService);
+                await fs.writeFile(servicePath, newServiceContent);
+                console.log(colors.green(`✅ Updated service: src/services/${editCamelName}Service.ts`));
+                console.log(colors.dim(`   Backup saved: src/services/${editCamelName}Service.ts.bak`));
+              }
+
+              // Regenerate routes if exists
+              if (crudExists.routes) {
+                const routePath = path.join(process.cwd(), 'src', 'routes', `${editCamelName}.ts`);
+                const existingRoutes = await fs.readFile(routePath, 'utf-8');
+                const newRouteContent = generateCRUDRoutes(modelName, updatedFields);
+
+                await fs.writeFile(routePath + '.bak', existingRoutes);
+                await fs.writeFile(routePath, newRouteContent);
+                console.log(colors.green(`✅ Updated routes: src/routes/${editCamelName}.ts`));
+                console.log(colors.dim(`   Backup saved: src/routes/${editCamelName}.ts.bak`));
+              }
+
+              console.log(colors.green('\n✅ CRUD operations updated successfully!'));
+              console.log(colors.cyan('💡 What happened:'));
+              console.log(colors.dim('   • Previous files saved as .bak backups'));
+              console.log(colors.dim('   • New code generated based on updated schema'));
+              console.log(colors.dim('   • Files are clean and compilable — no commented-out code'));
+              console.log(colors.dim('   • Both versions coexist in the same files for easy comparison'));
+            }
+          }
+          
+          console.log(colors.cyan('\n🎉 Model edit completed successfully!'));
+          console.log(colors.yellow('\n🔧 Next steps:'));
+          console.log('   • Run TypeScript compilation: npm run build');
+          console.log('   • Test your updated model and API endpoints');
+          if (hasCRUD && !updateCRUD) {
+            console.log('   • Consider manually updating CRUD operations if needed');
+          }
+          
+          break;
+          
+        } else if (action === '4') {
+          // Cancel
+          console.log(colors.yellow('✖️ Edit cancelled'));
+          break;
+        } else {
+          console.log(colors.red('❌ Invalid choice. Please select 1-4.'));
+        }
+      }
+      
+      rl.close();
+      
+    } catch (error) {
+      console.error(colors.red('❌ Error editing model:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// Task Creation Command — adds a new task to the Task enum
+program
+  .command('task')
+  .argument('<task-name>', 'Name of the task to create (e.g., MANAGE_USERS)')
+  .description('Add a new task to the Task enum for role-based authorization')
+  .action(async (taskName: string) => {
+    try {
+      const taskKey = taskName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+      const taskValue = taskKey;
+
+      const rl = createReadlineInterface();
+      const description = await askQuestion(rl, colors.yellow('Task description: '));
+      rl.close();
+
+      if (!description.trim()) {
+        console.log(colors.red('❌ Description is required'));
+        return;
+      }
+
+      const enumPath = path.join(process.cwd(), 'src', 'enums', 'Task.ts');
+
+      if (!await fs.pathExists(enumPath)) {
+        console.log(colors.red('❌ Task enum not found at src/enums/Task.ts'));
+        console.log(colors.yellow('💡 Create a new project with "koti new" to get the Task enum'));
+        return;
+      }
+
+      let content = await fs.readFile(enumPath, 'utf-8');
+
+      // Check if task already exists
+      if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
+        console.log(colors.red(`❌ Task "${taskKey}" already exists in the enum`));
+        return;
+      }
+
+      // Insert new entry before the closing brace of the Task enum
+      // Match the last enum entry line and the closing brace
+      const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
+      if (!enumClosingMatch) {
+        console.log(colors.red('❌ Could not parse Task enum. Please add the task manually.'));
+        return;
+      }
+
+      const lastEntry = enumClosingMatch[1];
+      const closingBrace = enumClosingMatch[2];
+
+      // Make sure last existing entry has a trailing comma
+      const lastEntryWithComma = lastEntry.trimEnd().endsWith(',')
+        ? lastEntry
+        : lastEntry.replace(/(\S)\s*$/, '$1,\n');
+
+      const newEnumEntry = `  /** ${description} */\n  ${taskKey} = '${taskValue}',\n`;
+
+      content = content.replace(
+        lastEntry + closingBrace,
+        lastEntryWithComma + newEnumEntry + closingBrace
+      );
+
+      // Insert new entry into TaskDescriptions before the closing brace
+      const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
+      if (descClosingMatch) {
+        const lastDescEntry = descClosingMatch[1];
+        const descClosing = descClosingMatch[2];
+
+        const lastDescWithComma = lastDescEntry.trimEnd().endsWith(',')
+          ? lastDescEntry
+          : lastDescEntry.replace(/(\S)\s*$/, '$1,\n');
+
+        const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',\n`;
+
+        content = content.replace(
+          lastDescEntry + descClosing,
+          lastDescWithComma + newDescEntry + descClosing
+        );
+      }
+
+      await fs.writeFile(enumPath, content);
+
+      console.log(colors.green(`✅ Added task: ${taskKey}`));
+      console.log(colors.dim(`   Description: ${description}`));
+      console.log(colors.dim(`   File: src/enums/Task.ts`));
+
+      console.log(colors.cyan('\n💡 Usage in routes:'));
+      console.log(colors.dim(`   import { checkPermission } from '../middleware/checkPermission';`));
+      console.log(colors.dim(`   import { Task } from '../enums/Task';`));
+      console.log(colors.dim(`   router.get('/endpoint', auth, checkPermission(Task.${taskKey}), handler);`));
+
+    } catch (error) {
+      console.error(colors.red('❌ Error adding task:'), (error as Error).message);
       process.exit(1);
     }
   });

@@ -34,7 +34,7 @@ export interface IGoogleUserData {
   profilePicture?: string;
 }
 
-export const login = async (email: string, password: string): Promise<IAuthResult> => {
+export const login = async (email: string, password: string): Promise<IAuthResult & { roles: any[]; tasks: string[] }> => {
   const user = await User.findByEmailWithPassword(email);
   if (!user) {
     throw new AppError('Invalid email or password', 401);
@@ -58,12 +58,22 @@ export const login = async (email: string, password: string): Promise<IAuthResul
   user.lastLogin = new Date();
   await user.save();
 
+  // Fetch user with populated roles for the response
+  const userWithRoles = await User.findById(userId)
+    .populate<{ roles: Array<{ _id: Types.ObjectId; name: string; description?: string; tasks: string[]; isActive: boolean }> }>('roles', 'name description tasks isActive');
+
+  // Collect all tasks from active roles
+  const roles = (userWithRoles?.roles || []).filter(r => r.isActive);
+  const tasks = [...new Set(roles.flatMap(r => r.tasks))];
+
   const { password: _, refreshTokens: __, ...userWithoutSensitiveData } = user.toObject();
-  
-  return { 
-    user: userWithoutSensitiveData as IUser, 
-    accessToken, 
-    refreshToken 
+
+  return {
+    user: userWithoutSensitiveData as IUser,
+    accessToken,
+    refreshToken,
+    roles,
+    tasks,
   };
 };
 

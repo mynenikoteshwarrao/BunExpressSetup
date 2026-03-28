@@ -1,29 +1,37 @@
 {
   "name": "koti",
-  "version": "1.0.8",
+  "version": "2.0.3",
   "description": "⚠️ DEVELOPMENT VERSION: CLI tool to generate Bun API projects with Express and MongoDB. This is an initial development release and may contain errors or bugs. Use at your own discretion.",
   "main": "dist/cli.js",
   "bin": {
-    "koti": "./dist/cli.js"
+    "koti": "./dist/cli.js",
+    "koti-mcp": "./dist/mcp-server.js"
   },
   "scripts": {
     "build": "tsc",
+    "build:mcp": "tsc && echo 'MCP server built at dist/mcp-server.js'",
     "dev": "ts-node src/cli.ts",
+    "dev:mcp": "ts-node src/mcp-server.ts",
     "start": "node dist/cli.js",
+    "start:mcp": "node dist/mcp-server.js",
+    "pack:mcpb": "mcpb pack",
     "update-version": "node scripts/update-version.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run update-version && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
     "commander": "^11.1.0",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.2",
-    "@types/node": "^20.10.0",
     "@types/fs-extra": "^11.0.4",
-    "ts-node": "^10.9.1"
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2",
+    "vitest": "^4.1.1"
   },
   "keywords": [
     "bun",
@@ -34,7 +42,11 @@
     "generator",
     "scaffold",
     "boilerplate",
-    "javascript",
+    "mcp",
+    "model-context-protocol",
+    "ai-tools",
+    "claude",
+    "typescript",
     "nodejs"
   ],
   "author": {
@@ -54,8 +66,10 @@
     "node": ">=16.0.0"
   },
   "files": [
-    "koti",
+    "dist/",
     "templates/",
+    "manifest.json",
+    "version.json",
     "README.md",
     "LICENSE"
   ]

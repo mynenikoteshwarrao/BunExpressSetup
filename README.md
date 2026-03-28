@@ -1,134 +1,154 @@
 # Koti - Bun API Generator
 
-A CLI tool that generates Bun-based API projects with Express.js and MongoDB setup. This tool creates a complete, production-ready API project structure with authentication, security middleware, and best practices built-in.
+A CLI tool that generates Bun-based API projects with Express.js and MongoDB setup. Creates a complete, production-ready API project structure with authentication, security middleware, and best practices built-in.
 
-## ⚠️ Development Version Disclaimer
+## Current Version: 2.0.3
 
-**Current Version: 1.0.8 - Latest Release**
+> **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
 
-This is a development version with significant improvements and may contain errors, bugs, or security vulnerabilities. Please use with caution:
+## What's New in v2.0.3
 
-- **Review all generated code** before using in production environments
-- **Test thoroughly** in development environments first
-- **Update dependencies** to latest secure versions after generation
-- **Implement proper security measures** for production deployment
-- **Use at your own discretion and risk**
+### RBAC & User Management
+- **User CRUD** — Built-in user management at `/api/users` with list, create, update, soft-delete, and role assignment endpoints.
+- **Independent `checkPermission` middleware** — Separate from `auth`. Routes that only need authentication use just `auth`; routes needing permissions chain `auth, checkPermission(Task.X)`. SUPER_ADMIN bypasses all permission checks.
+- **Login response enrichment** — Login now returns `roles` (active role objects) and `tasks` (flat deduplicated array) so the frontend can control UI visibility.
+- **Auto task generation** — `koti model` with CRUD now prompts to auto-create VIEW/CREATE/UPDATE/DELETE tasks and wire `checkPermission` into generated routes.
+- **Master seed data** — `npm run seed` creates Super Admin + Admin roles and default users (`superadmin@app.com` / `admin@app.com`).
+- **Barrel file auto-updates** — All CLI commands (`model`, `controller`, `service`, `middleware`, `enum`) auto-update their respective `index.ts` barrel files.
 
-This software is provided "as-is" without warranty of any kind. Always review and validate generated code before production use.
+### Environment & Configuration
+- **Comprehensive `.env` template** — `koti new` generates a full `.env` with all configuration sections: Server, Database, JWT, Security, Pagination, Google OAuth, Email, TinyURL, File Upload/S3. Database always points to `mongodb://localhost:27017/<project-name>`.
+- **Auto-generated JWT secrets** — Cryptographically secure JWT and refresh token secrets injected via `crypto.randomBytes()`. No more placeholder secrets.
+- **`.env.example` included** — Ships with every generated project as a reference template.
 
-## 🚀 New Features in v1.0.8
+### Security & Fixes
+- **TypeScript strict mode compatibility** — Fixed `delete` operator errors in model `toJSON` transforms for `ts-node` compatibility (`npm run seed` now works out of the box).
 
-### ✨ **Latest Improvements**
-- **Enhanced Stability**: Improved error handling and bug fixes
-- **Better Performance**: Optimized code generation and template processing
-- **Security Updates**: Latest dependency versions and security improvements
-- **Documentation Refresh**: Cleaner, more comprehensive documentation
-- **Version Consistency**: Centralized version management across all components
+### CRUD & Validation
+- **Joi validation generation** — `koti model` with CRUD now generates Joi validation schemas in `src/validators/` with `create` and `update` schemas mapped to your model fields.
+- **Route-level validation** — Generated CRUD routes automatically wire up `validate()` middleware on POST/PUT endpoints.
+- **Fixed CRUD file naming** — Changed from `toLowerCase()` to `toCamelCase()`, so `koti model UserProfile` correctly generates `userProfileController.ts`, `userProfileService.ts`, etc.
 
-### 🔧 **Previous Major Features (v1.0.7)**
-- **Modern TypeScript Templates**: Complete migration from JavaScript to TypeScript
-- **UUID Implementation**: Uses UUIDs instead of ObjectIds for better JSON serialization
-- **Enhanced Security**: Updated middleware with better error handling and validation
-- **Improved Documentation**: Complete Swagger/OpenAPI 3.0 documentation
-- **Better Project Structure**: Organized with proper TypeScript architecture
-- **Modern Dependencies**: Updated to latest versions of all dependencies
+### Model Editing
+- **Clean `.bak` backups** — `koti model:edit` now saves previous files as `.bak` instead of commenting out old code in the same file. Updated files are clean and compilable.
+- **Fixed field parser** — `parseExistingModel` regex now correctly extracts all existing fields when editing models.
+
+### Project Scaffolding
+- **Template placeholder replacement** — `koti new` now recursively replaces `{{PROJECT_NAME}}` in all `.ts` and `.json` files copied from templates.
+- **Validators directory** — `koti new` creates `src/validators/` alongside other src directories.
+- **No more template overwrites** — `generateEssentialFiles()` no longer overwrites production-quality template files with simpler inline versions. Only `.env` is generated dynamically.
+
+### Server & Runtime
+- **Graceful shutdown** — Generated `server.ts` includes SIGTERM/SIGINT handlers with `mongoose.connection.close()`.
+- **Dynamic version** — Server reads version from `package.json` at startup instead of hardcoding `1.0.0`.
+
+### Developer Experience
+- **Hardened `getVersion()`** — Falls back gracefully through `version.json` → `package.json` → `0.0.0-unknown` instead of calling `process.exit(1)`.
+- **Comprehensive test suite** — 55 tests (16 static + 39 integration) covering all CLI commands using vitest.
+- **Centralized version** — Single `version.json` as the source of truth, referenced by CLI and tests.
 
 ## Features
 
 - **TypeScript First**: Full TypeScript support with type safety
 - **Bun Runtime**: Optimized for speed with modern JavaScript runtime
 - **Express.js**: Minimal and flexible web framework
-- **MongoDB Integration**: Complete setup with Mongoose ODM and UUIDs
-- **JWT Authentication**: Ready-to-use authentication system with refresh tokens
+- **MongoDB Integration**: Complete setup with Mongoose ODM
+- **JWT Authentication**: Access and refresh token system with Google OAuth support
 - **Security First**: Helmet, CORS, rate limiting, and password hashing
-- **Error Handling**: Centralized error handling middleware
-- **Request Validation**: Joi validation with detailed error messages
+- **Input Validation**: Joi validation with auto-generated schemas for CRUD models
 - **API Documentation**: Complete Swagger/OpenAPI 3.0 documentation
-- **Environment Config**: Comprehensive environment variable setup
-- **Modern Structure**: Well-organized folder structure following best practices
+- **Graceful Shutdown**: Proper signal handling and database cleanup
+- **Audit Logging**: Built-in audit trail for operations
+- **Email Support**: Nodemailer integration for password reset and verification
+- **File Uploads**: Multer-based file upload with S3 support
 
 ## Installation
 
 ### Global Installation (Recommended)
 
-Install globally via npm:
-
 ```bash
-npm install -g koti@1.0.8
+npm install -g koti@2.0.3
 ```
 
 ### Development Setup
 
-For development or local testing:
+```bash
+git clone https://github.com/mynenikoteshwarrao/BunExpressSetup.git
+cd BunExpressSetup
+npm install
+npm run build
+```
 
-1. **Clone this repository**:
-   ```bash
-   git clone https://github.com/mynenikoteshwarrao/BunExpressSetup.git
-   cd BunExpressSetup
-   ```
+## Commands
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+### `koti new <project-name>`
 
-3. **Build the CLI**:
-   ```bash
-   npm run build
-   ```
-
-## Usage
-
-### Create a new Bun API project:
+Creates a complete API project with all boilerplate, templates, and auto-installed dependencies.
 
 ```bash
 koti new my-awesome-api
-```
-
-Or use the create alias:
-
-```bash
+# or
 koti create my-awesome-api
 ```
 
-### Enhanced TypeScript Code Generation:
+### `koti model <name>`
 
-**Create TypeScript models with UUIDs:**
+Interactive command to create a Mongoose model with TypeScript interfaces. Prompts for field names, types (String, Number, Date, Boolean, ObjectId, Array, Mixed, JSON), required/unique/indexed flags, and default values. Optionally generates full CRUD (controller, service, routes, Joi validation).
+
 ```bash
-koti create:model Product
-# Interactive prompt for fields, types, validation rules
-# Generates model with UUID primary key, proper TypeScript interfaces
+koti model Product
 ```
 
-**Create TypeScript enums:**
+### `koti model:edit <name>`
+
+Interactive command to add or delete fields on an existing model. Detects and optionally updates associated CRUD files. Previous files are saved as `.bak` backups.
+
 ```bash
-koti create:enum Status
-# Interactive prompt for enum type (string/number) and values
+koti model:edit Product
 ```
 
-**Create TypeScript controllers:**
+### `koti controller <name>`
+
+Generates a TypeScript controller with CRUD operation stubs.
+
 ```bash
-koti create:controller Product
-# Generates controller with CRUD operations and proper error handling
+koti controller Product
+# Creates src/controllers/productController.ts
 ```
 
-**Create TypeScript services:**
+### `koti service <name>`
+
+Generates a TypeScript service layer with business logic stubs.
+
 ```bash
-koti create:service Product
-# Generates service layer with business logic
+koti service Product
+# Creates src/services/productService.ts
 ```
 
-**Create TypeScript middleware:**
+### `koti middleware <name>`
+
+Generates an Express middleware with proper TypeScript types.
+
 ```bash
-koti create:middleware Auth
-# Generates middleware with proper TypeScript types
+koti middleware RateLimit
+# Creates src/middleware/rateLimit.ts
 ```
 
-**CRUD Generation:**
+### `koti enum <name>`
+
+Interactive command to create a TypeScript enum (string or number type).
+
 ```bash
-koti create:model Product
-# When prompted, choose 'y' for CRUD generation
-# Automatically creates model, controller, service, and routes
+koti enum Status
+```
+
+### `koti task <name>`
+
+Adds a new task to the RBAC Task enum with a description. Tasks can also be auto-generated when creating models with CRUD.
+
+```bash
+koti task MANAGE_ORDERS
+# Adds MANAGE_ORDERS to src/enums/Task.ts
 ```
 
 ## Generated Project Structure
@@ -137,224 +157,168 @@ koti create:model Product
 my-awesome-api/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts         # MongoDB connection with UUID support
+│   │   ├── database.ts         # MongoDB connection
 │   │   ├── email.ts            # Email configuration
 │   │   ├── logger.ts           # Logger configuration
-│   │   ├── passport.ts         # Passport.js configuration
+│   │   ├── passport.ts         # Passport.js / Google OAuth
 │   │   ├── s3.ts               # AWS S3 configuration
-│   │   └── swagger.ts          # Swagger/OpenAPI 3.0 configuration
+│   │   └── swagger.ts          # Swagger/OpenAPI 3.0 setup
 │   ├── controllers/
 │   │   ├── auditController.ts  # Audit logging controller
-│   │   ├── authController.ts   # Authentication controllers
-│   │   ├── documentController.ts # Document management controller
-│   │   ├── tinyUrlController.ts # URL shortening controller
-│   │   └── index.ts           # Controller exports
+│   │   ├── authController.ts   # Authentication controller
+│   │   ├── documentController.ts # Document management
+│   │   ├── tinyUrlController.ts  # URL shortening
+│   │   ├── userController.ts   # User CRUD controller
+│   │   └── index.ts
 │   ├── middleware/
 │   │   ├── auditMiddleware.ts  # Audit logging middleware
-│   │   ├── auth.ts            # JWT authentication middleware
-│   │   ├── errorHandler.ts    # Custom error handling middleware
-│   │   ├── validation.ts      # Joi validation middleware
-│   │   └── index.ts           # Middleware exports
+│   │   ├── auth.ts             # JWT authentication
+│   │   ├── authorize.ts        # RBAC authorization middleware
+│   │   ├── checkPermission.ts  # Independent permission check middleware
+│   │   ├── errorHandler.ts     # Centralized error handling
+│   │   ├── validation.ts       # Joi validation middleware
+│   │   └── index.ts
 │   ├── models/
-│   │   ├── AuditLog.ts        # Audit logging model
-│   │   ├── Document.ts        # Document management model
-│   │   ├── TinyUrl.ts         # URL shortening model
-│   │   ├── User.ts            # User model with UUID and TypeScript
-│   │   └── index.ts           # Model exports
+│   │   ├── AuditLog.ts         # Audit log model
+│   │   ├── Document.ts         # Document model
+│   │   ├── Role.ts             # Role model for RBAC
+│   │   ├── TinyUrl.ts          # URL shortening model
+│   │   ├── User.ts             # User model
+│   │   └── index.ts
 │   ├── routes/
-│   │   ├── audit.ts           # Audit logging routes
-│   │   ├── auth.ts            # Authentication routes
-│   │   ├── document.ts        # Document management routes
-│   │   ├── tinyUrl.ts         # URL shortening routes
-│   │   └── index.ts           # General API routes
+│   │   ├── audit.ts            # Audit routes
+│   │   ├── auth.ts             # Auth routes
+│   │   ├── document.ts         # Document routes
+│   │   ├── tinyUrl.ts          # URL shortening routes
+│   │   ├── user.ts             # User CRUD routes
+│   │   └── index.ts            # Route registry
+│   ├── seeds/
+│   │   ├── seed.ts             # Master seed (roles + users)
+│   │   └── seedRoles.ts        # Role-only seed data
 │   ├── services/
-│   │   ├── auditService.ts    # Audit logging service
-│   │   ├── authService.ts     # Authentication service
-│   │   ├── documentService.ts # Document management service
-│   │   ├── tinyUrlService.ts  # URL shortening service
-│   │   └── index.ts           # Service exports
+│   │   ├── auditService.ts     # Audit service
+│   │   ├── authService.ts      # Auth with Google OAuth & email verification
+│   │   ├── documentService.ts  # Document service
+│   │   ├── tinyUrlService.ts   # URL shortening service
+│   │   ├── userService.ts      # User CRUD service
+│   │   └── index.ts
+│   ├── schemas/                # Reserved for JSON schemas
+│   ├── enums/                  # TypeScript enums (via koti enum)
+│   ├── validators/             # Joi validation schemas (via koti model --crud)
 │   ├── types/
-│   │   └── api.ts             # API response types and interfaces
+│   │   └── api.ts              # API response types & interfaces
 │   ├── utils/
-│   │   ├── AppError.ts        # Custom error class
-│   │   ├── logger.ts          # Logging utility
-│   │   ├── responseHelper.ts  # Response formatting utilities
-│   │   ├── tokenUtils.ts      # JWT token utilities
-│   │   └── index.ts           # Utility exports
-│   └── server.ts              # Main server file with middleware setup
-├── dist/                      # Compiled JavaScript output
-├── uploads/                   # File upload storage (if file upload enabled)
-├── .env                       # Environment variables
-├── .env.example              # Environment variables template
-├── .gitignore                # Git ignore rules
-├── package.json              # Dependencies and scripts
-├── tsconfig.json             # TypeScript configuration
-├── bun.lockb                 # Bun lock file
-└── README.md                 # Project documentation
+│   │   ├── AppError.ts         # Custom error class
+│   │   ├── logger.ts           # Logging utility
+│   │   ├── responseHelper.ts   # Response formatting
+│   │   ├── tokenUtils.ts       # JWT token utilities
+│   │   └── index.ts
+│   └── server.ts               # Entry point with graceful shutdown
+├── .env                        # Auto-generated with secure secrets
+├── .gitignore
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## Quick Start for Generated Project
+## Quick Start
 
-1. **Navigate to your project**:
-   ```bash
-   cd my-awesome-api
-   ```
+```bash
+koti new my-api
+cd my-api
+# Dependencies are auto-installed via bun or npm
 
-2. **Install dependencies** (automatically done during generation):
-   ```bash
-   bun install
-   ```
+# Configure MongoDB URI in .env (JWT secrets are pre-generated)
+# Start MongoDB, then:
 
-3. **Set up MongoDB**:
-   - Install and start MongoDB locally, or
-   - Get a MongoDB Atlas connection string
+# Seed default roles and users
+npm run seed
 
-4. **Configure environment**:
-   - Copy `.env.example` to `.env`
-   - Update MongoDB URI and other settings
-   - Generate secure JWT secrets
+# Start development server
+bun run dev
+```
 
-5. **Start development server**:
-   ```bash
-   bun run dev
-   ```
-
-6. **View API documentation**:
-   - Open `http://localhost:8000/api-docs` for Swagger UI
+Open `http://localhost:8000/api-docs` for Swagger UI.
 
 ## API Endpoints
 
-### Health Check
-- `GET /health` - Server health status
-
-### General API
-- `GET /api/` - API welcome message
-- `GET /api/status` - Detailed API status
+### Health & Status
+- `GET /health` — Server health check
+- `GET /api/` — API welcome message
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get current user profile
-- `POST /api/auth/refresh-token` - Refresh access token
-- `POST /api/auth/logout` - User logout
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password with token
+- `POST /api/auth/register` — Register new user
+- `POST /api/auth/login` — User login (returns roles & tasks)
+- `GET /api/auth/profile` — Get current user profile (protected)
+- `POST /api/auth/refresh-token` — Refresh access token
+- `POST /api/auth/logout` — User logout
+- `POST /api/auth/forgot-password` — Request password reset email
+- `POST /api/auth/reset-password` — Reset password with token
+
+### User Management
+- `GET /api/users` — List users (protected, VIEW_USERS)
+- `GET /api/users/:id` — Get user by ID (protected, VIEW_USERS)
+- `POST /api/users` — Create user (protected, CREATE_USER)
+- `PUT /api/users/:id` — Update user (protected, UPDATE_USER)
+- `DELETE /api/users/:id` — Soft-delete user (protected, DELETE_USER)
+- `PUT /api/users/:id/roles` — Assign roles (protected, MANAGE_USER_ROLES)
 
 ### Documentation
-- `GET /api-docs` - Interactive Swagger UI documentation
-- `GET /docs/api` - Alternative documentation endpoint
+- `GET /api-docs` — Interactive Swagger UI
 
 ## Environment Variables
 
-The generated `.env` file includes:
+The generated `.env` includes auto-generated secure secrets:
 
 ```env
-# Environment Configuration
 NODE_ENV=development
 PORT=8000
 
-# Database
-MONGODB_URI=mongodb://localhost:27017/your-project-name
+MONGODB_URI=mongodb://localhost:27017/my-api
 
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_REFRESH_SECRET=your-super-secret-jwt-refresh-key-change-this-in-production
+JWT_SECRET=<auto-generated 128-char hex>
+JWT_REFRESH_SECRET=<auto-generated 128-char hex>
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:5000
-
-# API Configuration
 API_URL=http://localhost:8000
 
-# Pagination Configuration
 DEFAULT_PAGE_LIMIT=10
 MAX_PAGE_LIMIT=100
 
-# Security Configuration
 BCRYPT_SALT_ROUNDS=12
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 ```
 
-## Dependencies Included
+## Dependencies
 
-### Production Dependencies
-- **express**: Web framework
-- **mongoose**: MongoDB ODM with TypeScript support
-- **typescript**: TypeScript language support
-- **dotenv**: Environment variable management
-- **cors**: Cross-origin resource sharing
-- **helmet**: Security headers
-- **bcryptjs**: Password hashing
-- **jsonwebtoken**: JWT token management
-- **express-rate-limit**: Request rate limiting
-- **joi**: Request validation
-- **swagger-jsdoc**: API documentation generation
-- **swagger-ui-express**: Interactive API documentation
-- **uuid**: UUID generation for primary keys
+### Production
+express, mongoose, typescript, dotenv, cors, helmet, bcryptjs, jsonwebtoken, express-rate-limit, joi, swagger-jsdoc, swagger-ui-express, morgan, passport, passport-google-oauth20, nodemailer, multer
 
-### Development Dependencies
-- **ts-node**: TypeScript execution
-- **nodemon**: Development server with auto-restart
-- **@types/**: TypeScript type definitions
+### Development
+ts-node, nodemon, @types/* (TypeScript type definitions)
 
-## Security Features
+## Testing
 
-- **JWT Authentication**: Access and refresh token system
-- **Password Hashing**: bcrypt with configurable rounds
-- **Rate Limiting**: Protection against brute force attacks
-- **CORS Configuration**: Secure cross-origin requests
-- **Helmet**: Sets various HTTP headers for security
-- **Input Validation**: Comprehensive Joi validation
-- **Error Handling**: Prevents information leakage
-- **UUID Primary Keys**: Better security than sequential IDs
-- **Audit Logging**: Complete audit trail for all operations
-
-## Development Commands
+The CLI itself is tested with 55 vitest tests covering all commands:
 
 ```bash
-# Start production server
-bun run start
-
-# Start development server with hot reload
-bun run dev
-
-# Build TypeScript to JavaScript
-bun run build
-
-# Type checking
-bun run type-check
-
-# Run linting
-bun run lint
-
-# Run tests (when implemented)
-bun run test
+npm test
 ```
 
 ## Contributing
 
 1. Fork the repository
 2. Create your feature branch
-3. Commit your changes
-4. Add tests if applicable
-5. Submit a pull request
+3. Run tests: `npm test`
+4. Submit a pull request
 
 ## License
 
-MIT License - feel free to use this tool for personal and commercial projects.
-
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check the generated project's README for specific setup instructions
-2. Ensure MongoDB is running and accessible
-3. Verify environment variables are properly configured
-4. Check that all dependencies are installed
+MIT License — free for personal and commercial use.
 
 ---
 
-**Generated with ❤️ by [Koti CLI](https://www.npmjs.com/package/koti) v1.0.8**
+**Generated with Koti CLI v2.0.3** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
