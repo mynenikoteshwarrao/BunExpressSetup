@@ -1,10 +1,29 @@
 # Koti - Bun API Generator
 
-A CLI tool that generates Bun-based API projects with Express.js and MongoDB setup. Creates a complete, production-ready API project structure with authentication, security middleware, and best practices built-in.
+A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and MongoDB. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on either framework.
 
-## Current Version: 2.0.3
+## Current Version: 3.0.0
 
 > **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
+
+## What's New in v3.0.0 🎉
+
+### Choose Your Framework: Express *or* Elysia
+
+This major release adds **first-class [Elysia](https://elysiajs.com/) support** alongside Express, with **full feature parity** between the two.
+
+- **Pick at create time** — `koti new my-api` now prompts you to choose Express or Elysia, or pass `--framework express|elysia` to skip the prompt (CI-friendly). The flag always wins; non-interactive runs default to Express.
+- **Full parity** — Every Express feature is reproduced in idiomatic Elysia: JWT auth, RBAC (roles/permissions with `SUPER_ADMIN` wildcard), audit logging, document upload + S3, tinyURL shortener, Swagger/OpenAPI docs, email, and password reset/verification. Same endpoints, same response shapes, same env keys.
+- **Idiomatic Elysia** — Auth + permissions implemented as a single Elysia macro, validation via TypeBox (`t`) schemas, global `onError` handler, `@elysiajs/swagger`, `elysia-rate-limit`, native `t.File()` uploads, and `Bun.file` streaming downloads. No Express shims.
+- **`koti.config.json`** — Every generated project records its framework (and CLI version) so future tooling can detect it.
+
+### Under the Hood
+
+- **Restructured templates** — `templates/` is now split into `express/`, `elysia/`, and a framework-agnostic `shared/` layer (models, services, utils, enums, seeds, types) reused by both, so business logic stays single-sourced.
+- **Framework-aware scaffolding** — `koti new` copies the chosen framework template + the shared layer, injects auto-generated JWT secrets, and writes `koti.config.json`. Inline Express code generation is now gated to Express only.
+- **Validated** — Generated Elysia projects ship with zero `express` imports, all routes wired, type-clean against the shared baseline, and a green HTTP boot smoke (health, swagger spec, protected-route 401). CLI suite: 55/55 tests passing.
+
+> **Note:** The framework choice currently applies to `koti new`. The component generators (`koti model/controller/service/middleware`) still emit Express-oriented code; framework-aware generators are planned for a follow-up release.
 
 ## What's New in v2.0.3
 
@@ -49,9 +68,10 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 
 ## Features
 
+- **Framework Choice**: Scaffold with **Express** or **Elysia** — full feature parity on either
 - **TypeScript First**: Full TypeScript support with type safety
 - **Bun Runtime**: Optimized for speed with modern JavaScript runtime
-- **Express.js**: Minimal and flexible web framework
+- **Express.js or Elysia**: Pick a minimal, flexible web framework at create time
 - **MongoDB Integration**: Complete setup with Mongoose ODM
 - **JWT Authentication**: Access and refresh token system with Google OAuth support
 - **Security First**: Helmet, CORS, rate limiting, and password hashing
@@ -67,7 +87,7 @@ A CLI tool that generates Bun-based API projects with Express.js and MongoDB set
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g koti@2.0.3
+npm install -g koti@3.0.0
 ```
 
 ### Development Setup
@@ -83,13 +103,21 @@ npm run build
 
 ### `koti new <project-name>`
 
-Creates a complete API project with all boilerplate, templates, and auto-installed dependencies.
+Creates a complete API project with all boilerplate, templates, and auto-installed dependencies. Prompts for the framework (Express or Elysia) unless `--framework` is supplied.
 
 ```bash
+# Interactive — choose Express or Elysia when prompted
 koti new my-awesome-api
-# or
-koti create my-awesome-api
+
+# Non-interactive — choose explicitly (CI-friendly)
+koti new my-awesome-api --framework elysia
+koti new my-awesome-api --framework express
+
+# `create` is an alias for `new`
+koti create my-awesome-api --framework elysia
 ```
+
+The generated project includes a `koti.config.json` recording the chosen framework.
 
 ### `koti model <name>`
 
@@ -216,10 +244,18 @@ my-awesome-api/
 │   └── server.ts               # Entry point with graceful shutdown
 ├── .env                        # Auto-generated with secure secrets
 ├── .gitignore
+├── koti.config.json            # Records the chosen framework + CLI version
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+> **Framework differences:** the tree above shows the **Express** output. The **Elysia**
+> project mirrors it with idiomatic equivalents — `config/oauth.ts` (hand-rolled Google
+> OAuth2) instead of `config/passport.ts`, TypeBox (`t`) schemas in `middleware/validation.ts`
+> instead of Joi (no `validators/`), a single auth+permission macro in `middleware/auth.ts`,
+> and `utils/respond.ts` instead of `responseHelper.ts`. Models, services, seeds, enums, and
+> types are shared verbatim between both frameworks.
 
 ## Quick Start
 
@@ -292,13 +328,16 @@ RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 ```
 
-## Dependencies
+## Dependencies (generated projects)
 
-### Production
-express, mongoose, typescript, dotenv, cors, helmet, bcryptjs, jsonwebtoken, express-rate-limit, joi, swagger-jsdoc, swagger-ui-express, morgan, passport, passport-google-oauth20, nodemailer, multer
+### Express template
+express, mongoose, typescript, dotenv, cors, helmet, bcryptjs, jsonwebtoken, express-rate-limit, joi, swagger-jsdoc, swagger-ui-express, passport, passport-google-oauth20, nodemailer, multer
+
+### Elysia template
+elysia, @elysiajs/cors, @elysiajs/swagger, elysia-rate-limit, mongoose, dotenv, bcryptjs, jsonwebtoken, nodemailer, aws-sdk (validation via Elysia's built-in TypeBox `t`; uploads/downloads via native `t.File()` + `Bun.file` — no multer; OAuth2 hand-rolled — no passport)
 
 ### Development
-ts-node, nodemon, @types/* (TypeScript type definitions)
+ts-node / bun, @types/* (TypeScript type definitions)
 
 ## Testing
 
@@ -321,4 +360,4 @@ MIT License — free for personal and commercial use.
 
 ---
 
-**Generated with Koti CLI v2.0.3** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
+**Generated with Koti CLI v3.0.0** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
