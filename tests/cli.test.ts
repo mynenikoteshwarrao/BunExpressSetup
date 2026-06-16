@@ -89,19 +89,27 @@ describe('Koti CLI', () => {
 
   describe('Template files', () => {
     it('should have all required template source files', () => {
+      // Templates are split into per-framework (express/elysia) + shared layers.
       const requiredFiles = [
-        'templates/src/server.ts',
-        'templates/src/config/database.ts',
-        'templates/src/config/swagger.ts',
-        'templates/src/middleware/auth.ts',
-        'templates/src/middleware/errorHandler.ts',
-        'templates/src/middleware/validation.ts',
-        'templates/src/models/User.ts',
-        'templates/src/services/authService.ts',
-        'templates/src/types/api.ts',
-        'templates/src/utils/AppError.ts',
-        'templates/src/routes/auth.ts',
-        'templates/src/routes/index.ts',
+        // Express framework template
+        'templates/express/src/server.ts',
+        'templates/express/src/config/database.ts',
+        'templates/express/src/config/swagger.ts',
+        'templates/express/src/middleware/auth.ts',
+        'templates/express/src/middleware/errorHandler.ts',
+        'templates/express/src/middleware/validation.ts',
+        'templates/express/src/routes/auth.ts',
+        'templates/express/src/routes/index.ts',
+        // Elysia framework template
+        'templates/elysia/src/server.ts',
+        'templates/elysia/src/middleware/auth.ts',
+        'templates/elysia/src/routes/auth.ts',
+        'templates/elysia/src/routes/index.ts',
+        // Shared (framework-agnostic) layer
+        'templates/shared/src/models/User.ts',
+        'templates/shared/src/services/authService.ts',
+        'templates/shared/src/types/api.ts',
+        'templates/shared/src/utils/AppError.ts',
       ];
 
       for (const file of requiredFiles) {
@@ -111,7 +119,7 @@ describe('Koti CLI', () => {
 
     it('template server.ts should not have hardcoded version', () => {
       const content = fs.readFileSync(
-        path.join(ROOT, 'templates', 'src', 'server.ts'),
+        path.join(ROOT, 'templates', 'express', 'src', 'server.ts'),
         'utf-8'
       );
       // Should use getAppVersion(), not a hardcoded string
@@ -121,7 +129,7 @@ describe('Koti CLI', () => {
 
     it('template server.ts should have graceful shutdown', () => {
       const content = fs.readFileSync(
-        path.join(ROOT, 'templates', 'src', 'server.ts'),
+        path.join(ROOT, 'templates', 'express', 'src', 'server.ts'),
         'utf-8'
       );
       expect(content).toContain('gracefulShutdown');

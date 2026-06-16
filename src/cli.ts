@@ -1471,7 +1471,7 @@ const updateMainRoutes = async (modelName: string): Promise<void> => {
 };
 
 // Generate essential TypeScript files
-const generateEssentialFiles = async (projectPath: string, projectName: string): Promise<void> => {
+const generateEssentialFiles = async (projectPath: string, projectName: string, framework: string = 'express'): Promise<void> => {
   const srcPath = path.join(projectPath, 'src');
 
   // Generate basic route files
@@ -1717,11 +1717,16 @@ router.get('/profile', auth, authController.getProfile);
 
 export default router;`;
 
-  await fs.writeFile(path.join(srcPath, 'routes', 'index.ts'), indexRouteContent);
-  await fs.writeFile(path.join(srcPath, 'routes', 'auth.ts'), authRouteContent);
-  
-  console.log(colors.green('✅ Created file: src/routes/index.ts'));
-  console.log(colors.green('✅ Created file: src/routes/auth.ts'));
+  // These inline route templates are Express-specific (import { Router } from 'express').
+  // For non-Express frameworks the routes ship as static files in templates/<framework>/src,
+  // so only write them for Express to avoid clobbering the copied framework routes.
+  if (framework === 'express') {
+    await fs.writeFile(path.join(srcPath, 'routes', 'index.ts'), indexRouteContent);
+    await fs.writeFile(path.join(srcPath, 'routes', 'auth.ts'), authRouteContent);
+
+    console.log(colors.green('✅ Created file: src/routes/index.ts'));
+    console.log(colors.green('✅ Created file: src/routes/auth.ts'));
+  }
 
   // Generate enhanced auth controller with service layer
   const authControllerContent = `import { Request, Response, NextFunction } from 'express';
@@ -2208,118 +2213,6 @@ export const verifyRefreshToken = async (token: string): Promise<TokenPayload | 
   console.log(colors.green('✅ Created file: .env (with auto-generated JWT secrets)'));
 };
 
-// Generate TypeScript server template
-const generateServerTemplate = (projectName: string): string => {
-  return `import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
-import mongoose from 'mongoose';
-
-import { connectDB } from './config/database';
-import { errorHandler } from './middleware/errorHandler';
-import { setupSwagger } from './config/swagger';
-
-// Import routes
-import indexRoutes from './routes/index';
-import authRoutes from './routes/auth';
-
-dotenv.config();
-
-// Read version from package.json
-const getAppVersion = (): string => {
-  try {
-    const pkgPath = path.join(__dirname, '..', 'package.json');
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-    return pkg.version || '0.0.0';
-  } catch {
-    return '0.0.0';
-  }
-};
-
-const app: Application = express();
-const PORT: number = parseInt(process.env.PORT || '8000');
-
-// Connect to MongoDB
-connectDB();
-
-// Security middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5000',
-  credentials: true
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Setup Swagger documentation
-setupSwagger(app);
-
-// Routes
-app.use('/api', indexRoutes);
-app.use('/api/auth', authRoutes);
-
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: getAppVersion()
-  });
-});
-
-// Error handling middleware (should be last)
-app.use(errorHandler);
-
-// 404 handler
-app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.originalUrl
-  });
-});
-
-// Graceful shutdown
-const gracefulShutdown = async (signal: string) => {
-  console.log(\`\\n\${signal} received. Shutting down gracefully...\`);
-  try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed.');
-  } catch (err) {
-    console.error('Error closing MongoDB connection:', err);
-  }
-  process.exit(0);
-};
-
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(\`🚀 Server running on port \${PORT}\`);
-  console.log(\`📱 Environment: \${process.env.NODE_ENV || 'development'}\`);
-  console.log(\`📚 API Documentation: http://localhost:\${PORT}/api-docs\`);
-});
-
-export default app;
-`;
-};
-
 program
   .name('koti')
   .description('⚠️  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express and MongoDB\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.')
@@ -2673,8 +2566,9 @@ program
   .command('new')
   .alias('create')
   .argument('<project-name>', 'Name of the project to create')
+  .option('--framework <framework>', 'Framework choice: express or elysia (default: express)')
   .description('Create a new TypeScript Bun API project')
-  .action(async (projectName: string) => {
+  .action(async (projectName: string, options: { framework?: string }) => {
     try {
       console.log(colors.blue(`🚀 Creating TypeScript Bun API project: ${projectName}`));
       
@@ -2684,8 +2578,30 @@ program
       // Create project directory
       await fs.ensureDir(projectPath);
       
-      // Get template path
-      const templatePath = path.join(__dirname, '..', 'templates');
+      // Resolve framework: the --framework flag wins (CI-friendly). Otherwise
+      // prompt interactively — but only when attached to a TTY. In non-interactive
+      // contexts (CI, pipes, tests) there is no one to answer, so default to express.
+      let framework = options?.framework?.toLowerCase();
+      if (!framework) {
+        if (process.stdin.isTTY) {
+          const rl = createReadlineInterface();
+          const answer = (await askQuestion(
+            rl,
+            colors.cyan('\n📦 Choose a framework:\n  1) Express (default)\n  2) Elysia\nEnter choice [1-2 or name]: ')
+          )).trim().toLowerCase();
+          rl.close();
+          framework = (answer === '2' || answer === 'elysia') ? 'elysia' : 'express';
+        } else {
+          framework = 'express';
+        }
+      }
+      if (!['express', 'elysia'].includes(framework)) {
+        console.error(colors.red('Error: Framework must be either express or elysia'));
+        process.exit(1);
+      }
+      console.log(colors.dim(`🧩 Framework: ${framework}`));
+      const templatePath = path.join(__dirname, '..', 'templates', framework);
+      const sharedTemplatePath = path.join(__dirname, '..', 'templates', 'shared');
       
       // Create src directory structure
       const srcPath = path.join(projectPath, 'src');
@@ -2722,29 +2638,41 @@ program
       const templateSrcPath = path.join(templatePath, 'src');
       const projectSrcPath = path.join(projectPath, 'src');
 
-      // Copy the entire src directory structure
-      if (await fs.pathExists(templateSrcPath)) {
-        await fs.copy(templateSrcPath, projectSrcPath);
-
-        // Replace {{PROJECT_NAME}} in all copied .ts files
-        const replaceInDir = async (dirPath: string): Promise<void> => {
-          const entries = await fs.readdir(dirPath, { withFileTypes: true });
-          for (const entry of entries) {
-            const fullPath = path.join(dirPath, entry.name);
-            if (entry.isDirectory()) {
-              await replaceInDir(fullPath);
-            } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.json')) {
-              let content = await fs.readFile(fullPath, 'utf-8');
-              if (content.includes('{{PROJECT_NAME}}')) {
-                content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
-                await fs.writeFile(fullPath, content);
-              }
+      // Replace {{PROJECT_NAME}} in all copied .ts/.json files
+      const replaceInDir = async (dirPath: string): Promise<void> => {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            await replaceInDir(fullPath);
+          } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.json')) {
+            let content = await fs.readFile(fullPath, 'utf-8');
+            if (content.includes('{{PROJECT_NAME}}')) {
+              content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+              await fs.writeFile(fullPath, content);
             }
           }
-        };
-        await replaceInDir(projectSrcPath);
+        }
+      };
 
-        console.log(colors.green('✅ Copied TypeScript source files'));
+      // Copy framework-specific source files (templates/<framework>/src)
+      if (await fs.pathExists(templateSrcPath)) {
+        await fs.copy(templateSrcPath, projectSrcPath);
+        console.log(colors.green('✅ Copied framework source files'));
+      }
+
+      // Copy shared source files (models, services, utils, enums, seeds, types).
+      // Runs for BOTH frameworks, independent of whether the framework ships its
+      // own src/ — must NOT be nested inside the framework-src check above.
+      const sharedSrcPath = path.join(sharedTemplatePath, 'src');
+      if (await fs.pathExists(sharedSrcPath)) {
+        await fs.copy(sharedSrcPath, projectSrcPath);
+        console.log(colors.green('✅ Copied shared source files'));
+      }
+
+      // Replace placeholders across everything that was copied (framework + shared)
+      if (await fs.pathExists(projectSrcPath)) {
+        await replaceInDir(projectSrcPath);
       }
       
       // Copy additional template files
@@ -2767,9 +2695,21 @@ program
         }
       }
 
-      // Generate additional necessary files
-      await generateEssentialFiles(projectPath, projectName);
-      
+      // Generate additional necessary files (framework-aware)
+      await generateEssentialFiles(projectPath, projectName, framework);
+
+      // Write koti.config.json so generator commands can detect the framework later
+      const kotiConfig = {
+        framework,
+        kotiVersion: getVersion(),
+        createdAt: new Date().toISOString()
+      };
+      await fs.writeFile(
+        path.join(projectPath, 'koti.config.json'),
+        JSON.stringify(kotiConfig, null, 2)
+      );
+      console.log(colors.green('✅ Created file: koti.config.json'));
+
       console.log(colors.green('\n🎉 TypeScript project created successfully!'));
       
       // Automatically install dependencies

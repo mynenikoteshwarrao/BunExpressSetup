@@ -1,4 +1,4 @@
 {
-  "version": "2.0.3",
-  "description": "Stable release for Koti CLI"
+  "version": "3.0.0",
+  "description": "Major release: dual-framework support (Express + Elysia) for Koti CLI"
 }

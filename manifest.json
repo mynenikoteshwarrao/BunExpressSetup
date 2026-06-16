@@ -1,15 +1,18 @@
 {
-  "manifest_version": "0.1",
+  "manifest_version": "0.3",
   "name": "koti-mcp",
-  "display_name": "Koti CLI — API Scaffolding",
-  "version": "2.0.3",
-  "description": "Scaffold Bun + Express + MongoDB TypeScript API projects with RBAC, JWT auth, and Swagger docs through natural language.",
-  "long_description": "Koti CLI MCP server exposes 8 tools for creating and managing TypeScript API projects: scaffold complete projects, define Mongoose models with optional CRUD endpoints, create controllers/services/middleware/enums, manage RBAC permissions, and seed databases. All through AI-assisted natural language instead of interactive CLI prompts.",
+  "display_name": "Koti — API Project Scaffolding",
+  "version": "3.0.0",
+  "description": "Scaffold Bun + (Express or Elysia) + MongoDB TypeScript API projects with RBAC, JWT auth, and Swagger docs through natural language.",
+  "long_description": "Koti MCP server lets AI assistants create and manage full-stack TypeScript API projects.\n\n**8 Tools:**\n- `create_project` — Scaffold a complete project with auth, RBAC, Swagger, security middleware\n- `create_model` — Define Mongoose models with optional CRUD endpoints and RBAC permissions\n- `create_controller` / `create_service` / `create_middleware` — Generate architectural components\n- `create_enum` — Create TypeScript enums\n- `create_task` — Add RBAC permission tasks\n- `seed_database` — Populate MongoDB with default roles and admin users\n\n**3 Resources:** Inspect project structure, existing models, and RBAC tasks\n\n**2 Prompts:** Guided workflows for full API scaffolding and model creation\n\nInstead of running 10+ interactive CLI commands, describe what you want and the AI does it all.",
+  "icon": "icon.png",
   "author": {
-    "name": "mynenikoteshwarrao",
+    "name": "Koteshwar Rao Myneni",
     "email": "mynenikoteshwarrao@gmail.com",
     "url": "https://github.com/mynenikoteshwarrao"
   },
+  "homepage": "https://github.com/mynenikoteshwarrao/BunExpressSetup#readme",
+  "documentation": "https://github.com/mynenikoteshwarrao/BunExpressSetup/blob/main/MCP_DISTRIBUTION_GUIDE.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/mynenikoteshwarrao/BunExpressSetup"
@@ -28,23 +31,23 @@
   "tools": [
     {
       "name": "create_project",
-      "description": "Scaffold a complete Bun + Express + MongoDB TypeScript API project"
+      "description": "Scaffold a complete Bun + Express + MongoDB TypeScript API project with JWT auth, RBAC, Swagger, and security middleware"
     },
     {
       "name": "create_model",
-      "description": "Create a Mongoose model with optional CRUD endpoints and RBAC tasks"
+      "description": "Create a Mongoose model with typed interface, optional CRUD endpoints (controller, service, routes, Joi validation), and optional RBAC task generation"
     },
     {
       "name": "create_controller",
-      "description": "Create an empty TypeScript Express controller"
+      "description": "Create an empty TypeScript Express controller class with standard structure"
     },
     {
       "name": "create_service",
-      "description": "Create an empty TypeScript service class"
+      "description": "Create an empty TypeScript service class for business logic"
     },
     {
       "name": "create_middleware",
-      "description": "Create an Express middleware function"
+      "description": "Create an Express middleware function for request processing"
     },
     {
       "name": "create_enum",
@@ -52,35 +55,23 @@
     },
     {
       "name": "create_task",
-      "description": "Add an RBAC permission task to the Task enum"
+      "description": "Add an RBAC permission task to the Task enum for role-based access control"
     },
     {
       "name": "seed_database",
-      "description": "Seed MongoDB with default roles and admin users"
-    }
-  ],
-  "resources": [
-    {
-      "name": "project-structure",
-      "description": "View the file tree of a Koti project"
-    },
-    {
-      "name": "models-list",
-      "description": "List all Mongoose models in the project"
-    },
-    {
-      "name": "tasks-list",
-      "description": "List all RBAC tasks in the Task enum"
+      "description": "Seed MongoDB with default roles (Super Admin, Admin) and admin users"
     }
   ],
   "prompts": [
     {
       "name": "scaffold-api",
-      "description": "Guided workflow to create a new API project with models and RBAC"
+      "description": "Guided workflow: create project, define models, set up RBAC, and seed database",
+      "arguments": ["projectName", "description"]
     },
     {
       "name": "add-crud-model",
-      "description": "Guided model creation with full CRUD and permissions"
+      "description": "Guided model creation with full CRUD endpoints and RBAC permissions",
+      "arguments": ["modelName", "description", "projectPath"]
     }
   ],
   "keywords": [
@@ -93,12 +84,14 @@
     "crud",
     "rbac",
     "authentication",
-    "swagger"
+    "swagger",
+    "mongoose",
+    "jwt"
   ],
   "license": "MIT",
   "user_config": {},
   "compatibility": {
-    "claude_desktop": ">=0.10.0",
+    "claude_desktop": ">=1.0.0",
     "platforms": ["darwin", "win32", "linux"],
     "runtimes": {
       "node": ">=16.0.0"
