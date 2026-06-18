@@ -6,32 +6,60 @@ interface TokenPayload {
   username?: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+// Pinned signing algorithm — prevents algorithm-confusion / `alg: none` attacks.
+const JWT_ALGORITHM = 'HS256' as const;
+
+/**
+ * Read a required secret from the environment. No insecure hardcoded fallback —
+ * the server fails fast (on first token operation) if it is missing. Evaluated
+ * lazily (not at import time) so it works regardless of when dotenv loads.
+ */
+const requireEnv = (name: string): string => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Missing required environment variable: ${name}. Set it in your .env before starting the server.`
+    );
+  }
+  return value;
+};
+
+const accessSecret = (): string => requireEnv('JWT_SECRET');
+// Refresh uses its own secret when provided, otherwise falls back to JWT_SECRET
+// (never to a hardcoded value). Env names match .env / .env.example / README.
+const refreshSecret = (): string => process.env.JWT_REFRESH_SECRET || requireEnv('JWT_SECRET');
+const accessExpiry = (): string => process.env.JWT_EXPIRES_IN || '15m';
+const refreshExpiry = (): string => process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 export const generateAccessToken = async (payload: TokenPayload): Promise<string> => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, accessSecret(), {
+    expiresIn: accessExpiry(),
+    algorithm: JWT_ALGORITHM
+  } as jwt.SignOptions);
 };
 
 export const generateRefreshToken = async (payload: TokenPayload): Promise<string> => {
-  return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
+  return jwt.sign(payload, refreshSecret(), {
+    expiresIn: refreshExpiry(),
+    algorithm: JWT_ALGORITHM
+  } as jwt.SignOptions);
 };
 
 export const verifyAccessToken = async (token: string): Promise<TokenPayload | null> => {
+  // Resolve the secret BEFORE the try so a missing-secret error fails fast
+  // instead of being swallowed and mistaken for an invalid token.
+  const secret = accessSecret();
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    return decoded;
+    return jwt.verify(token, secret, { algorithms: [JWT_ALGORITHM] }) as TokenPayload;
   } catch (error) {
     return null;
   }
 };
 
 export const verifyRefreshToken = async (token: string): Promise<TokenPayload | null> => {
+  const secret = refreshSecret();
   try {
-    const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as TokenPayload;
-    return decoded;
+    return jwt.verify(token, secret, { algorithms: [JWT_ALGORITHM] }) as TokenPayload;
   } catch (error) {
     return null;
   }
