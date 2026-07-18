@@ -1,6 +1,6 @@
 {
   "name": "koti",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "CLI tool to scaffold Bun API projects with a choice of Express or Elysia framework and MongoDB. Pick your framework at create time (--framework express|elysia) with full feature parity: JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email. Review generated code before production use.",
   "main": "dist/cli.js",
   "bin": {

@@ -2,9 +2,18 @@
 
 A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and MongoDB. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on either framework.
 
-## Current Version: 3.0.0
+## Current Version: 3.0.1
 
 > **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
+
+## What's New in v3.0.1 🔒
+
+Security hardening for the generated auth layer (applies to **both** frameworks):
+
+- **Fixed a silent auth bypass** — the Express auth middleware now `await`s the async token verification (previously an unawaited Promise was always truthy, so invalid tokens could pass). It also maps the token's `userId` onto `req.user.id` so RBAC/ownership checks work.
+- **Corrected the refresh-token secret** — `tokenUtils` now reads the canonical `JWT_REFRESH_SECRET` / `JWT_REFRESH_EXPIRES_IN` (matching `.env`, `.env.example`, and the docs). Previously a name mismatch meant refresh tokens silently used a hardcoded fallback secret.
+- **No more hardcoded secret fallbacks** — missing `JWT_SECRET` now fails fast with a clear error instead of falling back to a default value.
+- **Pinned JWT algorithm** — tokens are signed and verified with `HS256` only, preventing algorithm-confusion / `alg: none` attacks.
 
 ## What's New in v3.0.0 🎉
 
@@ -75,7 +84,7 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 - **MongoDB Integration**: Complete setup with Mongoose ODM
 - **JWT Authentication**: Access and refresh token system with Google OAuth support
 - **Security First**: Helmet, CORS, rate limiting, and password hashing
-- **Input Validation**: Joi validation with auto-generated schemas for CRUD models
+- **Input Validation**: Joi schemas on Express; TypeBox (`t`) schemas on Elysia — validation idiomatic to each framework
 - **API Documentation**: Complete Swagger/OpenAPI 3.0 documentation
 - **Graceful Shutdown**: Proper signal handling and database cleanup
 - **Audit Logging**: Built-in audit trail for operations
@@ -87,7 +96,7 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g koti@3.0.0
+npm install -g koti@3.0.1
 ```
 
 ### Development Setup
@@ -341,7 +350,7 @@ ts-node / bun, @types/* (TypeScript type definitions)
 
 ## Testing
 
-The CLI itself is tested with 55 vitest tests covering all commands:
+The CLI itself is tested with 59 vitest tests covering all commands, template integrity, and the auth/token security guards:
 
 ```bash
 npm test
@@ -360,4 +369,4 @@ MIT License — free for personal and commercial use.
 
 ---
 
-**Generated with Koti CLI v3.0.0** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
+**Generated with Koti CLI v3.0.1** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)

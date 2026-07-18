@@ -1,211 +1,155 @@
 # Publishing Koti CLI to npm
 
-This guide will help you publish the Koti CLI tool to npm so users can install it globally with `npm install -g koti`.
+How to cut and publish a new release of the `koti` CLI (installed globally as
+`npm install -g koti`). This reflects the **current** repo setup (v3.x,
+dual-framework templates, `version.json` as the source of truth).
+
+> This file is excluded from the published package (see `.npmignore`). It is an
+> internal maintainer guide.
 
 ## Prerequisites
 
-1. **Node.js and npm**: Ensure you have Node.js 16+ and npm installed
-2. **npm account**: Create an account at [npmjs.com](https://www.npmjs.com/)
-3. **GitHub repository**: Create a GitHub repository for your project
+1. **Node.js 16+ and npm**, plus **Bun** (generated projects target Bun).
+2. An **npm account** with publish rights to the `koti` package
+   (current owner: `codeninza`).
+3. Logged in: `npm login` → verify with `npm whoami`.
+4. 2FA: keep an authenticator handy — npm will require a one-time code (`--otp`).
 
-## Steps to Publish
+## How the package is built & shipped
 
-### 1. Prepare Your Project Structure
+- **`bin`** maps the two executables:
+  - `koti` → `dist/cli.js`
+  - `koti-mcp` → `dist/mcp-server.js`
+- **`build`** bundles TypeScript with esbuild:
+  `src/cli.ts → dist/cli.js` and `src/mcp-server.ts → dist/mcp-server.js`.
+- **`files`** (in `package.json`) is the publish whitelist — only these ship:
+  `dist/`, `templates/`, `manifest.json`, `icon.png`, `version.json`,
+  `README.md`, `LICENSE`.
+- **Templates** are split into `templates/express/`, `templates/elysia/`, and a
+  framework-agnostic `templates/shared/` — all three are published.
+- **`prepublishOnly`** runs automatically on `npm publish`:
+  `npm run update-version && npm run build`.
 
-Your project should have this structure:
+### Repo layout (relevant to publishing)
+
 ```
 koti/
-├── src/                   # TypeScript source files
-├── dist/                  # Compiled JavaScript output
-├── templates/             # Template files
-├── tests/                 # Test files
-├── version.json           # Version metadata
-├── npm-package.json       # Package configuration
-├── README.md              # Documentation
-├── LICENSE                # MIT License
-└── PUBLISHING_GUIDE.md    # This guide
+├── src/                  # CLI + MCP server source (TypeScript)
+├── dist/                 # Bundled output (published; git-ignored)
+├── templates/
+│   ├── express/          # Express framework template
+│   ├── elysia/           # Elysia framework template
+│   └── shared/           # Framework-agnostic models/services/utils/…
+├── tests/                # vitest suite (NOT published)
+├── version.json          # ← source of truth for the version number
+├── package.json          # npm metadata + "files" whitelist + scripts
+├── npm-package.json      # mirror updated by `update-version` (legacy artifact)
+├── manifest.json         # MCP bundle manifest (has its own version field)
+├── README.md             # Published docs
+└── LICENSE
 ```
 
-### 2. Update Package Information
+## Versioning
 
-Edit `npm-package.json` and update these fields:
-- `author.name`: Your name
-- `author.email`: Your email
-- `repository.url`: Your GitHub repository URL
-- `bugs.url`: Your GitHub issues URL
-- `homepage`: Your GitHub repository homepage
+`version.json` is the single source of truth, but a few files carry the version
+and must be kept in sync. **`npm run update-version` only propagates to
+`npm-package.json` and the README install line** — it does **not** touch
+`package.json` or `manifest.json`, so bump those by hand.
 
-### 3. Set Up Git Repository
+When cutting a release, set the version in **all three** of:
+
+| File | Field | Updated by |
+|------|-------|------------|
+| `version.json` | `version` | manual (source of truth) |
+| `package.json` | `version` | manual (the version npm publishes) |
+| `manifest.json` | `version` | manual (MCP bundle) |
+| `npm-package.json` | `version` | `npm run update-version` |
+| `README.md` | `npm install -g koti@X` | `npm run update-version` |
+
+Follow semver: bug/security fixes → patch (`3.0.0 → 3.0.1`); new
+backwards-compatible features → minor; breaking changes → major.
+
+## Release steps
+
+### 1. Bump the version (3 files)
+
+Edit `version.json`, `package.json`, and `manifest.json` to the new version
+(e.g. `3.0.1`). Add a matching **"What's New"** section at the top of `README.md`.
+
+### 2. Propagate, build, and test
 
 ```bash
-# Initialize git repository
-git init
-
-# Add all files
-git add .
-
-# Commit files
-git commit -m "Initial commit: Koti CLI tool"
-
-# Add remote repository (replace with your GitHub URL)
-git remote add origin https://github.com/yourusername/koti.git
-
-# Push to GitHub
-git push -u origin main
+npm run update-version     # writes npm-package.json + README install line
+npm run build              # esbuild → dist/cli.js + dist/mcp-server.js
+npm test                   # vitest — all green before publishing
 ```
 
-### 4. Prepare for npm Publishing
+### 3. Sanity-check the tarball
 
 ```bash
-# Login to npm (run this once)
-npm login
-
-# Copy the package.json file to the correct location
-cp npm-package.json package.json
-
-# Test the package locally
-npm pack
-
-# This creates a .tgz file you can test with:
-npm install -g koti-2.0.3.tgz
+npm pack --dry-run
 ```
 
-### 5. Test Your Package
+Confirm: correct `version:`, `dist/cli.js` present, and
+`templates/express`, `templates/elysia`, `templates/shared` all included.
+
+### 4. (Optional but recommended) smoke-test locally
 
 ```bash
-# Test the global installation
-koti --help
-
-# Test creating a project
-koti new test-project
-
-# Verify it works, then clean up
-rm -rf test-project
+npm pack                                  # creates koti-<version>.tgz
+npm install -g ./koti-<version>.tgz
+koti --version                            # should print the new version
+koti new demo --framework elysia          # scaffolds an Elysia project
+koti new demo2 --framework express        # scaffolds an Express project
+npm uninstall -g koti && rm koti-<version>.tgz
 ```
 
-### 6. Publish to npm
+### 5. Commit & tag
 
 ```bash
-# Publish to npm
-npm publish
-
-# If the package name is taken, you might need to use a scoped package
-# npm publish --scope=@yourusername
+git add -A
+git commit -m "release: vX.Y.Z — <summary>"
+git tag vX.Y.Z
+git push && git push --tags
 ```
 
-### 7. Verify Publication
+### 6. Publish
 
 ```bash
-# Uninstall local version
-npm uninstall -g koti
-
-# Install from npm
-npm install -g koti
-
-# Test again
-koti --help
-koti new test-project
+npm whoami                 # confirm you're logged in as the owner
+npm publish                # prepublishOnly re-runs update-version + build
+# If 2FA prompts:
+# npm publish --otp=123456
 ```
 
-## After Publishing
+> A `404 Not Found` on publish almost always means **not authenticated** (npm
+> masks "no permission" as 404). Run `npm login` and retry.
 
-### Update Documentation
-
-Update your README.md to include the new installation instructions:
-
-```markdown
-## Installation
-
-Install globally via npm:
+### 7. Verify it's live
 
 ```bash
-npm install -g koti
+npm view koti version --prefer-online      # bypasses local cache → new version
+npm view koti dist-tags --json --prefer-online
 ```
 
-## Usage
-
-Create a new Bun API project:
-
-```bash
-koti new my-awesome-api
-```
-```
-
-### Managing Updates
-
-When you make changes:
-
-1. Update version in package.json:
-   ```json
-   {
-     "version": "2.0.3"
-   }
-   ```
-
-2. Commit and push changes:
-   ```bash
-   git add .
-   git commit -m "Update: description of changes"
-   git push
-   ```
-
-3. Publish update:
-   ```bash
-   npm publish
-   ```
-
-## Alternative Package Names
-
-If "koti" is taken, consider these alternatives:
-- `koti-cli`
-- `koti-generator`
-- `bun-api-generator`
-- `create-bun-api`
-- `@yourusername/koti` (scoped package)
-
-## Package.json Key Fields Explained
-
-- `name`: Package name (must be unique on npm)
-- `version`: Follow semantic versioning (x.y.z)
-- `bin`: Maps command name to executable file
-- `files`: Specifies which files to include in the package
-- `engines`: Specifies Node.js version requirements
-- `keywords`: Helps users find your package
+The npm website and `npm install` may show the old version for a few minutes due
+to CDN/local caching — `--prefer-online` shows the true registry state.
 
 ## Troubleshooting
 
-### Common Issues:
+- **`E404` / `E403` on publish** → not logged in or no publish rights:
+  `npm login`, confirm `npm whoami`, check `npm owner ls koti`.
+- **`EOTP` / 2FA required** → `npm publish --otp=<code>`.
+- **Old version still shows after publish** → CDN/local cache; verify with
+  `npm view koti version --prefer-online`.
+- **Missing files in the package** → check the `files` whitelist in
+  `package.json` and that `.npmignore` isn't excluding them. Note: npm strips
+  nested `.gitignore` files from the tarball.
+- **Version mismatch warnings** → ensure `version.json`, `package.json`, and
+  `manifest.json` all match (step 1).
 
-1. **Package name taken**: Try a different name or use a scoped package
-2. **Permission denied**: Make sure the `koti` file is executable (`chmod +x koti`)
-3. **Module not found**: Ensure all dependencies are listed in package.json
-4. **Command not found**: Check that `bin` field in package.json is correct
+## Post-publish
 
-### Testing Locally:
-
-```bash
-# Link package locally for testing
-npm link
-
-# Test the command
-koti --help
-
-# Unlink when done
-npm unlink
-```
-
-## Success!
-
-Once published, users can install your tool with:
-
-```bash
-npm install -g koti
-```
-
-And use it with:
-
-```bash
-koti new my-project
-```
-
-Your CLI tool is now available to developers worldwide!
+- Confirm the README on npmjs.com renders the new "What's New" section.
+- Push the git tag so the published version is traceable.
+- Open the next milestone / update the roadmap as needed.

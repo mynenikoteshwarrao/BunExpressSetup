@@ -1,6 +1,6 @@
 {
   "name": "koti",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "CLI tool to generate Bun API projects with Express, MongoDB, and built-in RBAC. Scaffolds production-ready APIs with authentication, authorization, and security middleware.",
   "main": "dist/cli.js",
   "bin": {

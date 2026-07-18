@@ -138,6 +138,50 @@ describe('Koti CLI', () => {
     });
   });
 
+  // Regression guards for the v3.0.1 auth/token security fixes. Behavior is
+  // proven at runtime (a tampered/forged token resolves to null and a missing
+  // secret throws); these assertions lock the source so the fixes can't silently
+  // regress without a Mongo-backed e2e harness.
+  describe('Security hardening (v3.0.1)', () => {
+    const tokenUtils = () =>
+      fs.readFileSync(
+        path.join(ROOT, 'templates', 'shared', 'src', 'utils', 'tokenUtils.ts'),
+        'utf-8'
+      );
+    const expressAuth = () =>
+      fs.readFileSync(
+        path.join(ROOT, 'templates', 'express', 'src', 'middleware', 'auth.ts'),
+        'utf-8'
+      );
+
+    it('#1 express auth awaits token verification and maps userId -> id', () => {
+      const c = expressAuth();
+      expect(c).toMatch(/export const auth\s*=\s*async/);
+      expect(c).toContain('await verifyAccessToken');
+      expect(c).toContain('id: decoded.userId');
+    });
+
+    it('#2 tokenUtils reads the canonical JWT_REFRESH_SECRET env name', () => {
+      const c = tokenUtils();
+      expect(c).toContain('JWT_REFRESH_SECRET');
+      expect(c).not.toContain('REFRESH_TOKEN_SECRET');
+    });
+
+    it('#3 tokenUtils has no hardcoded secret fallbacks and fails fast', () => {
+      const c = tokenUtils();
+      expect(c).not.toContain('your-super-secret-jwt-key');
+      expect(c).not.toContain('your-refresh-secret');
+      expect(c).toContain('Missing required environment variable');
+    });
+
+    it('#4 tokenUtils pins the JWT algorithm (HS256) on sign and verify', () => {
+      const c = tokenUtils();
+      expect(c).toContain("'HS256'");
+      expect(c).toContain('algorithm: JWT_ALGORITHM');
+      expect(c).toContain('algorithms: [JWT_ALGORITHM]');
+    });
+  });
+
   describe('README validation', () => {
     it('should not have duplicated version in install command', () => {
       const content = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');
