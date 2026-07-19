@@ -15,6 +15,14 @@ export const generateTypeScriptModel = (modelName: string, fields: FieldSpec[]):
     if (field.default) options.push(`default: ${field.type === 'String' ? `'${field.default}'` : field.default}`);
 
     const optionsString = options.length > 0 ? `,  ${options.join(', ')}` : '';
+    if (field.type === 'Array') {
+      // `{ type: [Schema.Types.Mixed] }` fails to typecheck under a generic
+      // `Schema<T>()` when the interface field is `any[]` (mongoose@8's nested
+      // SchemaTypeOptions union resolves incorrectly for `any` in that position).
+      // `[{ type: Schema.Types.Mixed }]` is the idiomatic mongoose array-of-mixed
+      // form and typechecks cleanly against `any[]`.
+      return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
+    }
     const mongooseType = (field.type === 'Mixed' || field.type === 'JSON') ? 'Schema.Types.Mixed' : field.type;
     return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
   }).join(',\n');

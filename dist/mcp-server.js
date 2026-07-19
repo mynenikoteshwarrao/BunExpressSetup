@@ -17428,6 +17428,9 @@ var generateTypeScriptModel = (modelName, fields) => {
     if (field.index) options.push("index: true");
     if (field.default) options.push(`default: ${field.type === "String" ? `'${field.default}'` : field.default}`);
     const optionsString = options.length > 0 ? `,  ${options.join(", ")}` : "";
+    if (field.type === "Array") {
+      return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
+    }
     const mongooseType = field.type === "Mixed" || field.type === "JSON" ? "Schema.Types.Mixed" : field.type;
     return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
   }).join(",\n");

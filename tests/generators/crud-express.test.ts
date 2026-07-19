@@ -9,6 +9,7 @@ const fields: FieldSpec[] = [
   { name: 'price', type: 'Number', index: true },
   { name: 'sku', type: 'String', unique: true, default: 'none' },
   { name: 'meta', type: 'JSON' },
+  { name: 'tags', type: 'Array' },
 ];
 
 describe('generateTypeScriptModel', () => {
@@ -24,6 +25,12 @@ describe('generateTypeScriptModel', () => {
     const src = generateTypeScriptModel('Product', fields);
     expect(src).toContain('meta: any;');
     expect(src).not.toContain('type: JSON');
+  });
+  it('emits Array fields as the mongoose array-of-mixed form, typed any[] on the interface', () => {
+    const src = generateTypeScriptModel('Product', fields);
+    expect(src).toContain('tags: [{ type: Schema.Types.Mixed }]');
+    expect(src).toContain('tags: any[];');
+    expect(src).not.toContain('tags: { type: Array }');
   });
 });
 
