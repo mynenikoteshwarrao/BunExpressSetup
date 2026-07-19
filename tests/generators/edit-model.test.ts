@@ -20,6 +20,15 @@ describe('parseExistingModel', () => {
     const root = await makeFakeProject('express'); roots.push(root);
     await expect(parseExistingModel(root, 'Nope')).rejects.toMatchObject({ code: 'IO_ERROR' });
   });
+  it('round-trips an Array field (bracket-wrapped array-of-mixed form)', async () => {
+    const root = await makeFakeProject('express'); roots.push(root);
+    await createModel({
+      projectRoot: root, name: 'Product',
+      fields: [...fields, { name: 'tags', type: 'Array', index: true }],
+    });
+    const parsed = await parseExistingModel(root, 'Product');
+    expect(parsed).toContainEqual({ name: 'tags', type: 'Array', required: false, unique: false, index: true, default: undefined });
+  });
 });
 
 describe('editModel', () => {
@@ -57,6 +66,21 @@ describe('editModel', () => {
     const model = await fs.readFile(path.join(root, 'src', 'models', 'Product.ts'), 'utf-8');
     expect(model).toContain('index: true');
     expect(await fs.pathExists(path.join(root, 'src', 'models', 'Product.ts.bak'))).toBe(true);
+  });
+  it('preserves an Array field through a round-trip edit (regression: bracket form was dropped by parseExistingModel)', async () => {
+    const root = await makeFakeProject('express'); roots.push(root);
+    await createModel({
+      projectRoot: root, name: 'Product',
+      fields: [...fields, { name: 'tags', type: 'Array', index: true }],
+    });
+    await editModel({
+      projectRoot: root, name: 'Product',
+      addFields: [{ name: 'sku', type: 'String' }],
+    });
+    const model = await fs.readFile(path.join(root, 'src', 'models', 'Product.ts'), 'utf-8');
+    expect(model).toContain('tags: [{ type: Schema.Types.Mixed,  index: true }]');
+    const parsed = await parseExistingModel(root, 'Product');
+    expect(parsed).toContainEqual({ name: 'tags', type: 'Array', required: false, unique: false, index: true, default: undefined });
   });
   it('removes a field', async () => {
     const root = await makeFakeProject('express'); roots.push(root);

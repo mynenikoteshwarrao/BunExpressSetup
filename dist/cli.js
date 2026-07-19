@@ -6322,19 +6322,20 @@ var parseExistingModel = async (projectRoot, name) => {
     throw new GeneratorError("IO_ERROR", `Could not parse schema in ${modelPath}`);
   }
   const schemaContent = schemaMatch[1];
-  const fieldMatches = schemaContent.match(/(\w+):\s*\{[^}]+\}/g);
+  const fieldMatches = schemaContent.match(/(\w+):\s*(\[)?\{[^}]+\}(\])?/g);
   if (fieldMatches) {
     fieldMatches.forEach((fieldMatch) => {
       const nameMatch = fieldMatch.match(/(\w+):/);
+      const isArrayForm = /^\w+:\s*\[/.test(fieldMatch);
       const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
       const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
       const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
       const indexMatch = fieldMatch.match(/index:\s*(true|false)/);
       const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
-      if (nameMatch && typeMatch) {
+      if (nameMatch && (isArrayForm || typeMatch)) {
         fields.push({
           name: nameMatch[1],
-          type: typeMatch[1],
+          type: isArrayForm ? "Array" : typeMatch[1],
           required: requiredMatch ? requiredMatch[1] === "true" : false,
           unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
           index: indexMatch ? indexMatch[1] === "true" : false,

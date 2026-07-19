@@ -70,10 +70,12 @@ backwards-compatible features → minor; breaking changes → major.
 
 ## Release steps
 
-### 1. Bump the version (3 files)
+### 1. Bump the version
 
-Edit `version.json`, `package.json`, and `manifest.json` to the new version
-(e.g. `3.0.1`). Add a matching **"What's New"** section at the top of `README.md`.
+Edit `version.json` to the new version (e.g. `3.0.1`) — `npm run update-version`
+(next step) propagates it to `package.json`, `manifest.json`, `npm-package.json`,
+and the README install line. Add a matching **"What's New"** section at the top
+of `README.md`.
 
 ### 2. Propagate, build, and test
 
