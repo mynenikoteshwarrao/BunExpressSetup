@@ -4,7 +4,10 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as readline from 'readline';
-import { GeneratorError, FieldSpec, resolveProject, getVersion, Framework } from './generators/context';
+import {
+  GeneratorError, FieldSpec, resolveProject, getVersion, Framework, FRAMEWORKS,
+  capitalize, toCamelCase, toUpperSnakeCase,
+} from './generators/context';
 import { createEnum } from './generators/enum';
 import { createTask } from './generators/task';
 import { createController } from './generators/controller';
@@ -54,54 +57,6 @@ const askQuestion = (rl: readline.Interface, question: string): Promise<string> 
       resolve(answer.trim());
     });
   });
-};
-
-// Helper function to capitalize first letter
-const capitalize = (str: string): string => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-// Helper function to convert to camelCase
-const toCamelCase = (str: string): string => {
-  return str.charAt(0).toLowerCase() + str.slice(1);
-};
-
-// Helper function to convert to kebab-case
-const toKebabCase = (str: string): string => {
-  return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-};
-
-// Helper function to convert to UPPER_SNAKE_CASE (e.g., UserProfile → USER_PROFILE)
-const toUpperSnakeCase = (str: string): string => {
-  return str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
-};
-
-/**
- * Append an export line to an index.ts barrel file.
- * Creates the index.ts if it doesn't exist yet.
- * Skips silently if the export line is already present.
- *
- * @param dirPath  – absolute path to the directory (e.g. src/models)
- * @param exportLine – the full export statement to add
- */
-const updateIndexExport = async (dirPath: string, exportLine: string): Promise<void> => {
-  const indexPath = path.join(dirPath, 'index.ts');
-
-  try {
-    let content = '';
-    if (await fs.pathExists(indexPath)) {
-      content = await fs.readFile(indexPath, 'utf-8');
-    }
-
-    // Already exported
-    if (content.includes(exportLine)) return;
-
-    // Append with a newline
-    const separator = content.length > 0 && !content.endsWith('\n') ? '\n' : '';
-    await fs.writeFile(indexPath, content + separator + exportLine + '\n');
-  } catch {
-    // Non-fatal – the index file is a convenience, not a requirement
-  }
 };
 
 program
@@ -430,7 +385,7 @@ program
           framework = 'express';
         }
       }
-      if (!['express', 'elysia'].includes(framework)) {
+      if (!FRAMEWORKS.includes(framework as Framework)) {
         console.error(colors.red('Error: Framework must be either express or elysia'));
         process.exit(1);
       }

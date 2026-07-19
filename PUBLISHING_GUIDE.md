@@ -51,18 +51,17 @@ koti/
 
 ## Versioning
 
-`version.json` is the single source of truth, but a few files carry the version
-and must be kept in sync. **`npm run update-version` only propagates to
-`npm-package.json` and the README install line** — it does **not** touch
-`package.json` or `manifest.json`, so bump those by hand.
-
-When cutting a release, set the version in **all three** of:
+`version.json` is the single source of truth. Bump the version there, then run
+**`npm run update-version`** — it reads `version.json` and propagates that
+version into `package.json`, `manifest.json`, and `npm-package.json`, and
+updates the `npm install -g koti@X` line in `README.md`. No other file needs
+to be edited by hand.
 
 | File | Field | Updated by |
 |------|-------|------------|
 | `version.json` | `version` | manual (source of truth) |
-| `package.json` | `version` | manual (the version npm publishes) |
-| `manifest.json` | `version` | manual (MCP bundle) |
+| `package.json` | `version` | `npm run update-version` |
+| `manifest.json` | `version` | `npm run update-version` |
 | `npm-package.json` | `version` | `npm run update-version` |
 | `README.md` | `npm install -g koti@X` | `npm run update-version` |
 

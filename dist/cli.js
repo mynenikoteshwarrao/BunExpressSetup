@@ -3284,8 +3284,8 @@ var require_graceful_fs = __commonJS({
       fs11.createReadStream = createReadStream;
       fs11.createWriteStream = createWriteStream;
       var fs$readFile = fs11.readFile;
-      fs11.readFile = readFile2;
-      function readFile2(path10, options, cb) {
+      fs11.readFile = readFile;
+      function readFile(path10, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
         return go$readFile(path10, options, cb);
@@ -3301,8 +3301,8 @@ var require_graceful_fs = __commonJS({
         }
       }
       var fs$writeFile = fs11.writeFile;
-      fs11.writeFile = writeFile2;
-      function writeFile2(path10, data, options, cb) {
+      fs11.writeFile = writeFile;
+      function writeFile(path10, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
         return go$writeFile(path10, data, options, cb);
@@ -4625,7 +4625,7 @@ var require_jsonfile = __commonJS({
       }
       return obj;
     }
-    var readFile2 = universalify.fromPromise(_readFile);
+    var readFile = universalify.fromPromise(_readFile);
     function readFileSync(file, options = {}) {
       if (typeof options === "string") {
         options = { encoding: options };
@@ -4650,16 +4650,16 @@ var require_jsonfile = __commonJS({
       const str = stringify(obj, options);
       await universalify.fromCallback(fs10.writeFile)(file, str, options);
     }
-    var writeFile2 = universalify.fromPromise(_writeFile);
+    var writeFile = universalify.fromPromise(_writeFile);
     function writeFileSync(file, obj, options = {}) {
       const fs10 = options.fs || _fs;
       const str = stringify(obj, options);
       return fs10.writeFileSync(file, str, options);
     }
     var jsonfile = {
-      readFile: readFile2,
+      readFile,
       readFileSync,
-      writeFile: writeFile2,
+      writeFile,
       writeFileSync
     };
     module2.exports = jsonfile;
@@ -6326,6 +6326,7 @@ var parseExistingModel = async (projectRoot, name) => {
       const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
       const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
       const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+      const indexMatch = fieldMatch.match(/index:\s*(true|false)/);
       const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
       if (nameMatch && typeMatch) {
         fields.push({
@@ -6333,6 +6334,7 @@ var parseExistingModel = async (projectRoot, name) => {
           type: typeMatch[1],
           required: requiredMatch ? requiredMatch[1] === "true" : false,
           unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
+          index: indexMatch ? indexMatch[1] === "true" : false,
           default: defaultMatch ? defaultMatch[1].replace(/['"]/g, "") : void 0
         });
       }
@@ -6368,6 +6370,10 @@ var editModel = async (opts) => {
     throw new GeneratorError("INVALID_INPUT", "Cannot remove all fields from a model");
   }
   const modelPath = import_path7.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  if (await import_fs_extra7.default.pathExists(modelPath)) {
+    const previousModel = await import_fs_extra7.default.readFile(modelPath, "utf-8");
+    await import_fs_extra7.default.writeFile(modelPath + ".bak", previousModel);
+  }
   await import_fs_extra7.default.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
   files.push(modelPath);
   if (opts.updateCrud) {
@@ -6874,19 +6880,10 @@ var askQuestion = (rl, question) => {
     });
   });
 };
-var capitalize2 = (str) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-var toCamelCase2 = (str) => {
-  return str.charAt(0).toLowerCase() + str.slice(1);
-};
-var toUpperSnakeCase2 = (str) => {
-  return str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
-};
 program2.name("koti").description("\u26A0\uFE0F  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express and MongoDB\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.").version(getVersion());
 program2.command("model").argument("<model-name>", "Name of the model to create").description("Create a new TypeScript model with schema registry").action(async (modelName) => {
   try {
-    console.log(colors.blue(`\u{1F3D7}\uFE0F Creating TypeScript model: ${capitalize2(modelName)}`));
+    console.log(colors.blue(`\u{1F3D7}\uFE0F Creating TypeScript model: ${capitalize(modelName)}`));
     const rl = createReadlineInterface();
     const fields = [];
     console.log(colors.cyan("\n\u{1F4DD} Define your model fields:"));
@@ -6940,8 +6937,8 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
     });
     const ctx = await resolveProject(process.cwd());
     const isElysia = ctx.framework === "elysia";
-    const crudCamelName = toCamelCase2(modelName);
-    console.log(colors.green(`\u2705 Created TypeScript model: src/models/${capitalize2(modelName)}.ts`));
+    const crudCamelName = toCamelCase(modelName);
+    console.log(colors.green(`\u2705 Created TypeScript model: src/models/${capitalize(modelName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/models/index.ts`));
     const indexedFieldNames = fields.filter((f) => f.index).map((f) => f.name);
     if (indexedFieldNames.length > 0) {
@@ -6951,7 +6948,7 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
       const tasksActuallyAdded = withTasks && result.files.some((f) => f.endsWith(path9.join("src", "enums", "Task.ts")));
       if (withTasks) {
         if (tasksActuallyAdded) {
-          const upperSnakeName = toUpperSnakeCase2(modelName);
+          const upperSnakeName = toUpperSnakeCase(modelName);
           console.log(colors.green(`\u2705 Added CRUD tasks to src/enums/Task.ts`));
           console.log(colors.dim(`   VIEW_${upperSnakeName}, CREATE_${upperSnakeName}, UPDATE_${upperSnakeName}, DELETE_${upperSnakeName}`));
         } else {
@@ -7001,7 +6998,7 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
 });
 program2.command("enum").argument("<enum-name>", "Name of the enum to create").description("Create a new TypeScript enum").action(async (enumName) => {
   try {
-    console.log(colors.blue(`\u{1F4CB} Creating TypeScript enum: ${capitalize2(enumName)}`));
+    console.log(colors.blue(`\u{1F4CB} Creating TypeScript enum: ${capitalize(enumName)}`));
     const rl = createReadlineInterface();
     const enumType = await askQuestion(rl, colors.yellow("Enum type (string/number): "));
     if (!enumTypes.includes(enumType)) {
@@ -7034,7 +7031,7 @@ program2.command("enum").argument("<enum-name>", "Name of the enum to create").d
       enumType,
       values
     });
-    console.log(colors.green(`\u2705 Created TypeScript enum: src/enums/${capitalize2(enumName)}.ts`));
+    console.log(colors.green(`\u2705 Created TypeScript enum: src/enums/${capitalize(enumName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/enums/index.ts`));
     result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
     result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
@@ -7049,9 +7046,9 @@ program2.command("enum").argument("<enum-name>", "Name of the enum to create").d
 });
 program2.command("controller").argument("<controller-name>", "Name of the controller to create").description("Create a new TypeScript controller").action(async (controllerName) => {
   try {
-    console.log(colors.blue(`\u{1F3AE} Creating TypeScript controller: ${capitalize2(controllerName)}`));
+    console.log(colors.blue(`\u{1F3AE} Creating TypeScript controller: ${capitalize(controllerName)}`));
     const result = await createController({ projectRoot: process.cwd(), name: controllerName });
-    console.log(colors.green(`\u2705 Created TypeScript controller: src/controllers/${toCamelCase2(controllerName)}Controller.ts`));
+    console.log(colors.green(`\u2705 Created TypeScript controller: src/controllers/${toCamelCase(controllerName)}Controller.ts`));
     console.log(colors.green(`\u2705 Updated export in src/controllers/index.ts`));
     result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
     result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
@@ -7066,9 +7063,9 @@ program2.command("controller").argument("<controller-name>", "Name of the contro
 });
 program2.command("service").argument("<service-name>", "Name of the service to create").description("Create a new TypeScript service").action(async (serviceName) => {
   try {
-    console.log(colors.blue(`\u2699\uFE0F Creating TypeScript service: ${capitalize2(serviceName)}`));
+    console.log(colors.blue(`\u2699\uFE0F Creating TypeScript service: ${capitalize(serviceName)}`));
     const result = await createService({ projectRoot: process.cwd(), name: serviceName });
-    console.log(colors.green(`\u2705 Created TypeScript service: src/services/${toCamelCase2(serviceName)}Service.ts`));
+    console.log(colors.green(`\u2705 Created TypeScript service: src/services/${toCamelCase(serviceName)}Service.ts`));
     console.log(colors.green(`\u2705 Updated export in src/services/index.ts`));
     result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
     result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
@@ -7083,9 +7080,9 @@ program2.command("service").argument("<service-name>", "Name of the service to c
 });
 program2.command("middleware").argument("<middleware-name>", "Name of the middleware to create").description("Create a new TypeScript middleware").action(async (middlewareName) => {
   try {
-    console.log(colors.blue(`\u{1F6E1}\uFE0F Creating TypeScript middleware: ${toCamelCase2(middlewareName)}`));
+    console.log(colors.blue(`\u{1F6E1}\uFE0F Creating TypeScript middleware: ${toCamelCase(middlewareName)}`));
     const result = await createMiddleware({ projectRoot: process.cwd(), name: middlewareName });
-    console.log(colors.green(`\u2705 Created TypeScript middleware: src/middleware/${toCamelCase2(middlewareName)}.ts`));
+    console.log(colors.green(`\u2705 Created TypeScript middleware: src/middleware/${toCamelCase(middlewareName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/middleware/index.ts`));
     result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
     result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
@@ -7115,7 +7112,7 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
         framework = "express";
       }
     }
-    if (!["express", "elysia"].includes(framework)) {
+    if (!FRAMEWORKS.includes(framework)) {
       console.error(colors.red("Error: Framework must be either express or elysia"));
       process.exit(1);
     }
@@ -7165,19 +7162,19 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
 });
 program2.command("model:edit").argument("<model-name>", "Name of the model to edit").description("Edit an existing TypeScript model (add/delete fields)").action(async (modelName) => {
   try {
-    console.log(colors.blue(`\u270F\uFE0F Editing TypeScript model: ${capitalize2(modelName)}`));
+    console.log(colors.blue(`\u270F\uFE0F Editing TypeScript model: ${capitalize(modelName)}`));
     let existingFields;
     try {
       existingFields = await parseExistingModel(process.cwd(), modelName);
     } catch (error) {
       if (error instanceof GeneratorError) {
-        console.log(colors.red(`\u274C Model ${capitalize2(modelName)} not found!`));
+        console.log(colors.red(`\u274C Model ${capitalize(modelName)} not found!`));
         console.log(colors.yellow('\u{1F4A1} Use "koti model <name>" to create a new model'));
         process.exit(1);
       }
       throw error;
     }
-    const editCamelName = toCamelCase2(modelName);
+    const editCamelName = toCamelCase(modelName);
     const controllerPath = path9.join(process.cwd(), "src", "controllers", `${editCamelName}Controller.ts`);
     const servicePath = path9.join(process.cwd(), "src", "services", `${editCamelName}Service.ts`);
     const routePath = path9.join(process.cwd(), "src", "routes", `${editCamelName}.ts`);
@@ -7187,7 +7184,7 @@ program2.command("model:edit").argument("<model-name>", "Name of the model to ed
       fs9.pathExists(routePath)
     ]);
     const hasCRUD = hasController || hasService || hasRoutes;
-    console.log(colors.green(`\u2705 Found model: ${capitalize2(modelName)}`));
+    console.log(colors.green(`\u2705 Found model: ${capitalize(modelName)}`));
     console.log(colors.dim(`   Fields: ${existingFields.map((f) => f.name).join(", ")}`));
     if (hasCRUD) {
       console.log(colors.cyan("\u{1F527} CRUD operations detected:"));
@@ -7299,7 +7296,7 @@ program2.command("model:edit").argument("<model-name>", "Name of the model to ed
           removeFields,
           updateCrud: updateCRUD
         });
-        console.log(colors.green(`\u2705 Updated model: src/models/${capitalize2(modelName)}.ts`));
+        console.log(colors.green(`\u2705 Updated model: src/models/${capitalize(modelName)}.ts`));
         if (updateCRUD) {
           console.log(colors.blue("\u{1F504} Updating CRUD operations..."));
           if (result.files.includes(controllerPath)) {

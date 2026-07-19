@@ -200,6 +200,7 @@ export const parseExistingModel = async (projectRoot: string, name: string): Pro
       const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
       const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
       const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+      const indexMatch = fieldMatch.match(/index:\s*(true|false)/);
       const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
 
       if (nameMatch && typeMatch) {
@@ -208,6 +209,7 @@ export const parseExistingModel = async (projectRoot: string, name: string): Pro
           type: typeMatch[1] as FieldSpec['type'],
           required: requiredMatch ? requiredMatch[1] === 'true' : false,
           unique: uniqueMatch ? uniqueMatch[1] === 'true' : false,
+          index: indexMatch ? indexMatch[1] === 'true' : false,
           default: defaultMatch ? defaultMatch[1].replace(/['"]/g, '') : undefined,
         });
       }
@@ -246,6 +248,10 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
   }
 
   const modelPath = path.join(ctx.root, 'src', 'models', `${capitalizedName}.ts`);
+  if (await fs.pathExists(modelPath)) {
+    const previousModel = await fs.readFile(modelPath, 'utf-8');
+    await fs.writeFile(modelPath + '.bak', previousModel);
+  }
   await fs.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
   files.push(modelPath);
 

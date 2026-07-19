@@ -18266,6 +18266,7 @@ var parseExistingModel = async (projectRoot, name) => {
       const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
       const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
       const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+      const indexMatch = fieldMatch.match(/index:\s*(true|false)/);
       const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
       if (nameMatch && typeMatch) {
         fields.push({
@@ -18273,6 +18274,7 @@ var parseExistingModel = async (projectRoot, name) => {
           type: typeMatch[1],
           required: requiredMatch ? requiredMatch[1] === "true" : false,
           unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
+          index: indexMatch ? indexMatch[1] === "true" : false,
           default: defaultMatch ? defaultMatch[1].replace(/['"]/g, "") : void 0
         });
       }
@@ -18308,6 +18310,10 @@ var editModel = async (opts) => {
     throw new GeneratorError("INVALID_INPUT", "Cannot remove all fields from a model");
   }
   const modelPath = import_path4.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  if (await import_fs_extra4.default.pathExists(modelPath)) {
+    const previousModel = await import_fs_extra4.default.readFile(modelPath, "utf-8");
+    await import_fs_extra4.default.writeFile(modelPath + ".bak", previousModel);
+  }
   await import_fs_extra4.default.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
   files.push(modelPath);
   if (opts.updateCrud) {

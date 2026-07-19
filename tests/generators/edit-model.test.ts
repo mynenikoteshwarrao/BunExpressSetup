@@ -14,7 +14,7 @@ describe('parseExistingModel', () => {
     const root = await makeFakeProject('express'); roots.push(root);
     await createModel({ projectRoot: root, name: 'Product', fields });
     const parsed = await parseExistingModel(root, 'Product');
-    expect(parsed).toEqual([{ name: 'title', type: 'String', required: true, unique: false, default: undefined }]);
+    expect(parsed).toEqual([{ name: 'title', type: 'String', required: true, unique: false, index: false, default: undefined }]);
   });
   it('throws IO_ERROR for a missing model', async () => {
     const root = await makeFakeProject('express'); roots.push(root);
@@ -43,6 +43,20 @@ describe('editModel', () => {
     const validator = await fs.readFile(path.join(root, 'src', 'validators', 'product.ts'), 'utf-8');
     expect(validator).toContain('price: Joi.number()');
     expect(result.files.length).toBeGreaterThanOrEqual(5);
+  });
+  it('preserves index: true through a round-trip edit and backs up the model file', async () => {
+    const root = await makeFakeProject('express'); roots.push(root);
+    await createModel({
+      projectRoot: root, name: 'Product',
+      fields: [...fields, { name: 'price', type: 'Number', index: true }],
+    });
+    await editModel({
+      projectRoot: root, name: 'Product',
+      addFields: [{ name: 'sku', type: 'String' }],
+    });
+    const model = await fs.readFile(path.join(root, 'src', 'models', 'Product.ts'), 'utf-8');
+    expect(model).toContain('index: true');
+    expect(await fs.pathExists(path.join(root, 'src', 'models', 'Product.ts.bak'))).toBe(true);
   });
   it('removes a field', async () => {
     const root = await makeFakeProject('express'); roots.push(root);
