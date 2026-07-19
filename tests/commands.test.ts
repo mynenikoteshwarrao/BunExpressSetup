@@ -478,6 +478,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'enums'));
+      // The enum command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'enum-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {

@@ -5,6 +5,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as readline from 'readline';
 import * as crypto from 'crypto';
+import { GeneratorError } from './generators/context';
+import { createEnum } from './generators/enum';
+import { createTask, addTaskToEnum } from './generators/task';
 
 // Read version from centralized location with fallback
 const getVersion = (): string => {
@@ -111,66 +114,6 @@ const toKebabCase = (str: string): string => {
 // Helper function to convert to UPPER_SNAKE_CASE (e.g., UserProfile → USER_PROFILE)
 const toUpperSnakeCase = (str: string): string => {
   return str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
-};
-
-/**
- * Insert a task entry into src/enums/Task.ts (both enum and TaskDescriptions).
- * Returns true if the task was added, false if it already exists or the file is missing.
- */
-const addTaskToEnum = async (taskKey: string, description: string): Promise<boolean> => {
-  const enumPath = path.join(process.cwd(), 'src', 'enums', 'Task.ts');
-
-  if (!await fs.pathExists(enumPath)) {
-    return false;
-  }
-
-  let content = await fs.readFile(enumPath, 'utf-8');
-
-  // Skip if task already exists
-  if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
-    return false;
-  }
-
-  // Insert new entry before the closing brace of the Task enum
-  const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
-  if (!enumClosingMatch) {
-    return false;
-  }
-
-  const lastEntry = enumClosingMatch[1];
-  const closingBrace = enumClosingMatch[2];
-
-  const lastEntryWithComma = lastEntry.trimEnd().endsWith(',')
-    ? lastEntry
-    : lastEntry.replace(/(\S)\s*$/, '$1,\n');
-
-  const newEnumEntry = `\n  /** ${description} */\n  ${taskKey} = '${taskKey}',\n`;
-
-  content = content.replace(
-    lastEntry + closingBrace,
-    lastEntryWithComma + newEnumEntry + closingBrace
-  );
-
-  // Insert into TaskDescriptions
-  const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
-  if (descClosingMatch) {
-    const lastDescEntry = descClosingMatch[1];
-    const descClosing = descClosingMatch[2];
-
-    const lastDescWithComma = lastDescEntry.trimEnd().endsWith(',')
-      ? lastDescEntry
-      : lastDescEntry.replace(/(\S)\s*$/, '$1,\n');
-
-    const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',\n`;
-
-    content = content.replace(
-      lastDescEntry + descClosing,
-      lastDescWithComma + newDescEntry + descClosing
-    );
-  }
-
-  await fs.writeFile(enumPath, content);
-  return true;
 };
 
 // Helper function to parse existing model schema
@@ -640,25 +583,6 @@ ${fieldsCode}
 });
 
 export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
-export default ${capitalizedName};
-`;
-};
-
-// Generate TypeScript Enum
-const generateTypeScriptEnum = (enumName: string, enumType: 'string' | 'number', values: { key: string; value: string | number }[]): string => {
-  const capitalizedName = capitalize(enumName);
-  
-  const enumValues = values.map(({ key, value }) => {
-    if (enumType === 'string') {
-      return `  ${key} = '${value}'`;
-    }
-    return `  ${key} = ${value}`;
-  }).join(',\n');
-
-  return `export enum ${capitalizedName} {
-${enumValues}
-}
-
 export default ${capitalizedName};
 `;
 };
@@ -2318,7 +2242,7 @@ program
 
         let tasksAdded = 0;
         for (const entry of taskEntries) {
-          const added = await addTaskToEnum(entry.key, entry.desc);
+          const added = await addTaskToEnum(process.cwd(), entry.key, entry.desc);
           if (added) tasksAdded++;
         }
 
@@ -2428,7 +2352,7 @@ program
       if (!enumTypes.includes(enumType)) {
         console.log(colors.red('❌ Invalid enum type. Use "string" or "number"'));
         rl.close();
-        return;
+        process.exit(1);
       }
 
       const values: { key: string; value: string | number }[] = [];
@@ -2457,22 +2381,24 @@ program
 
       rl.close();
 
-      // Generate TypeScript enum file
-      const enumContent = generateTypeScriptEnum(enumName, enumType as 'string' | 'number', values);
-      const enumPath = path.join(process.cwd(), 'src', 'enums', `${capitalize(enumName)}.ts`);
-      
-      await fs.ensureDir(path.dirname(enumPath));
-      await fs.writeFile(enumPath, enumContent);
-      
-      console.log(colors.green(`✅ Created TypeScript enum: src/enums/${capitalize(enumName)}.ts`));
+      const result = await createEnum({
+        projectRoot: process.cwd(),
+        name: enumName,
+        enumType: enumType as 'string' | 'number',
+        values,
+      });
 
-      // Update enums/index.ts
-      const enumsDir = path.join(process.cwd(), 'src', 'enums');
-      await updateIndexExport(enumsDir, `export { ${capitalize(enumName)} } from './${capitalize(enumName)}';`);
+      console.log(colors.green(`✅ Created TypeScript enum: src/enums/${capitalize(enumName)}.ts`));
       console.log(colors.green(`✅ Updated export in src/enums/index.ts`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
 
     } catch (error) {
-      console.error(colors.red('❌ Error creating enum:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
@@ -3036,7 +2962,6 @@ program
   .action(async (taskName: string) => {
     try {
       const taskKey = taskName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
-      const taskValue = taskKey;
 
       const rl = createReadlineInterface();
       const description = await askQuestion(rl, colors.yellow('Task description: '));
@@ -3044,71 +2969,20 @@ program
 
       if (!description.trim()) {
         console.log(colors.red('❌ Description is required'));
-        return;
+        process.exit(1);
       }
 
-      const enumPath = path.join(process.cwd(), 'src', 'enums', 'Task.ts');
-
-      if (!await fs.pathExists(enumPath)) {
-        console.log(colors.red('❌ Task enum not found at src/enums/Task.ts'));
-        console.log(colors.yellow('💡 Create a new project with "koti new" to get the Task enum'));
-        return;
-      }
-
-      let content = await fs.readFile(enumPath, 'utf-8');
-
-      // Check if task already exists
-      if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
-        console.log(colors.red(`❌ Task "${taskKey}" already exists in the enum`));
-        return;
-      }
-
-      // Insert new entry before the closing brace of the Task enum
-      // Match the last enum entry line and the closing brace
-      const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
-      if (!enumClosingMatch) {
-        console.log(colors.red('❌ Could not parse Task enum. Please add the task manually.'));
-        return;
-      }
-
-      const lastEntry = enumClosingMatch[1];
-      const closingBrace = enumClosingMatch[2];
-
-      // Make sure last existing entry has a trailing comma
-      const lastEntryWithComma = lastEntry.trimEnd().endsWith(',')
-        ? lastEntry
-        : lastEntry.replace(/(\S)\s*$/, '$1,\n');
-
-      const newEnumEntry = `  /** ${description} */\n  ${taskKey} = '${taskValue}',\n`;
-
-      content = content.replace(
-        lastEntry + closingBrace,
-        lastEntryWithComma + newEnumEntry + closingBrace
-      );
-
-      // Insert new entry into TaskDescriptions before the closing brace
-      const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
-      if (descClosingMatch) {
-        const lastDescEntry = descClosingMatch[1];
-        const descClosing = descClosingMatch[2];
-
-        const lastDescWithComma = lastDescEntry.trimEnd().endsWith(',')
-          ? lastDescEntry
-          : lastDescEntry.replace(/(\S)\s*$/, '$1,\n');
-
-        const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',\n`;
-
-        content = content.replace(
-          lastDescEntry + descClosing,
-          lastDescWithComma + newDescEntry + descClosing
-        );
-      }
-
-      await fs.writeFile(enumPath, content);
+      const result = await createTask({
+        projectRoot: process.cwd(),
+        name: taskKey,
+        description,
+      });
 
       console.log(colors.green(`✅ Added task: ${taskKey}`));
       console.log(colors.dim(`   Description: ${description}`));
       console.log(colors.dim(`   File: src/enums/Task.ts`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
 
       console.log(colors.cyan('\n💡 Usage in routes:'));
       console.log(colors.dim(`   import { checkPermission } from '../middleware/checkPermission';`));
@@ -3116,7 +2990,11 @@ program
       console.log(colors.dim(`   router.get('/endpoint', auth, checkPermission(Task.${taskKey}), handler);`));
 
     } catch (error) {
-      console.error(colors.red('❌ Error adding task:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
