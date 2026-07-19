@@ -1,4 +1,4 @@
 {
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Auth/token security hardening on top of the Express + Elysia dual-framework release"
 }

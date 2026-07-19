@@ -3,39 +3,34 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read version from centralized location
-const versionPath = path.join(__dirname, '..', 'version.json');
+const root = path.join(__dirname, '..');
+const versionPath = path.join(root, 'version.json');
 const { version } = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
 
 console.log(`Updating all files to version ${version}...`);
 
-// Update npm-package.json
-const npmPackagePath = path.join(__dirname, '..', 'npm-package.json');
-const npmPackage = JSON.parse(fs.readFileSync(npmPackagePath, 'utf8'));
-npmPackage.version = version;
-fs.writeFileSync(npmPackagePath, JSON.stringify(npmPackage, null, 2));
-console.log('✓ Updated npm-package.json');
+const updateJsonVersion = (file) => {
+  const p = path.join(root, file);
+  if (!fs.existsSync(p)) {
+    console.log(`⏭ Skipped ${file} (not found)`);
+    return;
+  }
+  const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+  data.version = version;
+  fs.writeFileSync(p, JSON.stringify(data, null, 2) + '\n');
+  console.log(`✓ Updated ${file}`);
+};
 
-// Update README.md
-const readmePath = path.join(__dirname, '..', 'README.md');
-let readmeContent = fs.readFileSync(readmePath, 'utf8');
-readmeContent = readmeContent.replace(/npm install -g koti@[\d.]+/g, `npm install -g koti@${version}`);
-fs.writeFileSync(readmePath, readmeContent);
-console.log('✓ Updated README.md');
+updateJsonVersion('package.json');
+updateJsonVersion('manifest.json');
+updateJsonVersion('npm-package.json');
 
-// Update replit.md (if it exists)
-const replitMdPath = path.join(__dirname, '..', 'replit.md');
-if (fs.existsSync(replitMdPath)) {
-  let replitContent = fs.readFileSync(replitMdPath, 'utf8');
-  replitContent = replitContent.replace(/Version [\d.]+ - Development Release/g, `Version ${version} - Development Release`);
-  replitContent = replitContent.replace(/Version [\d.]+ - Comprehensive Audit System/g, `Version ${version} - Comprehensive Audit System`);
-  fs.writeFileSync(replitMdPath, replitContent);
-  console.log('✓ Updated replit.md');
-} else {
-  console.log('⏭ Skipped replit.md (not found)');
+const readmePath = path.join(root, 'README.md');
+if (fs.existsSync(readmePath)) {
+  let readme = fs.readFileSync(readmePath, 'utf8');
+  readme = readme.replace(/npm install -g koti@[\d.]+/g, `npm install -g koti@${version}`);
+  fs.writeFileSync(readmePath, readme);
+  console.log('✓ Updated README.md');
 }
 
 console.log(`\n🎉 All files updated to version ${version}!`);
-console.log('\nNext steps:');
-console.log('1. Run: npm run build');
-console.log('2. Run: npm publish');

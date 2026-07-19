@@ -2,7 +2,7 @@
 
 A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and MongoDB. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on either framework.
 
-## Current Version: 3.0.1
+## Current Version: 3.1.0
 
 > **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
 
@@ -91,12 +91,24 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 - **Email Support**: Nodemailer integration for password reset and verification
 - **File Uploads**: Multer-based file upload with S3 support
 
+## MCP Server (use Koti from Claude)
+
+Koti ships an MCP server so AI agents can scaffold and grow projects directly:
+
+    npm install -g koti
+    claude mcp add koti -- koti-mcp
+
+9 tools: `create_project` (Express or Elysia), `create_model` (+CRUD +RBAC),
+`edit_model`, `create_enum`, `create_task`, `create_controller`, `create_service`,
+`create_middleware`, `seed_database`. Resources describe the project pointed to by
+`KOTI_PROJECT_ROOT`. See MCP_DISTRIBUTION_GUIDE.md for Claude Desktop setup.
+
 ## Installation
 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g koti@3.0.1
+npm install -g koti@3.1.0
 ```
 
 ### Development Setup

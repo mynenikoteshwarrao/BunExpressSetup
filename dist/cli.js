@@ -921,8 +921,8 @@ var require_command = __commonJS({
   "node_modules/commander/lib/command.js"(exports2) {
     var EventEmitter = require("events").EventEmitter;
     var childProcess = require("child_process");
-    var path2 = require("path");
-    var fs2 = require("fs");
+    var path10 = require("path");
+    var fs10 = require("fs");
     var process2 = require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
@@ -1745,10 +1745,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path2.resolve(baseDir, baseName);
-          if (fs2.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path2.extname(baseName))) return void 0;
-          const foundExt = sourceExt.find((ext) => fs2.existsSync(`${localBin}${ext}`));
+          const localBin = path10.resolve(baseDir, baseName);
+          if (fs10.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path10.extname(baseName))) return void 0;
+          const foundExt = sourceExt.find((ext) => fs10.existsSync(`${localBin}${ext}`));
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
         }
@@ -1759,23 +1759,23 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs2.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs10.realpathSync(this._scriptPath);
           } catch (err) {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path2.resolve(path2.dirname(resolvedScriptPath), executableDir);
+          executableDir = path10.resolve(path10.dirname(resolvedScriptPath), executableDir);
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path2.basename(this._scriptPath, path2.extname(this._scriptPath));
+            const legacyName = path10.basename(this._scriptPath, path10.extname(this._scriptPath));
             if (legacyName !== this._name) {
               localFile = findFile(executableDir, `${legacyName}-${subcommand._name}`);
             }
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path2.extname(executableFile));
+        launchWithNode = sourceExt.includes(path10.extname(executableFile));
         let proc;
         if (process2.platform !== "win32") {
           if (launchWithNode) {
@@ -2558,7 +2558,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path2.basename(filename, path2.extname(filename));
+        this._name = path10.basename(filename, path10.extname(filename));
         return this;
       }
       /**
@@ -2572,9 +2572,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {string|null|Command}
        */
-      executableDir(path3) {
-        if (path3 === void 0) return this._executableDir;
-        this._executableDir = path3;
+      executableDir(path11) {
+        if (path11 === void 0) return this._executableDir;
+        this._executableDir = path11;
         return this;
       }
       /**
@@ -2818,54 +2818,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs2) {
+    function patch(fs10) {
       if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs2);
+        patchLchmod(fs10);
       }
-      if (!fs2.lutimes) {
-        patchLutimes(fs2);
+      if (!fs10.lutimes) {
+        patchLutimes(fs10);
       }
-      fs2.chown = chownFix(fs2.chown);
-      fs2.fchown = chownFix(fs2.fchown);
-      fs2.lchown = chownFix(fs2.lchown);
-      fs2.chmod = chmodFix(fs2.chmod);
-      fs2.fchmod = chmodFix(fs2.fchmod);
-      fs2.lchmod = chmodFix(fs2.lchmod);
-      fs2.chownSync = chownFixSync(fs2.chownSync);
-      fs2.fchownSync = chownFixSync(fs2.fchownSync);
-      fs2.lchownSync = chownFixSync(fs2.lchownSync);
-      fs2.chmodSync = chmodFixSync(fs2.chmodSync);
-      fs2.fchmodSync = chmodFixSync(fs2.fchmodSync);
-      fs2.lchmodSync = chmodFixSync(fs2.lchmodSync);
-      fs2.stat = statFix(fs2.stat);
-      fs2.fstat = statFix(fs2.fstat);
-      fs2.lstat = statFix(fs2.lstat);
-      fs2.statSync = statFixSync(fs2.statSync);
-      fs2.fstatSync = statFixSync(fs2.fstatSync);
-      fs2.lstatSync = statFixSync(fs2.lstatSync);
-      if (fs2.chmod && !fs2.lchmod) {
-        fs2.lchmod = function(path2, mode, cb) {
+      fs10.chown = chownFix(fs10.chown);
+      fs10.fchown = chownFix(fs10.fchown);
+      fs10.lchown = chownFix(fs10.lchown);
+      fs10.chmod = chmodFix(fs10.chmod);
+      fs10.fchmod = chmodFix(fs10.fchmod);
+      fs10.lchmod = chmodFix(fs10.lchmod);
+      fs10.chownSync = chownFixSync(fs10.chownSync);
+      fs10.fchownSync = chownFixSync(fs10.fchownSync);
+      fs10.lchownSync = chownFixSync(fs10.lchownSync);
+      fs10.chmodSync = chmodFixSync(fs10.chmodSync);
+      fs10.fchmodSync = chmodFixSync(fs10.fchmodSync);
+      fs10.lchmodSync = chmodFixSync(fs10.lchmodSync);
+      fs10.stat = statFix(fs10.stat);
+      fs10.fstat = statFix(fs10.fstat);
+      fs10.lstat = statFix(fs10.lstat);
+      fs10.statSync = statFixSync(fs10.statSync);
+      fs10.fstatSync = statFixSync(fs10.fstatSync);
+      fs10.lstatSync = statFixSync(fs10.lstatSync);
+      if (fs10.chmod && !fs10.lchmod) {
+        fs10.lchmod = function(path10, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs2.lchmodSync = function() {
+        fs10.lchmodSync = function() {
         };
       }
-      if (fs2.chown && !fs2.lchown) {
-        fs2.lchown = function(path2, uid, gid, cb) {
+      if (fs10.chown && !fs10.lchown) {
+        fs10.lchown = function(path10, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs2.lchownSync = function() {
+        fs10.lchownSync = function() {
         };
       }
       if (platform === "win32") {
-        fs2.rename = typeof fs2.rename !== "function" ? fs2.rename : (function(fs$rename) {
+        fs10.rename = typeof fs10.rename !== "function" ? fs10.rename : (function(fs$rename) {
           function rename(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs2.stat(to, function(stater, st) {
+                  fs10.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -2881,9 +2881,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
           return rename;
-        })(fs2.rename);
+        })(fs10.rename);
       }
-      fs2.read = typeof fs2.read !== "function" ? fs2.read : (function(fs$read) {
+      fs10.read = typeof fs10.read !== "function" ? fs10.read : (function(fs$read) {
         function read(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -2891,22 +2891,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs2, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs10, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs2, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs10, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
         return read;
-      })(fs2.read);
-      fs2.readSync = typeof fs2.readSync !== "function" ? fs2.readSync : /* @__PURE__ */ (function(fs$readSync) {
+      })(fs10.read);
+      fs10.readSync = typeof fs10.readSync !== "function" ? fs10.readSync : /* @__PURE__ */ (function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs2, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs10, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -2916,11 +2916,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      })(fs2.readSync);
-      function patchLchmod(fs3) {
-        fs3.lchmod = function(path2, mode, callback) {
-          fs3.open(
-            path2,
+      })(fs10.readSync);
+      function patchLchmod(fs11) {
+        fs11.lchmod = function(path10, mode, callback) {
+          fs11.open(
+            path10,
             constants.O_WRONLY | constants.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -2928,80 +2928,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs3.fchmod(fd, mode, function(err2) {
-                fs3.close(fd, function(err22) {
+              fs11.fchmod(fd, mode, function(err2) {
+                fs11.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs3.lchmodSync = function(path2, mode) {
-          var fd = fs3.openSync(path2, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        fs11.lchmodSync = function(path10, mode) {
+          var fd = fs11.openSync(path10, constants.O_WRONLY | constants.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs3.fchmodSync(fd, mode);
+            ret = fs11.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs3.closeSync(fd);
+                fs11.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs3.closeSync(fd);
+              fs11.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs3) {
-        if (constants.hasOwnProperty("O_SYMLINK") && fs3.futimes) {
-          fs3.lutimes = function(path2, at, mt, cb) {
-            fs3.open(path2, constants.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs11) {
+        if (constants.hasOwnProperty("O_SYMLINK") && fs11.futimes) {
+          fs11.lutimes = function(path10, at, mt, cb) {
+            fs11.open(path10, constants.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs3.futimes(fd, at, mt, function(er2) {
-                fs3.close(fd, function(er22) {
+              fs11.futimes(fd, at, mt, function(er2) {
+                fs11.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs3.lutimesSync = function(path2, at, mt) {
-            var fd = fs3.openSync(path2, constants.O_SYMLINK);
+          fs11.lutimesSync = function(path10, at, mt) {
+            var fd = fs11.openSync(path10, constants.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs3.futimesSync(fd, at, mt);
+              ret = fs11.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs3.closeSync(fd);
+                  fs11.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs3.closeSync(fd);
+                fs11.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs3.futimes) {
-          fs3.lutimes = function(_a, _b, _c, cb) {
+        } else if (fs11.futimes) {
+          fs11.lutimes = function(_a, _b, _c, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs3.lutimesSync = function() {
+          fs11.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs2, target, mode, function(er) {
+          return orig.call(fs10, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3011,7 +3011,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs2, target, mode);
+            return orig.call(fs10, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3020,7 +3020,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs2, target, uid, gid, function(er) {
+          return orig.call(fs10, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3030,7 +3030,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs2, target, uid, gid);
+            return orig.call(fs10, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3050,13 +3050,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options ? orig.call(fs2, target, options, callback) : orig.call(fs2, target, callback);
+          return options ? orig.call(fs10, target, options, callback) : orig.call(fs10, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options) {
-          var stats = options ? orig.call(fs2, target, options) : orig.call(fs2, target);
+          var stats = options ? orig.call(fs10, target, options) : orig.call(fs10, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -3085,16 +3085,16 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream = require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs2) {
+    function legacy(fs10) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path2, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path2, options);
+      function ReadStream(path10, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path10, options);
         Stream.call(this);
         var self = this;
-        this.path = path2;
+        this.path = path10;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -3128,7 +3128,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs2.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs10.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self.emit("error", err);
             self.readable = false;
@@ -3139,10 +3139,10 @@ var require_legacy_streams = __commonJS({
           self._read();
         });
       }
-      function WriteStream(path2, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path2, options);
+      function WriteStream(path10, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path10, options);
         Stream.call(this);
-        this.path = path2;
+        this.path = path10;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -3167,7 +3167,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs2.open;
+          this._open = fs10.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -3188,13 +3188,13 @@ var require_clone = __commonJS({
       if (obj === null || typeof obj !== "object")
         return obj;
       if (obj instanceof Object)
-        var copy2 = { __proto__: getPrototypeOf(obj) };
+        var copy = { __proto__: getPrototypeOf(obj) };
       else
-        var copy2 = /* @__PURE__ */ Object.create(null);
+        var copy = /* @__PURE__ */ Object.create(null);
       Object.getOwnPropertyNames(obj).forEach(function(key) {
-        Object.defineProperty(copy2, key, Object.getOwnPropertyDescriptor(obj, key));
+        Object.defineProperty(copy, key, Object.getOwnPropertyDescriptor(obj, key));
       });
-      return copy2;
+      return copy;
     }
   }
 });
@@ -3202,7 +3202,7 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs2 = require("fs");
+    var fs10 = require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone = require_clone();
@@ -3216,7 +3216,7 @@ var require_graceful_fs = __commonJS({
       gracefulQueue = "___graceful-fs.queue";
       previousSymbol = "___graceful-fs.previous";
     }
-    function noop() {
+    function noop2() {
     }
     function publishQueue(context, queue2) {
       Object.defineProperty(context, gracefulQueue, {
@@ -3225,7 +3225,7 @@ var require_graceful_fs = __commonJS({
         }
       });
     }
-    var debug = noop;
+    var debug = noop2;
     if (util.debuglog)
       debug = util.debuglog("gfs4");
     else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ""))
@@ -3234,12 +3234,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs2[gracefulQueue]) {
+    if (!fs10[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs2, queue);
-      fs2.close = (function(fs$close) {
+      publishQueue(fs10, queue);
+      fs10.close = (function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs2, fd, function(err) {
+          return fs$close.call(fs10, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -3251,48 +3251,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      })(fs2.close);
-      fs2.closeSync = (function(fs$closeSync) {
+      })(fs10.close);
+      fs10.closeSync = (function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs2, arguments);
+          fs$closeSync.apply(fs10, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      })(fs2.closeSync);
+      })(fs10.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug(fs2[gracefulQueue]);
-          require("assert").equal(fs2[gracefulQueue].length, 0);
+          debug(fs10[gracefulQueue]);
+          require("assert").equal(fs10[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs2[gracefulQueue]);
+      publishQueue(global, fs10[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs2));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs2.__patched) {
-      module2.exports = patch(fs2);
-      fs2.__patched = true;
+    module2.exports = patch(clone(fs10));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs10.__patched) {
+      module2.exports = patch(fs10);
+      fs10.__patched = true;
     }
-    function patch(fs3) {
-      polyfills(fs3);
-      fs3.gracefulify = patch;
-      fs3.createReadStream = createReadStream;
-      fs3.createWriteStream = createWriteStream;
-      var fs$readFile = fs3.readFile;
-      fs3.readFile = readFile2;
-      function readFile2(path2, options, cb) {
+    function patch(fs11) {
+      polyfills(fs11);
+      fs11.gracefulify = patch;
+      fs11.createReadStream = createReadStream;
+      fs11.createWriteStream = createWriteStream;
+      var fs$readFile = fs11.readFile;
+      fs11.readFile = readFile2;
+      function readFile2(path10, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$readFile(path2, options, cb);
-        function go$readFile(path3, options2, cb2, startTime) {
-          return fs$readFile(path3, options2, function(err) {
+        return go$readFile(path10, options, cb);
+        function go$readFile(path11, options2, cb2, startTime) {
+          return fs$readFile(path11, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path3, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path11, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -3300,16 +3300,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs3.writeFile;
-      fs3.writeFile = writeFile2;
-      function writeFile2(path2, data, options, cb) {
+      var fs$writeFile = fs11.writeFile;
+      fs11.writeFile = writeFile2;
+      function writeFile2(path10, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$writeFile(path2, data, options, cb);
-        function go$writeFile(path3, data2, options2, cb2, startTime) {
-          return fs$writeFile(path3, data2, options2, function(err) {
+        return go$writeFile(path10, data, options, cb);
+        function go$writeFile(path11, data2, options2, cb2, startTime) {
+          return fs$writeFile(path11, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path3, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path11, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -3317,17 +3317,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs3.appendFile;
+      var fs$appendFile = fs11.appendFile;
       if (fs$appendFile)
-        fs3.appendFile = appendFile;
-      function appendFile(path2, data, options, cb) {
+        fs11.appendFile = appendFile;
+      function appendFile(path10, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$appendFile(path2, data, options, cb);
-        function go$appendFile(path3, data2, options2, cb2, startTime) {
-          return fs$appendFile(path3, data2, options2, function(err) {
+        return go$appendFile(path10, data, options, cb);
+        function go$appendFile(path11, data2, options2, cb2, startTime) {
+          return fs$appendFile(path11, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path3, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path11, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -3335,9 +3335,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs3.copyFile;
+      var fs$copyFile = fs11.copyFile;
       if (fs$copyFile)
-        fs3.copyFile = copyFile;
+        fs11.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -3355,34 +3355,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs3.readdir;
-      fs3.readdir = readdir2;
+      var fs$readdir = fs11.readdir;
+      fs11.readdir = readdir;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir2(path2, options, cb) {
+      function readdir(path10, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path3, options2, cb2, startTime) {
-          return fs$readdir(path3, fs$readdirCallback(
-            path3,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path11, options2, cb2, startTime) {
+          return fs$readdir(path11, fs$readdirCallback(
+            path11,
             options2,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path3, options2, cb2, startTime) {
-          return fs$readdir(path3, options2, fs$readdirCallback(
-            path3,
+        } : function go$readdir2(path11, options2, cb2, startTime) {
+          return fs$readdir(path11, options2, fs$readdirCallback(
+            path11,
             options2,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path2, options, cb);
-        function fs$readdirCallback(path3, options2, cb2, startTime) {
+        return go$readdir(path10, options, cb);
+        function fs$readdirCallback(path11, options2, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path3, options2, cb2],
+                [path11, options2, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -3397,21 +3397,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs3);
+        var legStreams = legacy(fs11);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs3.ReadStream;
+      var fs$ReadStream = fs11.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs3.WriteStream;
+      var fs$WriteStream = fs11.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs3, "ReadStream", {
+      Object.defineProperty(fs11, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -3421,7 +3421,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs3, "WriteStream", {
+      Object.defineProperty(fs11, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -3432,7 +3432,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs3, "FileReadStream", {
+      Object.defineProperty(fs11, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -3443,7 +3443,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs3, "FileWriteStream", {
+      Object.defineProperty(fs11, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -3453,7 +3453,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path2, options) {
+      function ReadStream(path10, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -3473,7 +3473,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path2, options) {
+      function WriteStream(path10, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -3491,22 +3491,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path2, options) {
-        return new fs3.ReadStream(path2, options);
+      function createReadStream(path10, options) {
+        return new fs11.ReadStream(path10, options);
       }
-      function createWriteStream(path2, options) {
-        return new fs3.WriteStream(path2, options);
+      function createWriteStream(path10, options) {
+        return new fs11.WriteStream(path10, options);
       }
-      var fs$open = fs3.open;
-      fs3.open = open;
-      function open(path2, flags, mode, cb) {
+      var fs$open = fs11.open;
+      fs11.open = open;
+      function open(path10, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path2, flags, mode, cb);
-        function go$open(path3, flags2, mode2, cb2, startTime) {
-          return fs$open(path3, flags2, mode2, function(err, fd) {
+        return go$open(path10, flags, mode, cb);
+        function go$open(path11, flags2, mode2, cb2, startTime) {
+          return fs$open(path11, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path3, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path11, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -3514,20 +3514,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs3;
+      return fs11;
     }
     function enqueue(elem) {
       debug("ENQUEUE", elem[0].name, elem[1]);
-      fs2[gracefulQueue].push(elem);
+      fs10[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs2[gracefulQueue].length; ++i) {
-        if (fs2[gracefulQueue][i].length > 2) {
-          fs2[gracefulQueue][i][3] = now;
-          fs2[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs10[gracefulQueue].length; ++i) {
+        if (fs10[gracefulQueue][i].length > 2) {
+          fs10[gracefulQueue][i][3] = now;
+          fs10[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -3535,9 +3535,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs2[gracefulQueue].length === 0)
+      if (fs10[gracefulQueue].length === 0)
         return;
-      var elem = fs2[gracefulQueue].shift();
+      var elem = fs10[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -3559,7 +3559,7 @@ var require_graceful_fs = __commonJS({
           debug("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs2[gracefulQueue].push(elem);
+          fs10[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -3574,7 +3574,7 @@ var require_fs = __commonJS({
   "node_modules/fs-extra/lib/fs/index.js"(exports2) {
     "use strict";
     var u = require_universalify().fromCallback;
-    var fs2 = require_graceful_fs();
+    var fs10 = require_graceful_fs();
     var api = [
       "access",
       "appendFile",
@@ -3615,26 +3615,26 @@ var require_fs = __commonJS({
       "utimes",
       "writeFile"
     ].filter((key) => {
-      return typeof fs2[key] === "function";
+      return typeof fs10[key] === "function";
     });
-    Object.assign(exports2, fs2);
+    Object.assign(exports2, fs10);
     api.forEach((method) => {
-      exports2[method] = u(fs2[method]);
+      exports2[method] = u(fs10[method]);
     });
     exports2.exists = function(filename, callback) {
       if (typeof callback === "function") {
-        return fs2.exists(filename, callback);
+        return fs10.exists(filename, callback);
       }
       return new Promise((resolve) => {
-        return fs2.exists(filename, resolve);
+        return fs10.exists(filename, resolve);
       });
     };
     exports2.read = function(fd, buffer, offset, length, position, callback) {
       if (typeof callback === "function") {
-        return fs2.read(fd, buffer, offset, length, position, callback);
+        return fs10.read(fd, buffer, offset, length, position, callback);
       }
       return new Promise((resolve, reject) => {
-        fs2.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
+        fs10.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
           if (err) return reject(err);
           resolve({ bytesRead, buffer: buffer2 });
         });
@@ -3642,10 +3642,10 @@ var require_fs = __commonJS({
     };
     exports2.write = function(fd, buffer, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.write(fd, buffer, ...args);
+        return fs10.write(fd, buffer, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
+        fs10.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
           if (err) return reject(err);
           resolve({ bytesWritten, buffer: buffer2 });
         });
@@ -3653,10 +3653,10 @@ var require_fs = __commonJS({
     };
     exports2.readv = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.readv(fd, buffers, ...args);
+        return fs10.readv(fd, buffers, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
+        fs10.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
           if (err) return reject(err);
           resolve({ bytesRead, buffers: buffers2 });
         });
@@ -3664,17 +3664,17 @@ var require_fs = __commonJS({
     };
     exports2.writev = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.writev(fd, buffers, ...args);
+        return fs10.writev(fd, buffers, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
+        fs10.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
           if (err) return reject(err);
           resolve({ bytesWritten, buffers: buffers2 });
         });
       });
     };
-    if (typeof fs2.realpath.native === "function") {
-      exports2.realpath.native = u(fs2.realpath.native);
+    if (typeof fs10.realpath.native === "function") {
+      exports2.realpath.native = u(fs10.realpath.native);
     } else {
       process.emitWarning(
         "fs.realpath.native is not a function. Is fs being monkey-patched?",
@@ -3689,10 +3689,10 @@ var require_fs = __commonJS({
 var require_utils = __commonJS({
   "node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path10 = require("path");
     module2.exports.checkPath = function checkPath(pth) {
       if (process.platform === "win32") {
-        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path2.parse(pth).root, ""));
+        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path10.parse(pth).root, ""));
         if (pathHasInvalidWinCharacters) {
           const error = new Error(`Path contains invalid characters: ${pth}`);
           error.code = "EINVAL";
@@ -3707,7 +3707,7 @@ var require_utils = __commonJS({
 var require_make_dir = __commonJS({
   "node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs10 = require_fs();
     var { checkPath } = require_utils();
     var getMode = (options) => {
       const defaults = { mode: 511 };
@@ -3716,14 +3716,14 @@ var require_make_dir = __commonJS({
     };
     module2.exports.makeDir = async (dir, options) => {
       checkPath(dir);
-      return fs2.mkdir(dir, {
+      return fs10.mkdir(dir, {
         mode: getMode(options),
         recursive: true
       });
     };
     module2.exports.makeDirSync = (dir, options) => {
       checkPath(dir);
-      return fs2.mkdirSync(dir, {
+      return fs10.mkdirSync(dir, {
         mode: getMode(options),
         recursive: true
       });
@@ -3755,13 +3755,13 @@ var require_path_exists = __commonJS({
   "node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    function pathExists2(path2) {
-      return fs2.access(path2).then(() => true).catch(() => false);
+    var fs10 = require_fs();
+    function pathExists2(path10) {
+      return fs10.access(path10).then(() => true).catch(() => false);
     }
     module2.exports = {
       pathExists: u(pathExists2),
-      pathExistsSync: fs2.existsSync
+      pathExistsSync: fs10.existsSync
     };
   }
 });
@@ -3770,16 +3770,16 @@ var require_path_exists = __commonJS({
 var require_utimes = __commonJS({
   "node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs10 = require_fs();
     var u = require_universalify().fromPromise;
-    async function utimesMillis(path2, atime, mtime) {
-      const fd = await fs2.open(path2, "r+");
+    async function utimesMillis(path10, atime, mtime) {
+      const fd = await fs10.open(path10, "r+");
       let closeErr = null;
       try {
-        await fs2.futimes(fd, atime, mtime);
+        await fs10.futimes(fd, atime, mtime);
       } finally {
         try {
-          await fs2.close(fd);
+          await fs10.close(fd);
         } catch (e) {
           closeErr = e;
         }
@@ -3788,10 +3788,10 @@ var require_utimes = __commonJS({
         throw closeErr;
       }
     }
-    function utimesMillisSync(path2, atime, mtime) {
-      const fd = fs2.openSync(path2, "r+");
-      fs2.futimesSync(fd, atime, mtime);
-      return fs2.closeSync(fd);
+    function utimesMillisSync(path10, atime, mtime) {
+      const fd = fs10.openSync(path10, "r+");
+      fs10.futimesSync(fd, atime, mtime);
+      return fs10.closeSync(fd);
     }
     module2.exports = {
       utimesMillis: u(utimesMillis),
@@ -3804,11 +3804,11 @@ var require_utimes = __commonJS({
 var require_stat = __commonJS({
   "node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs10 = require_fs();
+    var path10 = require("path");
     var u = require_universalify().fromPromise;
     function getStats(src, dest, opts) {
-      const statFunc = opts.dereference ? (file) => fs2.stat(file, { bigint: true }) : (file) => fs2.lstat(file, { bigint: true });
+      const statFunc = opts.dereference ? (file) => fs10.stat(file, { bigint: true }) : (file) => fs10.lstat(file, { bigint: true });
       return Promise.all([
         statFunc(src),
         statFunc(dest).catch((err) => {
@@ -3819,7 +3819,7 @@ var require_stat = __commonJS({
     }
     function getStatsSync(src, dest, opts) {
       let destStat;
-      const statFunc = opts.dereference ? (file) => fs2.statSync(file, { bigint: true }) : (file) => fs2.lstatSync(file, { bigint: true });
+      const statFunc = opts.dereference ? (file) => fs10.statSync(file, { bigint: true }) : (file) => fs10.lstatSync(file, { bigint: true });
       const srcStat = statFunc(src);
       try {
         destStat = statFunc(dest);
@@ -3833,8 +3833,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = await getStats(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path2.basename(src);
-          const destBaseName = path2.basename(dest);
+          const srcBaseName = path10.basename(src);
+          const destBaseName = path10.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -3856,8 +3856,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = getStatsSync(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path2.basename(src);
-          const destBaseName = path2.basename(dest);
+          const srcBaseName = path10.basename(src);
+          const destBaseName = path10.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -3876,12 +3876,12 @@ var require_stat = __commonJS({
       return { srcStat, destStat };
     }
     async function checkParentPaths(src, srcStat, dest, funcName) {
-      const srcParent = path2.resolve(path2.dirname(src));
-      const destParent = path2.resolve(path2.dirname(dest));
-      if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+      const srcParent = path10.resolve(path10.dirname(src));
+      const destParent = path10.resolve(path10.dirname(dest));
+      if (destParent === srcParent || destParent === path10.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = await fs2.stat(destParent, { bigint: true });
+        destStat = await fs10.stat(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -3892,12 +3892,12 @@ var require_stat = __commonJS({
       return checkParentPaths(src, srcStat, destParent, funcName);
     }
     function checkParentPathsSync(src, srcStat, dest, funcName) {
-      const srcParent = path2.resolve(path2.dirname(src));
-      const destParent = path2.resolve(path2.dirname(dest));
-      if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+      const srcParent = path10.resolve(path10.dirname(src));
+      const destParent = path10.resolve(path10.dirname(dest));
+      if (destParent === srcParent || destParent === path10.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = fs2.statSync(destParent, { bigint: true });
+        destStat = fs10.statSync(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -3911,8 +3911,8 @@ var require_stat = __commonJS({
       return destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
     }
     function isSrcSubdir(src, dest) {
-      const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
-      const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
+      const srcArr = path10.resolve(src).split(path10.sep).filter((i) => i);
+      const destArr = path10.resolve(dest).split(path10.sep).filter((i) => i);
       return srcArr.every((cur, i) => destArr[i] === cur);
     }
     function errMsg(src, dest, funcName) {
@@ -3936,13 +3936,13 @@ var require_stat = __commonJS({
 var require_copy = __commonJS({
   "node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs10 = require_fs();
+    var path10 = require("path");
     var { mkdirs } = require_mkdirs();
     var { pathExists: pathExists2 } = require_path_exists();
     var { utimesMillis } = require_utimes();
     var stat = require_stat();
-    async function copy2(src, dest, opts = {}) {
+    async function copy(src, dest, opts = {}) {
       if (typeof opts === "function") {
         opts = { filter: opts };
       }
@@ -3959,7 +3959,7 @@ var require_copy = __commonJS({
       await stat.checkParentPaths(src, srcStat, dest, "copy");
       const include = await runFilter(src, dest, opts);
       if (!include) return;
-      const destParent = path2.dirname(dest);
+      const destParent = path10.dirname(dest);
       const dirExists = await pathExists2(destParent);
       if (!dirExists) {
         await mkdirs(destParent);
@@ -3971,7 +3971,7 @@ var require_copy = __commonJS({
       return opts.filter(src, dest);
     }
     async function getStatsAndPerformCopy(destStat, src, dest, opts) {
-      const statFn = opts.dereference ? fs2.stat : fs2.lstat;
+      const statFn = opts.dereference ? fs10.stat : fs10.lstat;
       const srcStat = await statFn(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -3983,7 +3983,7 @@ var require_copy = __commonJS({
     async function onFile(srcStat, destStat, src, dest, opts) {
       if (!destStat) return copyFile(srcStat, src, dest, opts);
       if (opts.overwrite) {
-        await fs2.unlink(dest);
+        await fs10.unlink(dest);
         return copyFile(srcStat, src, dest, opts);
       }
       if (opts.errorOnExist) {
@@ -3991,30 +3991,30 @@ var require_copy = __commonJS({
       }
     }
     async function copyFile(srcStat, src, dest, opts) {
-      await fs2.copyFile(src, dest);
+      await fs10.copyFile(src, dest);
       if (opts.preserveTimestamps) {
         if (fileIsNotWritable(srcStat.mode)) {
           await makeFileWritable(dest, srcStat.mode);
         }
-        const updatedSrcStat = await fs2.stat(src);
+        const updatedSrcStat = await fs10.stat(src);
         await utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
       }
-      return fs2.chmod(dest, srcStat.mode);
+      return fs10.chmod(dest, srcStat.mode);
     }
     function fileIsNotWritable(srcMode) {
       return (srcMode & 128) === 0;
     }
     function makeFileWritable(dest, srcMode) {
-      return fs2.chmod(dest, srcMode | 128);
+      return fs10.chmod(dest, srcMode | 128);
     }
     async function onDir(srcStat, destStat, src, dest, opts) {
       if (!destStat) {
-        await fs2.mkdir(dest);
+        await fs10.mkdir(dest);
       }
       const promises = [];
-      for await (const item of await fs2.opendir(src)) {
-        const srcItem = path2.join(src, item.name);
-        const destItem = path2.join(dest, item.name);
+      for await (const item of await fs10.opendir(src)) {
+        const srcItem = path10.join(src, item.name);
+        const destItem = path10.join(dest, item.name);
         promises.push(
           runFilter(srcItem, destItem, opts).then((include) => {
             if (include) {
@@ -4027,26 +4027,26 @@ var require_copy = __commonJS({
       }
       await Promise.all(promises);
       if (!destStat) {
-        await fs2.chmod(dest, srcStat.mode);
+        await fs10.chmod(dest, srcStat.mode);
       }
     }
     async function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = await fs2.readlink(src);
+      let resolvedSrc = await fs10.readlink(src);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path10.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs2.symlink(resolvedSrc, dest);
+        return fs10.symlink(resolvedSrc, dest);
       }
       let resolvedDest = null;
       try {
-        resolvedDest = await fs2.readlink(dest);
+        resolvedDest = await fs10.readlink(dest);
       } catch (e) {
-        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs2.symlink(resolvedSrc, dest);
+        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs10.symlink(resolvedSrc, dest);
         throw e;
       }
       if (opts.dereference) {
-        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path10.resolve(process.cwd(), resolvedDest);
       }
       if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
         throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -4054,10 +4054,10 @@ var require_copy = __commonJS({
       if (stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
         throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
       }
-      await fs2.unlink(dest);
-      return fs2.symlink(resolvedSrc, dest);
+      await fs10.unlink(dest);
+      return fs10.symlink(resolvedSrc, dest);
     }
-    module2.exports = copy2;
+    module2.exports = copy;
   }
 });
 
@@ -4065,8 +4065,8 @@ var require_copy = __commonJS({
 var require_copy_sync = __commonJS({
   "node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
-    var path2 = require("path");
+    var fs10 = require_graceful_fs();
+    var path10 = require("path");
     var mkdirsSync = require_mkdirs().mkdirsSync;
     var utimesMillisSync = require_utimes().utimesMillisSync;
     var stat = require_stat();
@@ -4087,12 +4087,12 @@ var require_copy_sync = __commonJS({
       const { srcStat, destStat } = stat.checkPathsSync(src, dest, "copy", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "copy");
       if (opts.filter && !opts.filter(src, dest)) return;
-      const destParent = path2.dirname(dest);
-      if (!fs2.existsSync(destParent)) mkdirsSync(destParent);
+      const destParent = path10.dirname(dest);
+      if (!fs10.existsSync(destParent)) mkdirsSync(destParent);
       return getStats(destStat, src, dest, opts);
     }
     function getStats(destStat, src, dest, opts) {
-      const statSync = opts.dereference ? fs2.statSync : fs2.lstatSync;
+      const statSync = opts.dereference ? fs10.statSync : fs10.lstatSync;
       const srcStat = statSync(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -4107,14 +4107,14 @@ var require_copy_sync = __commonJS({
     }
     function mayCopyFile(srcStat, src, dest, opts) {
       if (opts.overwrite) {
-        fs2.unlinkSync(dest);
+        fs10.unlinkSync(dest);
         return copyFile(srcStat, src, dest, opts);
       } else if (opts.errorOnExist) {
         throw new Error(`'${dest}' already exists`);
       }
     }
     function copyFile(srcStat, src, dest, opts) {
-      fs2.copyFileSync(src, dest);
+      fs10.copyFileSync(src, dest);
       if (opts.preserveTimestamps) handleTimestamps(srcStat.mode, src, dest);
       return setDestMode(dest, srcStat.mode);
     }
@@ -4129,10 +4129,10 @@ var require_copy_sync = __commonJS({
       return setDestMode(dest, srcMode | 128);
     }
     function setDestMode(dest, srcMode) {
-      return fs2.chmodSync(dest, srcMode);
+      return fs10.chmodSync(dest, srcMode);
     }
     function setDestTimestamps(src, dest) {
-      const updatedSrcStat = fs2.statSync(src);
+      const updatedSrcStat = fs10.statSync(src);
       return utimesMillisSync(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
     }
     function onDir(srcStat, destStat, src, dest, opts) {
@@ -4140,12 +4140,12 @@ var require_copy_sync = __commonJS({
       return copyDir(src, dest, opts);
     }
     function mkDirAndCopy(srcMode, src, dest, opts) {
-      fs2.mkdirSync(dest);
+      fs10.mkdirSync(dest);
       copyDir(src, dest, opts);
       return setDestMode(dest, srcMode);
     }
     function copyDir(src, dest, opts) {
-      const dir = fs2.opendirSync(src);
+      const dir = fs10.opendirSync(src);
       try {
         let dirent;
         while ((dirent = dir.readSync()) !== null) {
@@ -4156,29 +4156,29 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyDirItem(item, src, dest, opts) {
-      const srcItem = path2.join(src, item);
-      const destItem = path2.join(dest, item);
+      const srcItem = path10.join(src, item);
+      const destItem = path10.join(dest, item);
       if (opts.filter && !opts.filter(srcItem, destItem)) return;
       const { destStat } = stat.checkPathsSync(srcItem, destItem, "copy", opts);
       return getStats(destStat, srcItem, destItem, opts);
     }
     function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = fs2.readlinkSync(src);
+      let resolvedSrc = fs10.readlinkSync(src);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path10.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs2.symlinkSync(resolvedSrc, dest);
+        return fs10.symlinkSync(resolvedSrc, dest);
       } else {
         let resolvedDest;
         try {
-          resolvedDest = fs2.readlinkSync(dest);
+          resolvedDest = fs10.readlinkSync(dest);
         } catch (err) {
-          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs2.symlinkSync(resolvedSrc, dest);
+          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs10.symlinkSync(resolvedSrc, dest);
           throw err;
         }
         if (opts.dereference) {
-          resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+          resolvedDest = path10.resolve(process.cwd(), resolvedDest);
         }
         if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
           throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -4190,8 +4190,8 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyLink(resolvedSrc, dest) {
-      fs2.unlinkSync(dest);
-      return fs2.symlinkSync(resolvedSrc, dest);
+      fs10.unlinkSync(dest);
+      return fs10.symlinkSync(resolvedSrc, dest);
     }
     module2.exports = copySync;
   }
@@ -4213,13 +4213,13 @@ var require_copy2 = __commonJS({
 var require_remove = __commonJS({
   "node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
+    var fs10 = require_graceful_fs();
     var u = require_universalify().fromCallback;
-    function remove(path2, callback) {
-      fs2.rm(path2, { recursive: true, force: true }, callback);
+    function remove(path10, callback) {
+      fs10.rm(path10, { recursive: true, force: true }, callback);
     }
-    function removeSync(path2) {
-      fs2.rmSync(path2, { recursive: true, force: true });
+    function removeSync(path10) {
+      fs10.rmSync(path10, { recursive: true, force: true });
     }
     module2.exports = {
       remove: u(remove),
@@ -4233,28 +4233,28 @@ var require_empty = __commonJS({
   "node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs10 = require_fs();
+    var path10 = require("path");
     var mkdir = require_mkdirs();
     var remove = require_remove();
     var emptyDir = u(async function emptyDir2(dir) {
       let items;
       try {
-        items = await fs2.readdir(dir);
+        items = await fs10.readdir(dir);
       } catch {
         return mkdir.mkdirs(dir);
       }
-      return Promise.all(items.map((item) => remove.remove(path2.join(dir, item))));
+      return Promise.all(items.map((item) => remove.remove(path10.join(dir, item))));
     });
     function emptyDirSync(dir) {
       let items;
       try {
-        items = fs2.readdirSync(dir);
+        items = fs10.readdirSync(dir);
       } catch {
         return mkdir.mkdirsSync(dir);
       }
       items.forEach((item) => {
-        item = path2.join(dir, item);
+        item = path10.join(dir, item);
         remove.removeSync(item);
       });
     }
@@ -4272,52 +4272,52 @@ var require_file = __commonJS({
   "node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path10 = require("path");
+    var fs10 = require_fs();
     var mkdir = require_mkdirs();
     async function createFile(file) {
       let stats;
       try {
-        stats = await fs2.stat(file);
+        stats = await fs10.stat(file);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path2.dirname(file);
+      const dir = path10.dirname(file);
       let dirStats = null;
       try {
-        dirStats = await fs2.stat(dir);
+        dirStats = await fs10.stat(dir);
       } catch (err) {
         if (err.code === "ENOENT") {
           await mkdir.mkdirs(dir);
-          await fs2.writeFile(file, "");
+          await fs10.writeFile(file, "");
           return;
         } else {
           throw err;
         }
       }
       if (dirStats.isDirectory()) {
-        await fs2.writeFile(file, "");
+        await fs10.writeFile(file, "");
       } else {
-        await fs2.readdir(dir);
+        await fs10.readdir(dir);
       }
     }
     function createFileSync(file) {
       let stats;
       try {
-        stats = fs2.statSync(file);
+        stats = fs10.statSync(file);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path2.dirname(file);
+      const dir = path10.dirname(file);
       try {
-        if (!fs2.statSync(dir).isDirectory()) {
-          fs2.readdirSync(dir);
+        if (!fs10.statSync(dir).isDirectory()) {
+          fs10.readdirSync(dir);
         }
       } catch (err) {
         if (err && err.code === "ENOENT") mkdir.mkdirsSync(dir);
         else throw err;
       }
-      fs2.writeFileSync(file, "");
+      fs10.writeFileSync(file, "");
     }
     module2.exports = {
       createFile: u(createFile),
@@ -4331,50 +4331,50 @@ var require_link = __commonJS({
   "node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path10 = require("path");
+    var fs10 = require_fs();
     var mkdir = require_mkdirs();
     var { pathExists: pathExists2 } = require_path_exists();
     var { areIdentical } = require_stat();
     async function createLink(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = await fs2.lstat(dstpath);
+        dstStat = await fs10.lstat(dstpath);
       } catch {
       }
       let srcStat;
       try {
-        srcStat = await fs2.lstat(srcpath);
+        srcStat = await fs10.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
       if (dstStat && areIdentical(srcStat, dstStat)) return;
-      const dir = path2.dirname(dstpath);
+      const dir = path10.dirname(dstpath);
       const dirExists = await pathExists2(dir);
       if (!dirExists) {
         await mkdir.mkdirs(dir);
       }
-      await fs2.link(srcpath, dstpath);
+      await fs10.link(srcpath, dstpath);
     }
     function createLinkSync(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = fs2.lstatSync(dstpath);
+        dstStat = fs10.lstatSync(dstpath);
       } catch {
       }
       try {
-        const srcStat = fs2.lstatSync(srcpath);
+        const srcStat = fs10.lstatSync(srcpath);
         if (dstStat && areIdentical(srcStat, dstStat)) return;
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
-      const dir = path2.dirname(dstpath);
-      const dirExists = fs2.existsSync(dir);
-      if (dirExists) return fs2.linkSync(srcpath, dstpath);
+      const dir = path10.dirname(dstpath);
+      const dirExists = fs10.existsSync(dir);
+      if (dirExists) return fs10.linkSync(srcpath, dstpath);
       mkdir.mkdirsSync(dir);
-      return fs2.linkSync(srcpath, dstpath);
+      return fs10.linkSync(srcpath, dstpath);
     }
     module2.exports = {
       createLink: u(createLink),
@@ -4387,14 +4387,14 @@ var require_link = __commonJS({
 var require_symlink_paths = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path10 = require("path");
+    var fs10 = require_fs();
     var { pathExists: pathExists2 } = require_path_exists();
     var u = require_universalify().fromPromise;
     async function symlinkPaths(srcpath, dstpath) {
-      if (path2.isAbsolute(srcpath)) {
+      if (path10.isAbsolute(srcpath)) {
         try {
-          await fs2.lstat(srcpath);
+          await fs10.lstat(srcpath);
         } catch (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
           throw err;
@@ -4404,8 +4404,8 @@ var require_symlink_paths = __commonJS({
           toDst: srcpath
         };
       }
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path10.dirname(dstpath);
+      const relativeToDst = path10.join(dstdir, srcpath);
       const exists = await pathExists2(relativeToDst);
       if (exists) {
         return {
@@ -4414,39 +4414,39 @@ var require_symlink_paths = __commonJS({
         };
       }
       try {
-        await fs2.lstat(srcpath);
+        await fs10.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureSymlink");
         throw err;
       }
       return {
         toCwd: srcpath,
-        toDst: path2.relative(dstdir, srcpath)
+        toDst: path10.relative(dstdir, srcpath)
       };
     }
     function symlinkPathsSync(srcpath, dstpath) {
-      if (path2.isAbsolute(srcpath)) {
-        const exists2 = fs2.existsSync(srcpath);
+      if (path10.isAbsolute(srcpath)) {
+        const exists2 = fs10.existsSync(srcpath);
         if (!exists2) throw new Error("absolute srcpath does not exist");
         return {
           toCwd: srcpath,
           toDst: srcpath
         };
       }
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
-      const exists = fs2.existsSync(relativeToDst);
+      const dstdir = path10.dirname(dstpath);
+      const relativeToDst = path10.join(dstdir, srcpath);
+      const exists = fs10.existsSync(relativeToDst);
       if (exists) {
         return {
           toCwd: relativeToDst,
           toDst: srcpath
         };
       }
-      const srcExists = fs2.existsSync(srcpath);
+      const srcExists = fs10.existsSync(srcpath);
       if (!srcExists) throw new Error("relative srcpath does not exist");
       return {
         toCwd: srcpath,
-        toDst: path2.relative(dstdir, srcpath)
+        toDst: path10.relative(dstdir, srcpath)
       };
     }
     module2.exports = {
@@ -4460,13 +4460,13 @@ var require_symlink_paths = __commonJS({
 var require_symlink_type = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs10 = require_fs();
     var u = require_universalify().fromPromise;
     async function symlinkType(srcpath, type) {
       if (type) return type;
       let stats;
       try {
-        stats = await fs2.lstat(srcpath);
+        stats = await fs10.lstat(srcpath);
       } catch {
         return "file";
       }
@@ -4476,7 +4476,7 @@ var require_symlink_type = __commonJS({
       if (type) return type;
       let stats;
       try {
-        stats = fs2.lstatSync(srcpath);
+        stats = fs10.lstatSync(srcpath);
       } catch {
         return "file";
       }
@@ -4494,8 +4494,8 @@ var require_symlink = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path10 = require("path");
+    var fs10 = require_fs();
     var { mkdirs, mkdirsSync } = require_mkdirs();
     var { symlinkPaths, symlinkPathsSync } = require_symlink_paths();
     var { symlinkType, symlinkTypeSync } = require_symlink_type();
@@ -4504,44 +4504,44 @@ var require_symlink = __commonJS({
     async function createSymlink(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = await fs2.lstat(dstpath);
+        stats = await fs10.lstat(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
         const [srcStat, dstStat] = await Promise.all([
-          fs2.stat(srcpath),
-          fs2.stat(dstpath)
+          fs10.stat(srcpath),
+          fs10.stat(dstpath)
         ]);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = await symlinkPaths(srcpath, dstpath);
       srcpath = relative.toDst;
       const toType = await symlinkType(relative.toCwd, type);
-      const dir = path2.dirname(dstpath);
+      const dir = path10.dirname(dstpath);
       if (!await pathExists2(dir)) {
         await mkdirs(dir);
       }
-      return fs2.symlink(srcpath, dstpath, toType);
+      return fs10.symlink(srcpath, dstpath, toType);
     }
     function createSymlinkSync(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = fs2.lstatSync(dstpath);
+        stats = fs10.lstatSync(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const srcStat = fs2.statSync(srcpath);
-        const dstStat = fs2.statSync(dstpath);
+        const srcStat = fs10.statSync(srcpath);
+        const dstStat = fs10.statSync(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = symlinkPathsSync(srcpath, dstpath);
       srcpath = relative.toDst;
       type = symlinkTypeSync(relative.toCwd, type);
-      const dir = path2.dirname(dstpath);
-      const exists = fs2.existsSync(dir);
-      if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
+      const dir = path10.dirname(dstpath);
+      const exists = fs10.existsSync(dir);
+      if (exists) return fs10.symlinkSync(srcpath, dstpath, type);
       mkdirsSync(dir);
-      return fs2.symlinkSync(srcpath, dstpath, type);
+      return fs10.symlinkSync(srcpath, dstpath, type);
     }
     module2.exports = {
       createSymlink: u(createSymlink),
@@ -4608,9 +4608,9 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs2 = options.fs || _fs;
+      const fs10 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
-      let data = await universalify.fromCallback(fs2.readFile)(file, options);
+      let data = await universalify.fromCallback(fs10.readFile)(file, options);
       data = stripBom(data);
       let obj;
       try {
@@ -4626,14 +4626,14 @@ var require_jsonfile = __commonJS({
       return obj;
     }
     var readFile2 = universalify.fromPromise(_readFile);
-    function readFileSync2(file, options = {}) {
+    function readFileSync(file, options = {}) {
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs2 = options.fs || _fs;
+      const fs10 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
       try {
-        let content = fs2.readFileSync(file, options);
+        let content = fs10.readFileSync(file, options);
         content = stripBom(content);
         return JSON.parse(content, options.reviver);
       } catch (err) {
@@ -4646,19 +4646,19 @@ var require_jsonfile = __commonJS({
       }
     }
     async function _writeFile(file, obj, options = {}) {
-      const fs2 = options.fs || _fs;
+      const fs10 = options.fs || _fs;
       const str = stringify(obj, options);
-      await universalify.fromCallback(fs2.writeFile)(file, str, options);
+      await universalify.fromCallback(fs10.writeFile)(file, str, options);
     }
     var writeFile2 = universalify.fromPromise(_writeFile);
     function writeFileSync(file, obj, options = {}) {
-      const fs2 = options.fs || _fs;
+      const fs10 = options.fs || _fs;
       const str = stringify(obj, options);
-      return fs2.writeFileSync(file, str, options);
+      return fs10.writeFileSync(file, str, options);
     }
     var jsonfile = {
       readFile: readFile2,
-      readFileSync: readFileSync2,
+      readFileSync,
       writeFile: writeFile2,
       writeFileSync
     };
@@ -4686,23 +4686,23 @@ var require_output_file = __commonJS({
   "node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs10 = require_fs();
+    var path10 = require("path");
     var mkdir = require_mkdirs();
     var pathExists2 = require_path_exists().pathExists;
     async function outputFile(file, data, encoding = "utf-8") {
-      const dir = path2.dirname(file);
+      const dir = path10.dirname(file);
       if (!await pathExists2(dir)) {
         await mkdir.mkdirs(dir);
       }
-      return fs2.writeFile(file, data, encoding);
+      return fs10.writeFile(file, data, encoding);
     }
     function outputFileSync(file, ...args) {
-      const dir = path2.dirname(file);
-      if (!fs2.existsSync(dir)) {
+      const dir = path10.dirname(file);
+      if (!fs10.existsSync(dir)) {
         mkdir.mkdirsSync(dir);
       }
-      fs2.writeFileSync(file, ...args);
+      fs10.writeFileSync(file, ...args);
     }
     module2.exports = {
       outputFile: u(outputFile),
@@ -4761,9 +4761,9 @@ var require_json = __commonJS({
 var require_move = __commonJS({
   "node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
-    var { copy: copy2 } = require_copy2();
+    var fs10 = require_fs();
+    var path10 = require("path");
+    var { copy } = require_copy2();
     var { remove } = require_remove();
     var { mkdirp } = require_mkdirs();
     var { pathExists: pathExists2 } = require_path_exists();
@@ -4772,8 +4772,8 @@ var require_move = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = await stat.checkPaths(src, dest, "move", opts);
       await stat.checkParentPaths(src, srcStat, dest, "move");
-      const destParent = path2.dirname(dest);
-      const parsedParentPath = path2.parse(destParent);
+      const destParent = path10.dirname(dest);
+      const parsedParentPath = path10.parse(destParent);
       if (parsedParentPath.root !== destParent) {
         await mkdirp(destParent);
       }
@@ -4788,7 +4788,7 @@ var require_move = __commonJS({
         }
       }
       try {
-        await fs2.rename(src, dest);
+        await fs10.rename(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") {
           throw err;
@@ -4802,7 +4802,7 @@ var require_move = __commonJS({
         errorOnExist: true,
         preserveTimestamps: true
       };
-      await copy2(src, dest, opts);
+      await copy(src, dest, opts);
       return remove(src);
     }
     module2.exports = move;
@@ -4813,8 +4813,8 @@ var require_move = __commonJS({
 var require_move_sync = __commonJS({
   "node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
-    var path2 = require("path");
+    var fs10 = require_graceful_fs();
+    var path10 = require("path");
     var copySync = require_copy2().copySync;
     var removeSync = require_remove().removeSync;
     var mkdirpSync = require_mkdirs().mkdirpSync;
@@ -4824,12 +4824,12 @@ var require_move_sync = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = stat.checkPathsSync(src, dest, "move", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "move");
-      if (!isParentRoot(dest)) mkdirpSync(path2.dirname(dest));
+      if (!isParentRoot(dest)) mkdirpSync(path10.dirname(dest));
       return doRename(src, dest, overwrite, isChangingCase);
     }
     function isParentRoot(dest) {
-      const parent = path2.dirname(dest);
-      const parsedPath = path2.parse(parent);
+      const parent = path10.dirname(dest);
+      const parsedPath = path10.parse(parent);
       return parsedPath.root === parent;
     }
     function doRename(src, dest, overwrite, isChangingCase) {
@@ -4838,12 +4838,12 @@ var require_move_sync = __commonJS({
         removeSync(dest);
         return rename(src, dest, overwrite);
       }
-      if (fs2.existsSync(dest)) throw new Error("dest already exists.");
+      if (fs10.existsSync(dest)) throw new Error("dest already exists.");
       return rename(src, dest, overwrite);
     }
     function rename(src, dest, overwrite) {
       try {
-        fs2.renameSync(src, dest);
+        fs10.renameSync(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") throw err;
         return moveAcrossDevice(src, dest, overwrite);
@@ -4913,70 +4913,157 @@ var {
 } = import_index.default;
 
 // src/cli.ts
-var fs = __toESM(require_lib());
-var path = __toESM(require("path"));
+var fs9 = __toESM(require_lib());
+var path9 = __toESM(require("path"));
 var readline = __toESM(require("readline"));
-var crypto = __toESM(require("crypto"));
+
+// src/generators/context.ts
+var import_fs_extra = __toESM(require_lib());
+var import_path = __toESM(require("path"));
+var import_crypto = __toESM(require("crypto"));
+var FRAMEWORKS = ["express", "elysia"];
+var FIELD_TYPES = ["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"];
+var GeneratorError = class extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+    this.name = "GeneratorError";
+  }
+};
+var assertValidName = (value, pattern, what) => {
+  if (!pattern.test(value)) {
+    throw new GeneratorError("INVALID_INPUT", `Invalid ${what}: "${value}" (must match ${pattern})`);
+  }
+};
+var capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+var toCamelCase = (str) => str.charAt(0).toLowerCase() + str.slice(1);
+var toKebabCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var toUpperSnakeCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+var generateSecret = (bytes = 64) => import_crypto.default.randomBytes(bytes).toString("hex");
+var packageRoot = () => {
+  const candidates = [import_path.default.join(__dirname, ".."), import_path.default.join(__dirname, "..", "..")];
+  for (const c of candidates) {
+    if (import_fs_extra.default.existsSync(import_path.default.join(c, "templates"))) return c;
+  }
+  throw new GeneratorError("IO_ERROR", "Could not locate koti package root (no templates/ directory found)");
+};
+var templatesDir = () => import_path.default.join(packageRoot(), "templates");
 var getVersion = () => {
   const candidates = [
-    path.join(__dirname, "..", "version.json"),
-    path.join(__dirname, "..", "package.json")
+    import_path.default.join(__dirname, "..", "version.json"),
+    import_path.default.join(__dirname, "..", "package.json"),
+    import_path.default.join(__dirname, "..", "..", "version.json"),
+    import_path.default.join(__dirname, "..", "..", "package.json")
   ];
   for (const candidate of candidates) {
     try {
-      const data = JSON.parse(fs.readFileSync(candidate, "utf8"));
+      const data = JSON.parse(import_fs_extra.default.readFileSync(candidate, "utf8"));
       if (data.version) return data.version;
     } catch {
     }
   }
-  console.error(colors.yellow("\u26A0\uFE0F  Could not determine CLI version. Using fallback."));
   return "0.0.0-unknown";
 };
-var generateSecret = (bytes = 64) => {
-  return crypto.randomBytes(bytes).toString("hex");
+var resolveProject = async (root) => {
+  const warnings = [];
+  const pkgPath = import_path.default.join(root, "package.json");
+  if (!await import_fs_extra.default.pathExists(pkgPath)) {
+    throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no package.json)`);
+  }
+  const configPath = import_path.default.join(root, "koti.config.json");
+  if (await import_fs_extra.default.pathExists(configPath)) {
+    try {
+      const config = await import_fs_extra.default.readJson(configPath);
+      if (config.framework === "express" || config.framework === "elysia") {
+        return { root, framework: config.framework, warnings };
+      }
+      warnings.push(`Unknown framework "${config.framework}" in koti.config.json \u2014 defaulting to express`);
+      return { root, framework: "express", warnings };
+    } catch {
+      warnings.push("Unreadable koti.config.json \u2014 falling back to dependency detection");
+    }
+  }
+  let deps = {};
+  try {
+    const pkg = await import_fs_extra.default.readJson(pkgPath);
+    deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  } catch {
+    throw new GeneratorError("NOT_KOTI_PROJECT", `${root} has an unreadable package.json`);
+  }
+  if (deps.elysia) {
+    warnings.push('No koti.config.json \u2014 framework "elysia" inferred from dependencies');
+    return { root, framework: "elysia", warnings };
+  }
+  if (deps.express || deps.mongoose) {
+    warnings.push('No koti.config.json \u2014 framework "express" inferred from dependencies');
+    return { root, framework: "express", warnings };
+  }
+  throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose dependency)`);
 };
-var program2 = new Command();
-var colors = {
-  green: (text) => `\x1B[32m${text}\x1B[0m`,
-  blue: (text) => `\x1B[34m${text}\x1B[0m`,
-  yellow: (text) => `\x1B[33m${text}\x1B[0m`,
-  red: (text) => `\x1B[31m${text}\x1B[0m`,
-  cyan: (text) => `\x1B[36m${text}\x1B[0m`,
-  bold: (text) => `\x1B[1m${text}\x1B[0m`,
-  dim: (text) => `\x1B[2m${text}\x1B[0m`
+var updateIndexExport = async (dirPath, exportLine) => {
+  const indexPath = import_path.default.join(dirPath, "index.ts");
+  try {
+    let content = "";
+    if (await import_fs_extra.default.pathExists(indexPath)) {
+      content = await import_fs_extra.default.readFile(indexPath, "utf-8");
+    }
+    if (content.includes(exportLine)) return;
+    const separator = content.length > 0 && !content.endsWith("\n") ? "\n" : "";
+    await import_fs_extra.default.writeFile(indexPath, content + separator + exportLine + "\n");
+  } catch {
+  }
 };
-var enumTypes = ["string", "number"];
-var createReadlineInterface = () => {
-  return readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+
+// src/generators/enum.ts
+var import_fs_extra2 = __toESM(require_lib());
+var import_path2 = __toESM(require("path"));
+var generateTypeScriptEnum = (enumName, enumType, values) => {
+  const capitalizedName = capitalize(enumName);
+  const enumValues = values.map(({ key, value }) => {
+    if (enumType === "string") {
+      return `  ${key} = '${value}'`;
+    }
+    return `  ${key} = ${value}`;
+  }).join(",\n");
+  return `export enum ${capitalizedName} {
+${enumValues}
+}
+
+export default ${capitalizedName};
+`;
 };
-var askQuestion = (rl, question) => {
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      resolve(answer.trim());
-    });
-  });
+var createEnum = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "enum name (PascalCase)");
+  for (const v of opts.values) {
+    assertValidName(v.key, /^[A-Z][A-Z0-9_]*$/, "enum key (UPPER_SNAKE_CASE)");
+    if (typeof v.value === "string" && /[\r\n']/.test(v.value)) {
+      throw new GeneratorError("INVALID_INPUT", `Enum value for ${v.key} must not contain newlines or quotes`);
+    }
+  }
+  if (opts.values.length === 0) {
+    throw new GeneratorError("INVALID_INPUT", "At least one enum value is required");
+  }
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const enumPath = import_path2.default.join(ctx.root, "src", "enums", `${capitalizedName}.ts`);
+  if (await import_fs_extra2.default.pathExists(enumPath)) {
+    throw new GeneratorError("DUPLICATE", `Enum already exists: ${enumPath}`);
+  }
+  await import_fs_extra2.default.ensureDir(import_path2.default.dirname(enumPath));
+  await import_fs_extra2.default.writeFile(enumPath, generateTypeScriptEnum(opts.name, opts.enumType, opts.values));
+  await updateIndexExport(import_path2.default.join(ctx.root, "src", "enums"), `export { ${capitalizedName} } from './${capitalizedName}';`);
+  return { files: [enumPath], warnings: ctx.warnings };
 };
-var capitalize = (str) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-var toCamelCase = (str) => {
-  return str.charAt(0).toLowerCase() + str.slice(1);
-};
-var toKebabCase = (str) => {
-  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-};
-var toUpperSnakeCase = (str) => {
-  return str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
-};
-var addTaskToEnum = async (taskKey, description) => {
-  const enumPath = path.join(process.cwd(), "src", "enums", "Task.ts");
-  if (!await fs.pathExists(enumPath)) {
+
+// src/generators/task.ts
+var import_fs_extra3 = __toESM(require_lib());
+var import_path3 = __toESM(require("path"));
+var addTaskToEnum = async (projectRoot, taskKey, description) => {
+  const enumPath = import_path3.default.join(projectRoot, "src", "enums", "Task.ts");
+  if (!await import_fs_extra3.default.pathExists(enumPath)) {
     return false;
   }
-  let content = await fs.readFile(enumPath, "utf-8");
+  let content = await import_fs_extra3.default.readFile(enumPath, "utf-8");
   if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
     return false;
   }
@@ -5007,425 +5094,37 @@ var addTaskToEnum = async (taskKey, description) => {
       lastDescWithComma + newDescEntry + descClosing
     );
   }
-  await fs.writeFile(enumPath, content);
+  await import_fs_extra3.default.writeFile(enumPath, content);
   return true;
 };
-var parseExistingModel = async (modelName) => {
-  const modelPath = path.join(process.cwd(), "src", "models", `${capitalize(modelName)}.ts`);
-  if (!await fs.pathExists(modelPath)) {
-    return { fields: [], hasSchema: false };
+var createTask = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][A-Z0-9_]*$/, "task name (UPPER_SNAKE_CASE)");
+  if (!opts.description.trim()) {
+    throw new GeneratorError("INVALID_INPUT", "Task description is required");
   }
-  const content = await fs.readFile(modelPath, "utf-8");
-  const fields = [];
-  const schemaMatch = content.match(/const\s+\w+Schema\s*=\s*new\s+Schema<.*?>\(\{([\s\S]*?)\},\s*\{/);
-  if (schemaMatch) {
-    const schemaContent = schemaMatch[1];
-    const fieldMatches = schemaContent.match(/(\w+):\s*\{[^}]+\}/g);
-    if (fieldMatches) {
-      fieldMatches.forEach((fieldMatch) => {
-        const nameMatch = fieldMatch.match(/(\w+):/);
-        const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
-        const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
-        const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
-        const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
-        if (nameMatch && typeMatch) {
-          fields.push({
-            name: nameMatch[1],
-            type: typeMatch[1],
-            required: requiredMatch ? requiredMatch[1] === "true" : false,
-            unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
-            default: defaultMatch ? defaultMatch[1].replace(/['"]/g, "") : void 0
-          });
-        }
-      });
-    }
+  if (/[\r\n]/.test(opts.description)) {
+    throw new GeneratorError("INVALID_INPUT", "Task description must be a single line");
   }
-  return { fields, hasSchema: true };
+  const ctx = await resolveProject(opts.projectRoot);
+  const enumPath = import_path3.default.join(ctx.root, "src", "enums", "Task.ts");
+  if (!await import_fs_extra3.default.pathExists(enumPath)) {
+    throw new GeneratorError("IO_ERROR", `src/enums/Task.ts not found \u2014 run this inside a Koti project (koti new creates it)`);
+  }
+  const content = await import_fs_extra3.default.readFile(enumPath, "utf-8");
+  if (content.includes(`${opts.name} =`) || content.includes(`${opts.name}=`)) {
+    throw new GeneratorError("DUPLICATE", `Task ${opts.name} already exists in Task.ts`);
+  }
+  const added = await addTaskToEnum(ctx.root, opts.name, opts.description);
+  if (!added) {
+    throw new GeneratorError("IO_ERROR", "Could not parse src/enums/Task.ts \u2014 unexpected enum format");
+  }
+  return { files: [enumPath], warnings: ctx.warnings };
 };
-var checkCRUDExists = async (modelName) => {
-  const camelName = toCamelCase(modelName);
-  const controllerPath = path.join(process.cwd(), "src", "controllers", `${camelName}Controller.ts`);
-  const servicePath = path.join(process.cwd(), "src", "services", `${camelName}Service.ts`);
-  const routePath = path.join(process.cwd(), "src", "routes", `${camelName}.ts`);
-  const [controller, service, routes] = await Promise.all([
-    fs.pathExists(controllerPath),
-    fs.pathExists(servicePath),
-    fs.pathExists(routePath)
-  ]);
-  return { controller, service, routes };
-};
-var projectTemplates = {
-  "package.json": JSON.stringify({
-    name: "{{PROJECT_NAME}}",
-    version: getVersion(),
-    description: "Bun API project with Express and MongoDB",
-    main: "dist/server.js",
-    scripts: {
-      build: "tsc",
-      start: "node dist/server.js",
-      dev: "bun --watch src/server.ts",
-      "dev:ts": "ts-node src/server.ts",
-      test: 'echo "Error: no test specified" && exit 1'
-    },
-    dependencies: {
-      "express": "^4.18.2",
-      "mongoose": "^8.0.0",
-      "dotenv": "^16.3.1",
-      "cors": "^2.8.5",
-      "helmet": "^7.1.0",
-      "bcryptjs": "^2.4.3",
-      "jsonwebtoken": "^9.0.2",
-      "express-rate-limit": "^7.1.5",
-      "joi": "^17.11.0",
-      "swagger-jsdoc": "^6.2.8",
-      "swagger-ui-express": "^5.0.0"
-    },
-    devDependencies: {
-      "typescript": "^5.3.2",
-      "@types/express": "^4.17.21",
-      "@types/node": "^20.10.0",
-      "@types/cors": "^2.8.17",
-      "@types/bcryptjs": "^2.4.6",
-      "@types/jsonwebtoken": "^9.0.5",
-      "@types/swagger-jsdoc": "^6.0.4",
-      "@types/swagger-ui-express": "^4.1.6",
-      "ts-node": "^10.9.1",
-      "nodemon": "^3.0.2"
-    },
-    keywords: ["bun", "express", "mongodb", "api", "typescript"],
-    author: "mynenikoteshwarrao",
-    license: "MIT",
-    disclaimer: `Generated by Koti CLI v${getVersion()} - Development version. Code provided as-is without warranty. Review before production use.`
-  }, null, 2),
-  "tsconfig.json": JSON.stringify({
-    compilerOptions: {
-      target: "ES2020",
-      module: "CommonJS",
-      lib: ["ES2020"],
-      outDir: "./dist",
-      rootDir: "./src",
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      resolveJsonModule: true,
-      declaration: true,
-      sourceMap: true,
-      removeComments: false,
-      noImplicitAny: true,
-      strictNullChecks: true,
-      moduleResolution: "node",
-      allowSyntheticDefaultImports: true,
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true
-    },
-    include: [
-      "src/**/*"
-    ],
-    exclude: [
-      "node_modules",
-      "dist"
-    ]
-  }, null, 2),
-  "README.md": `# {{PROJECT_NAME}}
 
-A modern TypeScript API built with Bun, Express.js, and MongoDB.
-
-## \u26A0\uFE0F Development Disclaimer
-
-**This project was generated using Koti CLI v${getVersion()}**
-
-This is an initial development release and may contain errors, bugs, or security vulnerabilities. Please:
-- Review all generated code before using in production
-- Test thoroughly in development environments
-- Update dependencies to latest versions
-- Implement proper security measures for production use
-- Use at your own discretion and risk
-
-Generated code is provided "as-is" without warranty of any kind.
-
-## \u{1F680} Features
-
-- **TypeScript**: Full type safety and modern JavaScript features
-- **Bun Runtime**: Lightning-fast JavaScript runtime
-- **Express.js**: Minimal and flexible web framework
-- **MongoDB**: NoSQL database with Mongoose ODM
-- **Authentication**: JWT-based authentication system
-- **Security**: Helmet, CORS, rate limiting
-- **Error Handling**: Centralized error handling
-- **Validation**: Joi request validation and sanitization
-- **API Documentation**: Swagger/OpenAPI 3.0 documentation
-- **Environment Config**: Environment-based configuration
-
-## \u{1F4CB} Prerequisites
-
-- [Bun](https://bun.sh/) installed
-- [MongoDB](https://www.mongodb.com/) installed and running
-- Node.js 16+ (for development tools)
-- TypeScript knowledge recommended
-
-## \u{1F6E0}\uFE0F Installation
-
-1. **Clone the repository**
-   \`\`\`bash
-   git clone <repository-url>
-   cd {{PROJECT_NAME}}
-   \`\`\`
-
-2. **Install dependencies**
-   \`\`\`bash
-   bun install
-   \`\`\`
-
-3. **Set up environment variables**
-   \`\`\`bash
-   cp .env.example .env
-   \`\`\`
-   
-   Edit \`.env\` file with your configuration:
-   \`\`\`env
-   NODE_ENV=development
-   PORT=8000
-   MONGODB_URI=mongodb://localhost:27017/{{PROJECT_NAME}}
-   # JWT secrets are auto-generated during project creation
-   \`\`\`
-
-4. **Start MongoDB**
-   \`\`\`bash
-   # On macOS with Homebrew
-   brew services start mongodb-community
-   
-   # On Linux
-   sudo systemctl start mongod
-   \`\`\`
-
-## \u{1F680} Usage
-
-### Development
-
-\`\`\`bash
-# Development with Bun (recommended)
-bun run dev
-
-# Development with TypeScript compilation
-npm run dev:ts
-
-# Build TypeScript
-npm run build
-
-# Production
-npm start
-\`\`\`
-
-### API Documentation
-
-- **Swagger UI**: http://localhost:8000/api-docs
-- **Health Check**: http://localhost:8000/health
-- **API Status**: http://localhost:8000/api/status
-
-### Default Endpoints
-
-- \`GET /health\` - Health check
-- \`GET /api/\` - API welcome message
-- \`GET /api/status\` - API status information
-- \`GET /api-docs\` - Interactive API documentation
-
-### Authentication Endpoints
-
-- \`POST /api/auth/register\` - Register new user
-- \`POST /api/auth/login\` - User login
-- \`GET /api/auth/me\` - Get current user profile
-
-## \u{1F4C1} Project Structure
-
-\`\`\`
-{{PROJECT_NAME}}/
-\u251C\u2500\u2500 src/
-\u2502   \u251C\u2500\u2500 config/
-\u2502   \u2502   \u251C\u2500\u2500 database.ts         # MongoDB connection
-\u2502   \u2502   \u2514\u2500\u2500 swagger.ts          # Swagger configuration
-\u2502   \u251C\u2500\u2500 controllers/
-\u2502   \u2502   \u251C\u2500\u2500 authController.ts   # Authentication logic
-\u2502   \u2502   \u2514\u2500\u2500 index.ts           # Controller exports
-\u2502   \u251C\u2500\u2500 middleware/
-\u2502   \u2502   \u251C\u2500\u2500 auth.ts            # JWT authentication
-\u2502   \u2502   \u251C\u2500\u2500 errorHandler.ts    # Error handling
-\u2502   \u2502   \u251C\u2500\u2500 rateLimit.ts       # Rate limiting
-\u2502   \u2502   \u2514\u2500\u2500 validation.ts      # Joi validation
-\u2502   \u251C\u2500\u2500 models/
-\u2502   \u2502   \u251C\u2500\u2500 User.ts            # User model
-\u2502   \u2502   \u2514\u2500\u2500 index.ts           # Model exports
-\u2502   \u251C\u2500\u2500 routes/
-\u2502   \u2502   \u251C\u2500\u2500 auth.ts            # Auth routes
-\u2502   \u2502   \u251C\u2500\u2500 index.ts           # Main routes
-\u2502   \u2502   \u2514\u2500\u2500 api.ts             # API routes
-\u2502   \u251C\u2500\u2500 types/
-\u2502   \u2502   \u2514\u2500\u2500 api.ts             # TypeScript definitions
-\u2502   \u251C\u2500\u2500 utils/
-\u2502   \u2502   \u251C\u2500\u2500 AppError.ts        # Custom error class
-\u2502   \u2502   \u251C\u2500\u2500 logger.ts          # Logging utility
-\u2502   \u2502   \u2514\u2500\u2500 responseHelper.ts  # Response helpers
-\u2502   \u2514\u2500\u2500 server.ts              # Main server file
-\u251C\u2500\u2500 dist/                      # Compiled JavaScript
-\u251C\u2500\u2500 .env                       # Environment variables
-\u251C\u2500\u2500 .gitignore                 # Git ignore rules
-\u251C\u2500\u2500 package.json               # Dependencies
-\u251C\u2500\u2500 tsconfig.json              # TypeScript config
-\u2514\u2500\u2500 README.md                  # This file
-\`\`\`
-
-## \u{1F527} Development
-
-### Adding New Features
-
-Use the Koti CLI to generate new components:
-
-\`\`\`bash
-# Create new model
-koti model Product
-
-# Edit existing model
-koti model:edit Product
-
-# Create new controller
-koti controller Product
-
-# Create new service
-koti service Email
-
-# Create new middleware
-koti middleware Logger
-
-# Create new enum
-koti enum Status
-\`\`\`
-
-### TypeScript Features
-
-- **Full Type Safety**: All code is written in TypeScript
-- **Interface Definitions**: Clear contracts for all data structures
-- **Enum Support**: Type-safe enumerations
-- **Generic Types**: Reusable type definitions
-- **Decorators**: Support for experimental decorators
-
-## \u{1F6E1}\uFE0F Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **Rate Limiting**: Protection against brute force attacks
-- **CORS**: Cross-origin resource sharing configuration
-- **Helmet**: Security headers middleware
-- **Input Validation**: Joi validation for all inputs
-
-## \u{1F4CA} Monitoring & Logging
-
-- **Health Checks**: Built-in health check endpoints
-- **Request Logging**: Detailed request/response logging
-- **Error Tracking**: Comprehensive error logging
-- **Performance Monitoring**: Request timing and metrics
-
-## \u{1F9EA} Testing
-
-\`\`\`bash
-# Run tests (when implemented)
-npm test
-
-# Type checking
-npx tsc --noEmit
-
-# Linting (when configured)
-npm run lint
-\`\`\`
-
-## \u{1F680} Deployment
-
-### Production Build
-
-\`\`\`bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-\`\`\`
-
-### Environment Variables
-
-Set the following environment variables for production:
-
-- \`NODE_ENV=production\`
-- \`PORT=8000\`
-- \`MONGODB_URI=your-production-mongodb-uri\`
-- \`JWT_SECRET=your-secure-jwt-secret\`
-
-## \u{1F4C4} License
-
-MIT License - see LICENSE file for details.
-
-## \u{1F91D} Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## \u{1F4DE} Support
-
-For support, please open an issue in the repository or contact the maintainer.
-
----
-
-Generated with \u2764\uFE0F by [Koti CLI](https://www.npmjs.com/package/koti)
-`
-};
-var generateTypeScriptModel = (modelName, fields) => {
-  const capitalizedName = capitalize(modelName);
-  const fieldsCode = fields.map((field) => {
-    const options = [];
-    if (field.required) options.push("required: true");
-    if (field.unique) options.push("unique: true");
-    if (field.default) options.push(`default: ${field.type === "String" ? `'${field.default}'` : field.default}`);
-    const optionsString = options.length > 0 ? `,  ${options.join(", ")} ` : "";
-    return `  ${field.name}: { type: ${field.type}${optionsString} }`;
-  }).join(",\n");
-  return `import { Schema, model, Document, Types } from 'mongoose';
-
-export interface I${capitalizedName} extends Document {
-${fields.map((field) => {
-    const tsType = field.type === "ObjectId" ? "Types.ObjectId" : field.type === "String" ? "string" : field.type === "Number" ? "number" : field.type === "Boolean" ? "boolean" : field.type === "Date" ? "Date" : field.type === "Array" ? "any[]" : "any";
-    return `  ${field.name}: ${tsType};`;
-  }).join("\n")}
-}
-
-const ${capitalizedName}Schema = new Schema<I${capitalizedName}>({
-${fieldsCode}
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
-export default ${capitalizedName};
-`;
-};
-var generateTypeScriptEnum = (enumName, enumType, values) => {
-  const capitalizedName = capitalize(enumName);
-  const enumValues = values.map(({ key, value }) => {
-    if (enumType === "string") {
-      return `  ${key} = '${value}'`;
-    }
-    return `  ${key} = ${value}`;
-  }).join(",\n");
-  return `export enum ${capitalizedName} {
-${enumValues}
-}
-
-export default ${capitalizedName};
-`;
-};
-var generateTypeScriptController = (controllerName) => {
+// src/generators/controller.ts
+var import_fs_extra4 = __toESM(require_lib());
+var import_path4 = __toESM(require("path"));
+var generateExpressController = (controllerName) => {
   const capitalizedName = capitalize(controllerName);
   const camelCaseName = toCamelCase(controllerName);
   return `import { Request, Response, NextFunction } from 'express';
@@ -5566,7 +5265,81 @@ export class ${capitalizedName}Controller {
 export default new ${capitalizedName}Controller();
 `;
 };
-var generateTypeScriptService = (serviceName) => {
+var generateElysiaController = (controllerName) => {
+  const capitalizedName = capitalize(controllerName);
+  const camelCaseName = toCamelCase(controllerName);
+  return `import { AppError } from '../utils/AppError';
+import { success, paginated } from '../utils/respond';
+
+export const ${camelCaseName}Controller = {
+  /** List ${camelCaseName}s with pagination */
+  async getAll({ query }: any) {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 10;
+    // TODO: Implement actual data fetching logic
+    const data: any[] = [];
+    const total = 0;
+    return paginated('${capitalizedName}s retrieved successfully', data, {
+      page, limit, total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page < Math.ceil(total / limit),
+      hasPrev: page > 1,
+    });
+  },
+
+  /** Get one ${camelCaseName} by id */
+  async getById({ params }: any) {
+    // TODO: Implement actual data fetching logic
+    const data = null;
+    if (!data) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} retrieved successfully', data);
+  },
+
+  /** Create a ${camelCaseName} */
+  async create({ body, set }: any) {
+    // TODO: Implement creation logic
+    set.status = 201;
+    return success('${capitalizedName} created successfully', body);
+  },
+
+  /** Update a ${camelCaseName} */
+  async update({ params, body }: any) {
+    // TODO: Implement update logic
+    return success('${capitalizedName} updated successfully', { id: params.id, ...body });
+  },
+
+  /** Delete a ${camelCaseName} */
+  async delete({ params }: any) {
+    // TODO: Implement delete logic
+    return success('${capitalizedName} deleted successfully');
+  }
+};
+
+export default ${camelCaseName}Controller;
+`;
+};
+var createController = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "controller name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path4.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`);
+  if (await import_fs_extra4.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Controller already exists: ${filePath}`);
+  }
+  const content = ctx.framework === "elysia" ? generateElysiaController(opts.name) : generateExpressController(opts.name);
+  await import_fs_extra4.default.ensureDir(import_path4.default.dirname(filePath));
+  await import_fs_extra4.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path4.default.join(ctx.root, "src", "controllers"),
+    `export { default as ${camelName}Controller } from './${camelName}Controller';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/service.ts
+var import_fs_extra5 = __toESM(require_lib());
+var import_path5 = __toESM(require("path"));
+var generateService = (serviceName) => {
   const capitalizedName = capitalize(serviceName);
   return `import { AppError } from '../utils/AppError';
 
@@ -5609,7 +5382,28 @@ export class ${capitalizedName}Service {
 export default new ${capitalizedName}Service();
 `;
 };
-var generateTypeScriptMiddleware = (middlewareName) => {
+var createService = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "service name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path5.default.join(ctx.root, "src", "services", `${camelName}Service.ts`);
+  if (await import_fs_extra5.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Service already exists: ${filePath}`);
+  }
+  const content = generateService(opts.name);
+  await import_fs_extra5.default.ensureDir(import_path5.default.dirname(filePath));
+  await import_fs_extra5.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path5.default.join(ctx.root, "src", "services"),
+    `export * from './${camelName}Service';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/middleware.ts
+var import_fs_extra6 = __toESM(require_lib());
+var import_path6 = __toESM(require("path"));
+var generateExpressMiddleware = (middlewareName) => {
   const camelCaseName = toCamelCase(middlewareName);
   return `import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
@@ -5624,14 +5418,14 @@ export const ${camelCaseName} = (req: Request, res: Response, next: NextFunction
   try {
     // TODO: Implement middleware logic here
     console.log(\`${capitalize(middlewareName)} middleware executed for \${req.method} \${req.path}\`);
-    
+
     // Example: Check some condition
     const isValid = true; // Replace with actual validation logic
-    
+
     if (!isValid) {
       return next(new AppError('${capitalize(middlewareName)} validation failed', 400));
     }
-    
+
     next();
   } catch (error) {
     next(new AppError(\`${capitalize(middlewareName)} middleware error\`, 500));
@@ -5641,6 +5435,198 @@ export const ${camelCaseName} = (req: Request, res: Response, next: NextFunction
 export default ${camelCaseName};
 `;
 };
+var generateElysiaMiddleware = (middlewareName) => {
+  const camelCaseName = toCamelCase(middlewareName);
+  return `import { Elysia } from 'elysia';
+
+/**
+ * ${capitalize(middlewareName)} middleware plugin
+ * Attach with .use(${camelCaseName}) on an Elysia instance or route group.
+ */
+export const ${camelCaseName} = new Elysia({ name: '${camelCaseName}' })
+  .onBeforeHandle(({ request, set }) => {
+    // TODO: Implement middleware logic here
+    console.log(\`${capitalize(middlewareName)} middleware executed for \${request.method} \${new URL(request.url).pathname}\`);
+
+    // Example: block the request by returning a response
+    // set.status = 400;
+    // return { success: false, message: '${capitalize(middlewareName)} validation failed' };
+  });
+
+export default ${camelCaseName};
+`;
+};
+var createMiddleware = async (opts) => {
+  assertValidName(opts.name, /^[A-Za-z][a-zA-Z0-9]*$/, "middleware name");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path6.default.join(ctx.root, "src", "middleware", `${camelName}.ts`);
+  if (await import_fs_extra6.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Middleware already exists: ${filePath}`);
+  }
+  const content = ctx.framework === "elysia" ? generateElysiaMiddleware(opts.name) : generateExpressMiddleware(opts.name);
+  await import_fs_extra6.default.ensureDir(import_path6.default.dirname(filePath));
+  await import_fs_extra6.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path6.default.join(ctx.root, "src", "middleware"),
+    `export { ${camelName} } from './${camelName}';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/model.ts
+var import_fs_extra7 = __toESM(require_lib());
+var import_path7 = __toESM(require("path"));
+
+// src/generators/crud/modelFile.ts
+var generateTypeScriptModel = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const fieldsCode = fields.map((field) => {
+    const options = [];
+    if (field.required) options.push("required: true");
+    if (field.unique) options.push("unique: true");
+    if (field.index) options.push("index: true");
+    if (field.default) options.push(`default: ${field.type === "String" ? `'${field.default}'` : field.default}`);
+    const optionsString = options.length > 0 ? `,  ${options.join(", ")}` : "";
+    const mongooseType = field.type === "Mixed" || field.type === "JSON" ? "Schema.Types.Mixed" : field.type;
+    return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
+  }).join(",\n");
+  return `import { Schema, model, Document, Types } from 'mongoose';
+
+export interface I${capitalizedName} extends Document {
+${fields.map((field) => {
+    const tsType = field.type === "ObjectId" ? "Types.ObjectId" : field.type === "String" ? "string" : field.type === "Number" ? "number" : field.type === "Boolean" ? "boolean" : field.type === "Date" ? "Date" : field.type === "Array" ? "any[]" : "any";
+    return `  ${field.name}: ${tsType};`;
+  }).join("\n")}
+}
+
+const ${capitalizedName}Schema = new Schema<I${capitalizedName}>({
+${fieldsCode}
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
+export default ${capitalizedName};
+`;
+};
+
+// src/generators/crud/service.ts
+var generateCRUDService = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  return `import { AppError } from '../utils/AppError';
+import ${capitalizedName} from '../models/${capitalizedName}';
+import { PaginationResult, QueryOptions } from '../types/api';
+
+export class ${capitalizedName}Service {
+  /**
+   * Get all ${capitalizedName}s with pagination and search
+   */
+  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
+    try {
+      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+      const skip = (page - 1) * limit;
+
+      // Build search query
+      let query: any = {};
+      if (search) {
+        const searchFields = [${fields.filter((f) => f.type === "String").map((f) => `'${f.name}'`).join(", ")}];
+        if (searchFields.length > 0) {
+          query.$or = searchFields.map(field => ({
+            [field]: { $regex: search, $options: 'i' }
+          }));
+        }
+      }
+
+      // Execute queries
+      const [data, total] = await Promise.all([
+        ${capitalizedName}.find(query)
+          .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ${capitalizedName}.countDocuments(query)
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Get ${capitalizedName} by ID
+   */
+  public async getById(id: string): Promise<any> {
+    try {
+      const ${camelCaseName} = await ${capitalizedName}.findById(id).lean();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Create new ${capitalizedName}
+   */
+  public async create(data: any): Promise<any> {
+    try {
+      const ${camelCaseName} = new ${capitalizedName}(data);
+      await ${camelCaseName}.save();
+      return ${camelCaseName}.toObject();
+    } catch (error) {
+      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Update ${capitalizedName} by ID
+   */
+  public async update(id: string, data: any): Promise<any> {
+    try {
+      const ${camelCaseName} = await ${capitalizedName}.findByIdAndUpdate(
+        id,
+        { ...data, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      ).lean();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Delete ${capitalizedName} by ID
+   */
+  public async delete(id: string): Promise<boolean> {
+    try {
+      const result = await ${capitalizedName}.findByIdAndDelete(id);
+      return !!result;
+    } catch (error) {
+      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+}
+
+export default new ${capitalizedName}Service();`;
+};
+
+// src/generators/crud/express.ts
 var generateCRUDController = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
   const camelCaseName = toCamelCase(modelName);
@@ -5781,116 +5767,74 @@ export class ${capitalizedName}Controller {
 
 export default new ${capitalizedName}Controller();`;
 };
-var generateCRUDService = (modelName, fields) => {
+var generateJoiValidation = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
-  const camelCaseName = toCamelCase(modelName);
-  return `import { AppError } from '../utils/AppError';
-import ${capitalizedName} from '../models/${capitalizedName}';
-import { PaginationResult, QueryOptions } from '../types/api';
-
-export class ${capitalizedName}Service {
-  /**
-   * Get all ${capitalizedName}s with pagination and search
-   */
-  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
-    try {
-      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
-      const skip = (page - 1) * limit;
-
-      // Build search query
-      let query: any = {};
-      if (search) {
-        const searchFields = [${fields.filter((f) => f.type === "String").map((f) => `'${f.name}'`).join(", ")}];
-        if (searchFields.length > 0) {
-          query.$or = searchFields.map(field => ({
-            [field]: { $regex: search, $options: 'i' }
-          }));
-        }
-      }
-
-      // Execute queries
-      const [data, total] = await Promise.all([
-        ${capitalizedName}.find(query)
-          .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        ${capitalizedName}.countDocuments(query)
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
-      };
-    } catch (error) {
-      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
+  const joiFields = fields.map((field) => {
+    let joiType = "Joi.string()";
+    switch (field.type) {
+      case "String":
+        joiType = "Joi.string()";
+        break;
+      case "Number":
+        joiType = "Joi.number()";
+        break;
+      case "Boolean":
+        joiType = "Joi.boolean()";
+        break;
+      case "Date":
+        joiType = "Joi.date()";
+        break;
+      case "Array":
+        joiType = "Joi.array()";
+        break;
+      case "ObjectId":
+        joiType = "Joi.string()";
+        break;
+      default:
+        joiType = "Joi.any()";
+        break;
     }
-  }
+    const chain = [joiType];
+    if (field.required) chain.push(".required()");
+    else chain.push(".optional()");
+    return `  ${field.name}: ${chain.join("")}`;
+  }).join(",\n");
+  return `import Joi from 'joi';
 
-  /**
-   * Get ${capitalizedName} by ID
-   */
-  public async getById(id: string): Promise<any> {
-    try {
-      const ${camelCaseName} = await ${capitalizedName}.findById(id).lean();
-      return ${camelCaseName};
-    } catch (error) {
-      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
+export const create${capitalizedName}Schema = Joi.object({
+${joiFields}
+});
+
+export const update${capitalizedName}Schema = Joi.object({
+${fields.map((field) => {
+    let joiType = "Joi.string()";
+    switch (field.type) {
+      case "String":
+        joiType = "Joi.string()";
+        break;
+      case "Number":
+        joiType = "Joi.number()";
+        break;
+      case "Boolean":
+        joiType = "Joi.boolean()";
+        break;
+      case "Date":
+        joiType = "Joi.date()";
+        break;
+      case "Array":
+        joiType = "Joi.array()";
+        break;
+      case "ObjectId":
+        joiType = "Joi.string()";
+        break;
+      default:
+        joiType = "Joi.any()";
+        break;
     }
-  }
-
-  /**
-   * Create new ${capitalizedName}
-   */
-  public async create(data: any): Promise<any> {
-    try {
-      const ${camelCaseName} = new ${capitalizedName}(data);
-      await ${camelCaseName}.save();
-      return ${camelCaseName}.toObject();
-    } catch (error) {
-      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
-    }
-  }
-
-  /**
-   * Update ${capitalizedName} by ID
-   */
-  public async update(id: string, data: any): Promise<any> {
-    try {
-      const ${camelCaseName} = await ${capitalizedName}.findByIdAndUpdate(
-        id,
-        { ...data, updatedAt: new Date() },
-        { new: true, runValidators: true }
-      ).lean();
-      return ${camelCaseName};
-    } catch (error) {
-      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
-    }
-  }
-
-  /**
-   * Delete ${capitalizedName} by ID
-   */
-  public async delete(id: string): Promise<boolean> {
-    try {
-      const result = await ${capitalizedName}.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
-    }
-  }
-}
-
-export default new ${capitalizedName}Service();`;
+    return `  ${field.name}: ${joiType}.optional()`;
+  }).join(",\n")}
+}).min(1);
+`;
 };
 var generateCRUDRoutes = (modelName, fields = [], withTasks = false) => {
   const capitalizedName = capitalize(modelName);
@@ -6085,125 +6029,425 @@ router.delete('/:id', auth, ${deletePerm}${camelCaseName}Controller.delete);
 
 export default router;`;
 };
-var generateJoiValidation = (modelName, fields) => {
+
+// src/generators/crud/elysia.ts
+var generateElysiaCrudController = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
-  const joiFields = fields.map((field) => {
-    let joiType = "Joi.string()";
-    switch (field.type) {
-      case "String":
-        joiType = "Joi.string()";
-        break;
-      case "Number":
-        joiType = "Joi.number()";
-        break;
-      case "Boolean":
-        joiType = "Joi.boolean()";
-        break;
-      case "Date":
-        joiType = "Joi.date()";
-        break;
-      case "Array":
-        joiType = "Joi.array()";
-        break;
-      case "ObjectId":
-        joiType = "Joi.string()";
-        break;
-      default:
-        joiType = "Joi.any()";
-        break;
-    }
-    const chain = [joiType];
-    if (field.required) chain.push(".required()");
-    else chain.push(".optional()");
-    return `  ${field.name}: ${chain.join("")}`;
-  }).join(",\n");
-  return `import Joi from 'joi';
+  const camelCaseName = toCamelCase(modelName);
+  return `import ${capitalizedName}Service from '../services/${camelCaseName}Service';
+import { AppError } from '../utils/AppError';
+import { success, paginated } from '../utils/respond';
 
-export const create${capitalizedName}Schema = Joi.object({
-${joiFields}
-});
+export const ${camelCaseName}Controller = {
+  /** List ${camelCaseName}s with pagination, search and sorting */
+  async getAll({ query }: any) {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || parseInt(process.env.DEFAULT_PAGE_LIMIT || '10');
+    const search = query.search as string | undefined;
+    const sortBy = (query.sortBy as string) || 'createdAt';
+    const sortOrder = ((query.sortOrder as string) === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
+    const result = await ${capitalizedName}Service.getAll({ page, limit, search, sortBy, sortOrder });
+    return paginated('${capitalizedName}s retrieved successfully', result.data, result.pagination);
+  },
 
-export const update${capitalizedName}Schema = Joi.object({
-${fields.map((field) => {
-    let joiType = "Joi.string()";
-    switch (field.type) {
-      case "String":
-        joiType = "Joi.string()";
-        break;
-      case "Number":
-        joiType = "Joi.number()";
-        break;
-      case "Boolean":
-        joiType = "Joi.boolean()";
-        break;
-      case "Date":
-        joiType = "Joi.date()";
-        break;
-      case "Array":
-        joiType = "Joi.array()";
-        break;
-      case "ObjectId":
-        joiType = "Joi.string()";
-        break;
-      default:
-        joiType = "Joi.any()";
-        break;
-    }
-    return `  ${field.name}: ${joiType}.optional()`;
-  }).join(",\n")}
-}).min(1);
+  /** Get one ${camelCaseName} by id */
+  async getById({ params }: any) {
+    const item = await ${capitalizedName}Service.getById(params.id);
+    if (!item) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} retrieved successfully', item);
+  },
+
+  /** Create a ${camelCaseName} */
+  async create({ body, set }: any) {
+    const item = await ${capitalizedName}Service.create(body);
+    set.status = 201;
+    return success('${capitalizedName} created successfully', item);
+  },
+
+  /** Update a ${camelCaseName} */
+  async update({ params, body }: any) {
+    const item = await ${capitalizedName}Service.update(params.id, body);
+    if (!item) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} updated successfully', item);
+  },
+
+  /** Delete a ${camelCaseName} */
+  async delete({ params }: any) {
+    const deleted = await ${capitalizedName}Service.delete(params.id);
+    if (!deleted) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} deleted successfully');
+  }
+};
+
+export default ${camelCaseName}Controller;
 `;
 };
-var updateIndexExport = async (dirPath, exportLine) => {
-  const indexPath = path.join(dirPath, "index.ts");
-  try {
-    let content = "";
-    if (await fs.pathExists(indexPath)) {
-      content = await fs.readFile(indexPath, "utf-8");
-    }
-    if (content.includes(exportLine)) return;
-    const separator = content.length > 0 && !content.endsWith("\n") ? "\n" : "";
-    await fs.writeFile(indexPath, content + separator + exportLine + "\n");
-  } catch {
+var typeBoxFor = (field) => {
+  switch (field.type) {
+    case "String":
+      return "t.String()";
+    case "Number":
+      return "t.Number()";
+    case "Boolean":
+      return "t.Boolean()";
+    case "Date":
+      return `t.String({ format: 'date-time' })`;
+    case "ObjectId":
+      return "t.String()";
+    case "Array":
+      return "t.Array(t.Any())";
+    default:
+      return "t.Any()";
   }
 };
-var updateMainRoutes = async (modelName) => {
+var generateTypeBoxValidator = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const props = fields.map((field) => {
+    const base = typeBoxFor(field);
+    const value = field.required ? base : `t.Optional(${base})`;
+    return `  ${field.name}: ${value}`;
+  }).join(",\n");
+  return `import { t } from 'elysia';
+
+export const create${capitalizedName}Body = t.Object({
+${props}
+});
+
+export const update${capitalizedName}Body = t.Partial(create${capitalizedName}Body);
+`;
+};
+var generateElysiaCrudRoutes = (modelName, fields, withTasks = false) => {
+  const capitalizedName = capitalize(modelName);
   const camelCaseName = toCamelCase(modelName);
-  const routesIndexPath = path.join(process.cwd(), "src", "routes", "index.ts");
-  try {
-    const currentContent = await fs.readFile(routesIndexPath, "utf-8");
-    const importStatement = `import ${camelCaseName}Routes from './${camelCaseName}';`;
-    const routeUsage = `router.use('/${camelCaseName}', ${camelCaseName}Routes);`;
-    if (currentContent.includes(importStatement)) {
-      return;
+  const upperSnakeName = toUpperSnakeCase(modelName);
+  const taskImport = withTasks ? `
+import { Task } from '../enums/Task';` : "";
+  const authFor = (op) => withTasks ? `[Task.${op}_${upperSnakeName}]` : "true";
+  return `import { Elysia, t } from 'elysia';
+import { ${camelCaseName}Controller } from '../controllers/${camelCaseName}Controller';
+import { authPlugin } from '../middleware/auth';${taskImport}
+import { create${capitalizedName}Body, update${capitalizedName}Body } from '../validators/${camelCaseName}';
+
+const tag = ['${capitalizedName}s'];
+const secured = { security: [{ bearerAuth: [] }] };
+const idParam = t.Object({ id: t.String() });
+
+export const ${camelCaseName}Routes = new Elysia({ prefix: '/${camelCaseName}' })
+  .use(authPlugin)
+  .get('/', ${camelCaseName}Controller.getAll, {
+    auth: ${authFor("VIEW")},
+    query: t.Object({
+      page: t.Optional(t.String()),
+      limit: t.Optional(t.String()),
+      search: t.Optional(t.String()),
+      sortBy: t.Optional(t.String()),
+      sortOrder: t.Optional(t.String())
+    }),
+    detail: { tags: tag, summary: 'List ${capitalizedName}s', ...secured }
+  })
+  .get('/:id', ${camelCaseName}Controller.getById, {
+    auth: ${authFor("VIEW")},
+    params: idParam,
+    detail: { tags: tag, summary: 'Get ${capitalizedName} by ID', ...secured }
+  })
+  .post('/', ${camelCaseName}Controller.create, {
+    auth: ${authFor("CREATE")},
+    body: create${capitalizedName}Body,
+    detail: { tags: tag, summary: 'Create a ${capitalizedName}', ...secured }
+  })
+  .put('/:id', ${camelCaseName}Controller.update, {
+    auth: ${authFor("UPDATE")},
+    params: idParam,
+    body: update${capitalizedName}Body,
+    detail: { tags: tag, summary: 'Update a ${capitalizedName}', ...secured }
+  })
+  .delete('/:id', ${camelCaseName}Controller.delete, {
+    auth: ${authFor("DELETE")},
+    params: idParam,
+    detail: { tags: tag, summary: 'Delete a ${capitalizedName}', ...secured }
+  });
+
+export default ${camelCaseName}Routes;
+`;
+};
+
+// src/generators/model.ts
+var validateFields = (fields) => {
+  if (fields.length === 0) throw new GeneratorError("INVALID_INPUT", "At least one field is required");
+  for (const f of fields) {
+    assertValidName(f.name, /^[a-zA-Z_][a-zA-Z0-9_]*$/, "field name");
+    if (!FIELD_TYPES.includes(f.type)) {
+      throw new GeneratorError("INVALID_INPUT", `Unknown field type "${f.type}" (valid: ${FIELD_TYPES.join(", ")})`);
     }
-    const lines = currentContent.split("\n");
-    let lastImportIndex = -1;
-    let routerUseIndex = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith("import") && lines[i].includes("from")) {
-        lastImportIndex = i;
-      }
-      if (lines[i].includes("router.use") && lines[i].includes("Routes")) {
-        routerUseIndex = i;
-      }
+    if (f.default !== void 0 && /[\r\n]/.test(f.default)) {
+      throw new GeneratorError("INVALID_INPUT", `Default value for ${f.name} must be a single line`);
     }
-    if (lastImportIndex >= 0) {
-      lines.splice(lastImportIndex + 1, 0, importStatement);
-    }
-    if (routerUseIndex >= 0) {
-      lines.splice(routerUseIndex + 1, 0, routeUsage);
-    }
-    const updatedContent = lines.join("\n");
-    await fs.writeFile(routesIndexPath, updatedContent);
-  } catch (error) {
-    console.log(colors.yellow("\u26A0\uFE0F  Could not update routes/index.ts automatically"));
-    console.log(colors.dim(`   Please add: router.use('/${camelCaseName}', ${camelCaseName}Routes);`));
   }
 };
-var generateEssentialFiles = async (projectPath, projectName, framework = "express") => {
-  const srcPath = path.join(projectPath, "src");
-  const indexRouteContent = `import { Router, Request, Response } from 'express';
+var registerRouteInIndex = async (projectRoot, framework, camelName) => {
+  const indexPath = import_path7.default.join(projectRoot, "src", "routes", "index.ts");
+  let content;
+  try {
+    content = await import_fs_extra7.default.readFile(indexPath, "utf-8");
+  } catch {
+    return false;
+  }
+  if (framework === "express") {
+    const importStatement2 = `import ${camelName}Routes from './${camelName}';`;
+    const routeUsage = `router.use('/${camelName}', ${camelName}Routes);`;
+    if (content.includes(importStatement2)) return true;
+    const lines2 = content.split("\n");
+    let lastImportIndex2 = -1;
+    let routerUseIndex = -1;
+    for (let i = 0; i < lines2.length; i++) {
+      if (lines2[i].startsWith("import") && lines2[i].includes("from")) lastImportIndex2 = i;
+      if (lines2[i].includes("router.use") && lines2[i].includes("Routes")) routerUseIndex = i;
+    }
+    if (lastImportIndex2 < 0 || routerUseIndex < 0) return false;
+    lines2.splice(lastImportIndex2 + 1, 0, importStatement2);
+    lines2.splice(routerUseIndex + 2, 0, routeUsage);
+    await import_fs_extra7.default.writeFile(indexPath, lines2.join("\n"));
+    return true;
+  }
+  const importStatement = `import { ${camelName}Routes } from './${camelName}';`;
+  if (content.includes(importStatement)) return true;
+  const lines = content.split("\n");
+  let lastImportIndex = -1;
+  let lastUseIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith("import") && lines[i].includes("from")) lastImportIndex = i;
+    if (/^\s*\.use\(\w+Routes\);?\s*$/.test(lines[i])) lastUseIndex = i;
+  }
+  if (lastImportIndex < 0 || lastUseIndex < 0) return false;
+  lines.splice(lastImportIndex + 1, 0, importStatement);
+  lastUseIndex += 1;
+  if (lines[lastUseIndex].trimEnd().endsWith(";")) {
+    lines[lastUseIndex] = lines[lastUseIndex].replace(/;\s*$/, "");
+    lines.splice(lastUseIndex + 1, 0, `  .use(${camelName}Routes);`);
+  } else {
+    lines.splice(lastUseIndex + 1, 0, `  .use(${camelName}Routes)`);
+  }
+  await import_fs_extra7.default.writeFile(indexPath, lines.join("\n"));
+  return true;
+};
+var createModel = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "model name (PascalCase)");
+  validateFields(opts.fields);
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const camelName = toCamelCase(opts.name);
+  const upperSnakeName = toUpperSnakeCase(opts.name);
+  const files = [];
+  const warnings = [...ctx.warnings];
+  const modelPath = import_path7.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  if (await import_fs_extra7.default.pathExists(modelPath)) {
+    throw new GeneratorError("DUPLICATE", `Model already exists: ${modelPath}`);
+  }
+  await import_fs_extra7.default.ensureDir(import_path7.default.dirname(modelPath));
+  await import_fs_extra7.default.writeFile(modelPath, generateTypeScriptModel(opts.name, opts.fields));
+  files.push(modelPath);
+  await updateIndexExport(
+    import_path7.default.join(ctx.root, "src", "models"),
+    `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
+  );
+  if (!opts.crud) return { files, warnings };
+  let withTasks = !!opts.tasks;
+  if (withTasks) {
+    const taskEntries = [
+      { key: `VIEW_${upperSnakeName}`, desc: `View the list of ${camelName}s and ${camelName} details` },
+      { key: `CREATE_${upperSnakeName}`, desc: `Create new ${camelName} records` },
+      { key: `UPDATE_${upperSnakeName}`, desc: `Update existing ${camelName} records` },
+      { key: `DELETE_${upperSnakeName}`, desc: `Delete ${camelName} records` }
+    ];
+    let added = 0;
+    for (const entry of taskEntries) {
+      if (await addTaskToEnum(ctx.root, entry.key, entry.desc)) added++;
+    }
+    if (added > 0) {
+      files.push(import_path7.default.join(ctx.root, "src", "enums", "Task.ts"));
+    } else {
+      withTasks = false;
+      warnings.push("No RBAC tasks were added (Task.ts missing or entries already exist) \u2014 routes generated without permission middleware");
+    }
+  }
+  const isElysia = ctx.framework === "elysia";
+  const writes = [
+    {
+      file: import_path7.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`),
+      content: isElysia ? generateElysiaCrudController(opts.name, opts.fields) : generateCRUDController(opts.name, opts.fields),
+      barrelDir: import_path7.default.join(ctx.root, "src", "controllers"),
+      barrelLine: `export { default as ${camelName}Controller } from './${camelName}Controller';`
+    },
+    {
+      file: import_path7.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
+      content: generateCRUDService(opts.name, opts.fields),
+      barrelDir: import_path7.default.join(ctx.root, "src", "services"),
+      barrelLine: `export * from './${camelName}Service';`
+    },
+    {
+      file: import_path7.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
+      content: isElysia ? generateTypeBoxValidator(opts.name, opts.fields) : generateJoiValidation(opts.name, opts.fields)
+    },
+    {
+      file: import_path7.default.join(ctx.root, "src", "routes", `${camelName}.ts`),
+      content: isElysia ? generateElysiaCrudRoutes(opts.name, opts.fields, withTasks) : generateCRUDRoutes(opts.name, opts.fields, withTasks)
+    }
+  ];
+  for (const w of writes) {
+    await import_fs_extra7.default.ensureDir(import_path7.default.dirname(w.file));
+    await import_fs_extra7.default.writeFile(w.file, w.content);
+    files.push(w.file);
+    if (w.barrelDir && w.barrelLine) await updateIndexExport(w.barrelDir, w.barrelLine);
+  }
+  const registered = await registerRouteInIndex(ctx.root, ctx.framework, camelName);
+  if (!registered) {
+    warnings.push(
+      ctx.framework === "express" ? `Could not update src/routes/index.ts \u2014 add manually: router.use('/${camelName}', ${camelName}Routes);` : `Could not update src/routes/index.ts \u2014 add manually: .use(${camelName}Routes)`
+    );
+  }
+  return { files, warnings };
+};
+var parseExistingModel = async (projectRoot, name) => {
+  const modelPath = import_path7.default.join(projectRoot, "src", "models", `${capitalize(name)}.ts`);
+  if (!await import_fs_extra7.default.pathExists(modelPath)) {
+    throw new GeneratorError("IO_ERROR", `Model not found: ${modelPath}`);
+  }
+  const content = await import_fs_extra7.default.readFile(modelPath, "utf-8");
+  const fields = [];
+  const schemaMatch = content.match(/const\s+\w+Schema\s*=\s*new\s+Schema<.*?>\(\{([\s\S]*?)\},\s*\{/);
+  if (!schemaMatch) {
+    throw new GeneratorError("IO_ERROR", `Could not parse schema in ${modelPath}`);
+  }
+  const schemaContent = schemaMatch[1];
+  const fieldMatches = schemaContent.match(/(\w+):\s*\{[^}]+\}/g);
+  if (fieldMatches) {
+    fieldMatches.forEach((fieldMatch) => {
+      const nameMatch = fieldMatch.match(/(\w+):/);
+      const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
+      const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
+      const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+      const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
+      if (nameMatch && typeMatch) {
+        fields.push({
+          name: nameMatch[1],
+          type: typeMatch[1],
+          required: requiredMatch ? requiredMatch[1] === "true" : false,
+          unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
+          default: defaultMatch ? defaultMatch[1].replace(/['"]/g, "") : void 0
+        });
+      }
+    });
+  }
+  return fields;
+};
+var editModel = async (opts) => {
+  var _a;
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "model name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const camelName = toCamelCase(opts.name);
+  const files = [];
+  const warnings = [...ctx.warnings];
+  let updatedFields = await parseExistingModel(ctx.root, opts.name);
+  for (const removeName of opts.removeFields ?? []) {
+    if (!updatedFields.some((f) => f.name === removeName)) {
+      throw new GeneratorError("INVALID_INPUT", `Field "${removeName}" does not exist on ${capitalizedName}`);
+    }
+    updatedFields = updatedFields.filter((f) => f.name !== removeName);
+  }
+  if ((_a = opts.addFields) == null ? void 0 : _a.length) {
+    validateFields(opts.addFields);
+    for (const f of opts.addFields) {
+      if (updatedFields.some((existing) => existing.name === f.name)) {
+        throw new GeneratorError("INVALID_INPUT", `Field "${f.name}" already exists on ${capitalizedName}`);
+      }
+    }
+    updatedFields = [...updatedFields, ...opts.addFields];
+  }
+  if (updatedFields.length === 0) {
+    throw new GeneratorError("INVALID_INPUT", "Cannot remove all fields from a model");
+  }
+  const modelPath = import_path7.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  await import_fs_extra7.default.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
+  files.push(modelPath);
+  if (opts.updateCrud) {
+    const isElysia = ctx.framework === "elysia";
+    const routePath = import_path7.default.join(ctx.root, "src", "routes", `${camelName}.ts`);
+    let withTasks = false;
+    if (await import_fs_extra7.default.pathExists(routePath)) {
+      const existingRoutes = await import_fs_extra7.default.readFile(routePath, "utf-8");
+      withTasks = existingRoutes.includes("checkPermission(") || existingRoutes.includes("auth: [Task.");
+    }
+    const regens = [
+      {
+        file: import_path7.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`),
+        content: isElysia ? generateElysiaCrudController(opts.name, updatedFields) : generateCRUDController(opts.name, updatedFields)
+      },
+      {
+        file: import_path7.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
+        content: generateCRUDService(opts.name, updatedFields)
+      },
+      {
+        file: import_path7.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
+        content: isElysia ? generateTypeBoxValidator(opts.name, updatedFields) : generateJoiValidation(opts.name, updatedFields)
+      },
+      {
+        file: routePath,
+        content: isElysia ? generateElysiaCrudRoutes(opts.name, updatedFields, withTasks) : generateCRUDRoutes(opts.name, updatedFields, withTasks)
+      }
+    ];
+    for (const r of regens) {
+      if (!await import_fs_extra7.default.pathExists(r.file)) {
+        warnings.push(`${import_path7.default.relative(ctx.root, r.file)} did not exist \u2014 skipped`);
+        continue;
+      }
+      const previous = await import_fs_extra7.default.readFile(r.file, "utf-8");
+      await import_fs_extra7.default.writeFile(r.file + ".bak", previous);
+      await import_fs_extra7.default.writeFile(r.file, r.content);
+      files.push(r.file);
+    }
+  }
+  return { files, warnings };
+};
+
+// src/generators/project.ts
+var import_fs_extra8 = __toESM(require_lib());
+var import_path8 = __toESM(require("path"));
+var import_child_process = require("child_process");
+var noop = (_msg) => {
+};
+var runInstall = (cwd, cmd, timeoutMs, log) => new Promise((resolve) => {
+  log == null ? void 0 : log(`Running: ${cmd} install`);
+  const child = (0, import_child_process.spawn)(cmd, ["install"], { cwd, stdio: "ignore", shell: process.platform === "win32" });
+  const timer = setTimeout(() => {
+    child.kill("SIGKILL");
+    resolve(false);
+  }, timeoutMs);
+  child.on("error", () => {
+    clearTimeout(timer);
+    resolve(false);
+  });
+  child.on("close", (code) => {
+    clearTimeout(timer);
+    resolve(code === 0);
+  });
+});
+var replaceInDir = async (dirPath, projectName) => {
+  const entries = await import_fs_extra8.default.readdir(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = import_path8.default.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      await replaceInDir(fullPath, projectName);
+    } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".json")) {
+      let content = await import_fs_extra8.default.readFile(fullPath, "utf-8");
+      if (content.includes("{{PROJECT_NAME}}")) {
+        content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+        await import_fs_extra8.default.writeFile(fullPath, content);
+      }
+    }
+  }
+};
+var indexRouteContent = (projectName) => `import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
 const router = Router();
@@ -6227,7 +6471,7 @@ router.get('/', (req: Request, res: Response) => {
     success: true,
     message: 'Welcome to ${projectName} API',
     data: {
-      version: getVersion(),
+      version: '${getVersion()}',
       description: 'TypeScript API built with Bun, Express, and MongoDB',
       documentation: '/api-docs'
     }
@@ -6260,7 +6504,7 @@ router.get('/status', (req: Request, res: Response) => {
 });
 
 export default router;`;
-  const authRouteContent = `import { Router } from 'express';
+var authRouteContent = `import { Router } from 'express';
 import authController from '../controllers/authController';
 import { auth } from '../middleware/auth';
 
@@ -6443,291 +6687,120 @@ router.post('/logout', authController.logout);
 router.get('/profile', auth, authController.getProfile);
 
 export default router;`;
+var createProject = async (opts) => {
+  const log = opts.log ?? noop;
+  const files = [];
+  const warnings = [];
+  assertValidName(opts.name, /^[a-z0-9-]+$/, "project name");
+  const framework = opts.framework ?? "express";
+  if (!FRAMEWORKS.includes(framework)) {
+    throw new GeneratorError("UNSUPPORTED_FRAMEWORK", `Unsupported framework: "${framework}" (must be one of ${FRAMEWORKS.join(", ")})`);
+  }
+  const directory = opts.directory ?? process.cwd();
+  const dirStat = await import_fs_extra8.default.stat(directory).catch(() => null);
+  if (!dirStat || !dirStat.isDirectory()) {
+    throw new GeneratorError("INVALID_INPUT", `Directory does not exist or is not a directory: "${directory}"`);
+  }
+  const projectPath = import_path8.default.join(directory, opts.name);
+  if (await import_fs_extra8.default.pathExists(projectPath)) {
+    const targetStat = await import_fs_extra8.default.stat(projectPath);
+    const isNonEmptyDir = targetStat.isDirectory() && (await import_fs_extra8.default.readdir(projectPath)).length > 0;
+    if (!targetStat.isDirectory() || isNonEmptyDir) {
+      throw new GeneratorError("DUPLICATE", `Target already exists: "${projectPath}"`);
+    }
+  }
+  log(`\u{1F680} Creating TypeScript Bun API project: ${opts.name}`);
+  log(`\u{1F4C1} Project directory: ${projectPath}`);
+  await import_fs_extra8.default.ensureDir(projectPath);
+  log(`\u{1F9E9} Framework: ${framework}`);
+  const templatePath = import_path8.default.join(templatesDir(), framework);
+  const sharedTemplatePath = import_path8.default.join(templatesDir(), "shared");
+  const srcPath = import_path8.default.join(projectPath, "src");
+  const directories = [
+    "config",
+    "controllers",
+    "middleware",
+    "models",
+    "routes",
+    "types",
+    "utils",
+    "services",
+    "schemas",
+    "enums",
+    "validators",
+    "seeds"
+  ];
+  for (const dir of directories) {
+    await import_fs_extra8.default.ensureDir(import_path8.default.join(srcPath, dir));
+    log(`\u2705 Created directory: src/${dir}/`);
+  }
+  const packageJsonPath = import_path8.default.join(templatePath, "package.json");
+  const readmePath = import_path8.default.join(templatePath, "README.md");
+  if (await import_fs_extra8.default.pathExists(packageJsonPath)) {
+    let content = await import_fs_extra8.default.readFile(packageJsonPath, "utf-8");
+    content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+    const dest = import_path8.default.join(projectPath, "package.json");
+    await import_fs_extra8.default.writeFile(dest, content);
+    files.push(dest);
+    log("\u2705 Created file: package.json");
+  }
+  if (await import_fs_extra8.default.pathExists(readmePath)) {
+    let content = await import_fs_extra8.default.readFile(readmePath, "utf-8");
+    content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+    const dest = import_path8.default.join(projectPath, "README.md");
+    await import_fs_extra8.default.writeFile(dest, content);
+    files.push(dest);
+    log("\u2705 Created file: README.md");
+  }
+  const templateSrcPath = import_path8.default.join(templatePath, "src");
+  const projectSrcPath = srcPath;
+  if (await import_fs_extra8.default.pathExists(templateSrcPath)) {
+    await import_fs_extra8.default.copy(templateSrcPath, projectSrcPath);
+    log("\u2705 Copied framework source files");
+  }
+  const sharedSrcPath = import_path8.default.join(sharedTemplatePath, "src");
+  if (await import_fs_extra8.default.pathExists(sharedSrcPath)) {
+    await import_fs_extra8.default.copy(sharedSrcPath, projectSrcPath);
+    log("\u2705 Copied shared source files");
+  }
+  if (await import_fs_extra8.default.pathExists(projectSrcPath)) {
+    await replaceInDir(projectSrcPath, opts.name);
+  }
+  const additionalFiles = ["tsconfig.json", ".env", ".env.example", ".gitignore"];
+  for (const fileName of additionalFiles) {
+    const templateFilePath = import_path8.default.join(templatePath, fileName);
+    const projectFilePath = import_path8.default.join(projectPath, fileName);
+    if (await import_fs_extra8.default.pathExists(templateFilePath)) {
+      let content = await import_fs_extra8.default.readFile(templateFilePath, "utf-8");
+      content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+      await import_fs_extra8.default.writeFile(projectFilePath, content);
+      files.push(projectFilePath);
+      log(`\u2705 Created file: ${fileName}`);
+    }
+  }
   if (framework === "express") {
-    await fs.writeFile(path.join(srcPath, "routes", "index.ts"), indexRouteContent);
-    await fs.writeFile(path.join(srcPath, "routes", "auth.ts"), authRouteContent);
-    console.log(colors.green("\u2705 Created file: src/routes/index.ts"));
-    console.log(colors.green("\u2705 Created file: src/routes/auth.ts"));
+    const indexPath = import_path8.default.join(srcPath, "routes", "index.ts");
+    const authPath = import_path8.default.join(srcPath, "routes", "auth.ts");
+    await import_fs_extra8.default.writeFile(indexPath, indexRouteContent(opts.name));
+    await import_fs_extra8.default.writeFile(authPath, authRouteContent);
+    files.push(indexPath, authPath);
+    log("\u2705 Created file: src/routes/index.ts");
+    log("\u2705 Created file: src/routes/auth.ts");
   }
-  const authControllerContent = `import { Request, Response, NextFunction } from 'express';
-import { ApiResponse, AuthenticatedRequest, LoginRequest, RegisterRequest } from '../types/api';
-import { AppError } from '../utils/AppError';
-import * as authService from '../services/authService';
-
-interface ForgotPasswordRequest {
-  email: string;
-}
-
-interface ResetPasswordRequest {
-  token: string;
-  newPassword: string;
-}
-
-interface RefreshTokenRequest {
-  refreshToken: string;
-}
-
-class AuthController {
-  /**
-   * Register new user
-   * @route POST /api/auth/register
-   */
-  public async register(req: Request<{}, any, RegisterRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const userData = req.body;
-      const result = await authService.signup(userData);
-      
-      if (result.message) {
-        const response: ApiResponse = {
-          success: true,
-          message: result.message,
-          data: null
-        };
-        return res.status(200).json(response);
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'User registered successfully',
-        data: result.user
-      };
-
-      res.status(201).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Registration failed', 400));
-    }
-  }
-
-  /**
-   * Login user
-   * @route POST /api/auth/login
-   */
-  public async login(req: Request<{}, any, LoginRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      const result = await authService.login(email, password);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Login successful',
-        data: result
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Invalid email or password', 401));
-    }
-  }
-
-  /**
-   * Forgot password
-   * @route POST /api/auth/forgot-password
-   */
-  public async forgotPassword(req: Request<{}, any, ForgotPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { email } = req.body;
-      const resetToken = await authService.forgotPassword(email);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Password reset instructions sent to your email',
-        data: { resetToken: resetToken }
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to process forgot password request', 500));
-    }
-  }
-
-  /**
-   * Reset password
-   * @route POST /api/auth/reset-password
-   */
-  public async resetPassword(req: Request<{}, any, ResetPasswordRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { token, newPassword } = req.body;
-      await authService.resetPassword(token, newPassword);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Password has been reset successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Password reset failed', 400));
-    }
-  }
-
-  /**
-   * Refresh access token
-   * @route POST /api/auth/refresh-token
-   */
-  public async refreshToken(req: Request<{}, any, RefreshTokenRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { refreshToken } = req.body;
-      const newAccessToken = await authService.refreshAccessToken(refreshToken);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Token refreshed successfully',
-        data: { accessToken: newAccessToken }
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Token refresh failed', 401));
-    }
-  }
-
-  /**
-   * Logout user
-   * @route POST /api/auth/logout
-   */
-  public async logout(req: Request<{}, any, RefreshTokenRequest>, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { refreshToken } = req.body;
-      await authService.logout(refreshToken);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Logged out successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Logout failed', 500));
-    }
-  }
-
-  /**
-   * Get user profile
-   * @route GET /api/auth/profile
-   */
-  public async getProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const user = req.user;
-      
-      if (!user) {
-        return next(new AppError('User not authenticated', 401));
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Profile retrieved successfully',
-        data: user
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      next(new AppError(error.message || 'Failed to get profile', 500));
-    }
-  }
-}
-
-export default new AuthController();`;
-  const authMiddlewareContent = `import { Request, Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '../types/api';
-import { AppError } from '../utils/AppError';
-import { verifyAccessToken } from '../utils/tokenUtils';
-
-export const auth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const authHeader = req.header('Authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return next(new AppError('Unauthorized: No token provided', 401));
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = await verifyAccessToken(token);
-    
-    if (!decoded) {
-      return next(new AppError('Unauthorized: Invalid token', 401));
-    }
-
-    req.user = decoded;
-    next();
-  } catch (error: any) {
-    next(new AppError('Unauthorized: Invalid token', 401));
-  }
-};
-
-export default auth;`;
-  const errorHandlerContent = `import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/AppError';
-import { ErrorResponse } from '../types/api';
-
-export const errorHandler = (
-  error: Error | AppError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  let statusCode = 500;
-  let message = 'Internal server error';
-
-  if (error instanceof AppError) {
-    statusCode = error.statusCode;
-    message = error.message;
-  }
-
-  const response: ErrorResponse = {
-    success: false,
-    message,
-    error: error.name || 'UnknownError',
-    statusCode,
-    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-  };
-
-  // Log error details in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('\u{1F6A8} Error Details:', {
-      message: error.message,
-      stack: error.stack,
-      url: req.url,
-      method: req.method,
-      body: req.body,
-      params: req.params,
-      query: req.query
-    });
-  } else {
-    // Log only essential info in production
-    console.error('Error:', error.message);
-  }
-
-  res.status(statusCode).json(response);
-};
-
-export const notFound = (req: Request, res: Response): void => {
-  const response: ErrorResponse = {
-    success: false,
-    message: \`Not Found - [\${req.method}] \${req.url}\`,
-    error: 'NotFound',
-    statusCode: 404
-  };
-
-  res.status(404).json(response);
-};
-
-export default errorHandler;`;
   const jwtSecret = generateSecret(64);
   const jwtRefreshSecret = generateSecret(64);
-  const envFilePath = path.join(projectPath, ".env");
-  let envContent = "";
-  if (await fs.pathExists(envFilePath)) {
-    envContent = await fs.readFile(envFilePath, "utf-8");
-    envContent = envContent.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+  const envFilePath = import_path8.default.join(projectPath, ".env");
+  let envContent;
+  if (await import_fs_extra8.default.pathExists(envFilePath)) {
+    envContent = await import_fs_extra8.default.readFile(envFilePath, "utf-8");
+    envContent = envContent.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
   } else {
     envContent = `# Environment Configuration
 NODE_ENV=development
 PORT=8000
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/${projectName}
+MONGODB_URI=mongodb://localhost:27017/${opts.name}
 
 # JWT Configuration (auto-generated secure secrets)
 JWT_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
@@ -6747,167 +6820,73 @@ MAX_PAGE_LIMIT=100`;
   }
   envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtSecret);
   envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtRefreshSecret);
-  const authServiceContent = `import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import { Types } from 'mongoose';
-import User from '../models/User';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/tokenUtils';
-import { AppError } from '../utils/AppError';
-
-export interface IUser {
-  _id?: string;
-  username: string;
-  email: string;
-  password?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export const login = async (email: string, password: string) => {
-  const user = await User.findOne({ email }).lean();
-  if (!user) {
-    throw new AppError('Invalid email or password', 401);
-  }
-
-  const passwordMatches = await bcrypt.compare(password, user.password);
-  if (!passwordMatches) {
-    throw new AppError('Invalid email or password', 401);
-  }
-
-  const userId = (user._id as Types.ObjectId).toString();
-
-  const accessToken = await generateAccessToken({ userId });
-  const refreshToken = await generateRefreshToken({ userId });
-
-  // TODO: Store refresh token in database
-  // await new RefreshToken({ userId, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }).save();
-
-  const { password: _, ...userWithoutPassword } = user;
-  return { accessToken, refreshToken, user: userWithoutPassword };
-};
-
-export const signup = async (userData: IUser & { password: string }) => {
-  try {
-    const existingUser = await User.findOne({ email: userData.email }).lean();
-    if (existingUser) {
-      return { message: 'User already exists with this email' };
+  await import_fs_extra8.default.writeFile(envFilePath, envContent);
+  if (!files.includes(envFilePath)) files.push(envFilePath);
+  log("\u2705 Created file: .env (with auto-generated JWT secrets)");
+  const kotiConfig = {
+    framework,
+    kotiVersion: getVersion(),
+    createdAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  const configPath = import_path8.default.join(projectPath, "koti.config.json");
+  await import_fs_extra8.default.writeFile(configPath, JSON.stringify(kotiConfig, null, 2));
+  files.push(configPath);
+  log("\u2705 Created file: koti.config.json");
+  log("\n\u{1F389} TypeScript project created successfully!");
+  if (!opts.skipInstall) {
+    log("\n\u{1F4E6} Installing dependencies...");
+    let installed = await runInstall(projectPath, "bun", 15e4, log);
+    if (!installed) {
+      log("\u26A0\uFE0F  Bun install failed or timed out, trying npm install...");
+      installed = await runInstall(projectPath, "npm", 15e4, log);
     }
-
-    const hashedPassword = await bcrypt.hash(userData.password, 12);
-    const newUser = new User({ ...userData, password: hashedPassword });
-
-    await newUser.save();
-    const { password: _, ...userWithoutPassword } = newUser.toObject();
-    return { user: userWithoutPassword };
-  } catch (error: any) {
-    throw new AppError('Signup failed: ' + error.message, 400);
-  }
-};
-
-export const forgotPassword = async (email: string): Promise<string> => {
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new AppError('No user found with that email address', 404);
-  }
-
-  // Generate reset token
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-  // TODO: Store reset token in database with expiration
-  // await new PasswordReset({ userId: user._id, token: hashedToken, expiresAt: Date.now() + 10 * 60 * 1000 }).save();
-
-  return resetToken;
-};
-
-export const resetPassword = async (token: string, newPassword: string) => {
-  // Validate password strength
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$/.test(newPassword)) {
-    throw new AppError('Password must be at least 8 characters long and contain lowercase, uppercase, number, and special character', 400);
-  }
-
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-  // TODO: Find and validate reset token
-  // const resetRecord = await PasswordReset.findOne({ token: hashedToken, expiresAt: { $gt: Date.now() } });
-  // if (!resetRecord) throw new AppError('Invalid or expired reset token', 400);
-
-  // TODO: Update user password
-  // const user = await User.findById(resetRecord.userId);
-  // if (!user) throw new AppError('User not found', 404);
-  // user.password = await bcrypt.hash(newPassword, 12);
-  // await user.save();
-  // await PasswordReset.deleteOne({ _id: resetRecord._id });
-
-  return 'Password has been reset successfully';
-};
-
-export const refreshAccessToken = async (refreshToken: string) => {
-  try {
-    const decoded = await verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      throw new AppError('Invalid refresh token', 401);
+    if (installed) {
+      log("\u2705 Dependencies installed successfully!");
+    } else {
+      warnings.push('Dependencies not installed \u2014 run "bun install" (or npm install) inside the project');
     }
-
-    // TODO: Validate stored refresh token
-    // const storedToken = await RefreshToken.findOne({ token: refreshToken });
-    // if (!storedToken) throw new AppError('Invalid refresh token', 401);
-
-    return await generateAccessToken({ userId: decoded.userId });
-  } catch (error) {
-    throw new AppError('Invalid or expired refresh token', 401);
   }
+  return { projectPath, files: [projectPath, ...files], warnings };
 };
 
-export const logout = async (refreshToken: string) => {
-  // TODO: Remove refresh token from database
-  // await RefreshToken.deleteOne({ token: refreshToken });
-  return true;
-};`;
-  const tokenUtilsContent = `import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET!;
-
-export interface TokenPayload {
-  userId: string;
-  exp?: number;
-}
-
-export const generateAccessToken = async (payload: TokenPayload): Promise<string> => {
-  const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '15m';
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: accessTokenExpiry });
+// src/cli.ts
+var program2 = new Command();
+var colors = {
+  green: (text) => `\x1B[32m${text}\x1B[0m`,
+  blue: (text) => `\x1B[34m${text}\x1B[0m`,
+  yellow: (text) => `\x1B[33m${text}\x1B[0m`,
+  red: (text) => `\x1B[31m${text}\x1B[0m`,
+  cyan: (text) => `\x1B[36m${text}\x1B[0m`,
+  bold: (text) => `\x1B[1m${text}\x1B[0m`,
+  dim: (text) => `\x1B[2m${text}\x1B[0m`
 };
-
-export const generateRefreshToken = async (payload: TokenPayload): Promise<string> => {
-  const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: refreshTokenExpiry });
+var enumTypes = ["string", "number"];
+var createReadlineInterface = () => {
+  return readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 };
-
-export const verifyAccessToken = async (token: string): Promise<TokenPayload | null> => {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    return decoded;
-  } catch (error) {
-    return null;
-  }
+var askQuestion = (rl, question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
 };
-
-export const verifyRefreshToken = async (token: string): Promise<TokenPayload | null> => {
-  try {
-    const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as TokenPayload;
-    return decoded;
-  } catch (error) {
-    return null;
-  }
-};`;
-  await fs.writeFile(path.join(projectPath, ".env"), envContent);
-  console.log(colors.green("\u2705 Created file: .env (with auto-generated JWT secrets)"));
+var capitalize2 = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+var toCamelCase2 = (str) => {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+};
+var toUpperSnakeCase2 = (str) => {
+  return str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
 };
 program2.name("koti").description("\u26A0\uFE0F  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express and MongoDB\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.").version(getVersion());
 program2.command("model").argument("<model-name>", "Name of the model to create").description("Create a new TypeScript model with schema registry").action(async (modelName) => {
   try {
-    console.log(colors.blue(`\u{1F3D7}\uFE0F Creating TypeScript model: ${capitalize(modelName)}`));
+    console.log(colors.blue(`\u{1F3D7}\uFE0F Creating TypeScript model: ${capitalize2(modelName)}`));
     const rl = createReadlineInterface();
     const fields = [];
     console.log(colors.cyan("\n\u{1F4DD} Define your model fields:"));
@@ -6941,7 +6920,7 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
         type: fieldType,
         required: isRequired,
         unique: isUnique || void 0,
-        indexed: isIndexed || void 0,
+        index: isIndexed || void 0,
         default: defaultValue || void 0
       });
       console.log(colors.green(`\u2705 Added field: ${fieldName} (${fieldType})`));
@@ -6952,62 +6931,37 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
       withTasks = (await askQuestion(rl, colors.cyan("\u{1F510} Add CRUD tasks for permission control? (y/n): "))).toLowerCase() === "y";
     }
     rl.close();
-    const modelContent = generateTypeScriptModel(modelName, fields);
-    const modelPath = path.join(process.cwd(), "src", "models", `${capitalize(modelName)}.ts`);
-    await fs.ensureDir(path.dirname(modelPath));
-    await fs.writeFile(modelPath, modelContent);
-    console.log(colors.green(`\u2705 Created TypeScript model: src/models/${capitalize(modelName)}.ts`));
-    const modelsDir = path.join(process.cwd(), "src", "models");
-    await updateIndexExport(modelsDir, `export { default as ${capitalize(modelName)}, I${capitalize(modelName)} } from './${capitalize(modelName)}';`);
+    const result = await createModel({
+      projectRoot: process.cwd(),
+      name: modelName,
+      fields,
+      crud: generateCRUD,
+      tasks: withTasks
+    });
+    const ctx = await resolveProject(process.cwd());
+    const isElysia = ctx.framework === "elysia";
+    const crudCamelName = toCamelCase2(modelName);
+    console.log(colors.green(`\u2705 Created TypeScript model: src/models/${capitalize2(modelName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/models/index.ts`));
+    const indexedFieldNames = fields.filter((f) => f.index).map((f) => f.name);
+    if (indexedFieldNames.length > 0) {
+      console.log(colors.dim(`   Indexed fields (now applied to the schema): ${indexedFieldNames.join(", ")}`));
+    }
     if (generateCRUD) {
-      const crudCamelName = toCamelCase(modelName);
-      const upperSnakeName = toUpperSnakeCase(modelName);
+      const tasksActuallyAdded = withTasks && result.files.some((f) => f.endsWith(path9.join("src", "enums", "Task.ts")));
       if (withTasks) {
-        const taskEntries = [
-          { key: `VIEW_${upperSnakeName}`, desc: `View the list of ${toCamelCase(modelName)}s and ${toCamelCase(modelName)} details` },
-          { key: `CREATE_${upperSnakeName}`, desc: `Create new ${toCamelCase(modelName)} records` },
-          { key: `UPDATE_${upperSnakeName}`, desc: `Update existing ${toCamelCase(modelName)} records` },
-          { key: `DELETE_${upperSnakeName}`, desc: `Delete ${toCamelCase(modelName)} records` }
-        ];
-        let tasksAdded = 0;
-        for (const entry of taskEntries) {
-          const added = await addTaskToEnum(entry.key, entry.desc);
-          if (added) tasksAdded++;
-        }
-        if (tasksAdded > 0) {
-          console.log(colors.green(`\u2705 Added ${tasksAdded} CRUD tasks to src/enums/Task.ts`));
+        if (tasksActuallyAdded) {
+          const upperSnakeName = toUpperSnakeCase2(modelName);
+          console.log(colors.green(`\u2705 Added CRUD tasks to src/enums/Task.ts`));
           console.log(colors.dim(`   VIEW_${upperSnakeName}, CREATE_${upperSnakeName}, UPDATE_${upperSnakeName}, DELETE_${upperSnakeName}`));
         } else {
           console.log(colors.yellow(`\u26A0\uFE0F  Could not add tasks (Task.ts not found or tasks already exist)`));
-          withTasks = false;
         }
       }
-      const controllerContent = generateCRUDController(modelName, fields);
-      const controllerPath = path.join(process.cwd(), "src", "controllers", `${crudCamelName}Controller.ts`);
-      await fs.ensureDir(path.dirname(controllerPath));
-      await fs.writeFile(controllerPath, controllerContent);
       console.log(colors.green(`\u2705 Created TypeScript controller: src/controllers/${crudCamelName}Controller.ts`));
-      const controllersDir = path.join(process.cwd(), "src", "controllers");
-      await updateIndexExport(controllersDir, `export { default as ${crudCamelName}Controller } from './${crudCamelName}Controller';`);
-      const serviceContent = generateCRUDService(modelName, fields);
-      const servicePath = path.join(process.cwd(), "src", "services", `${crudCamelName}Service.ts`);
-      await fs.ensureDir(path.dirname(servicePath));
-      await fs.writeFile(servicePath, serviceContent);
       console.log(colors.green(`\u2705 Created TypeScript service: src/services/${crudCamelName}Service.ts`));
-      const servicesDir = path.join(process.cwd(), "src", "services");
-      await updateIndexExport(servicesDir, `export * from './${crudCamelName}Service';`);
-      const validationContent = generateJoiValidation(modelName, fields);
-      const validationPath = path.join(process.cwd(), "src", "validators", `${crudCamelName}.ts`);
-      await fs.ensureDir(path.dirname(validationPath));
-      await fs.writeFile(validationPath, validationContent);
-      console.log(colors.green(`\u2705 Created Joi validation: src/validators/${crudCamelName}.ts`));
-      const routeContent = generateCRUDRoutes(modelName, fields, withTasks);
-      const routePath = path.join(process.cwd(), "src", "routes", `${crudCamelName}.ts`);
-      await fs.ensureDir(path.dirname(routePath));
-      await fs.writeFile(routePath, routeContent);
+      console.log(colors.green(`\u2705 Created ${isElysia ? "TypeBox validator" : "Joi validation"}: src/validators/${crudCamelName}.ts`));
       console.log(colors.green(`\u2705 Created TypeScript routes: src/routes/${crudCamelName}.ts`));
-      await updateMainRoutes(modelName);
       console.log(colors.green(`\u2705 Registered route in src/routes/index.ts`));
       console.log(colors.cyan("\n\u{1F4DA} Generated CRUD system includes:"));
       console.log("   \u2022 Model with Mongoose schema and TypeScript types");
@@ -7016,13 +6970,13 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
       console.log("   \u2022 Routes with Swagger documentation");
       console.log("   \u2022 Pagination support (configurable in .env - DEFAULT_PAGE_LIMIT)");
       console.log("   \u2022 Automatic route registration");
-      if (withTasks) {
+      if (tasksActuallyAdded) {
         console.log("   \u2022 CRUD tasks added to Task enum (VIEW, CREATE, UPDATE, DELETE)");
         console.log("   \u2022 Routes protected with checkPermission middleware");
       }
       console.log(colors.yellow("\n\u{1F527} Next steps:"));
       console.log("   \u2022 Update .env file with DEFAULT_PAGE_LIMIT (default: 10)");
-      if (withTasks) {
+      if (tasksActuallyAdded) {
         console.log("   \u2022 Assign the new tasks to roles via your admin panel or seed script");
       }
       console.log("   \u2022 Run TypeScript compilation: npm run build");
@@ -7034,20 +6988,26 @@ program2.command("model").argument("<model-name>", "Name of the model to create"
       console.log('   \u2022 Use "koti controller", "koti service" for CRUD operations');
       console.log("   \u2022 Run TypeScript compilation: npm run build");
     }
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating model:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("enum").argument("<enum-name>", "Name of the enum to create").description("Create a new TypeScript enum").action(async (enumName) => {
   try {
-    console.log(colors.blue(`\u{1F4CB} Creating TypeScript enum: ${capitalize(enumName)}`));
+    console.log(colors.blue(`\u{1F4CB} Creating TypeScript enum: ${capitalize2(enumName)}`));
     const rl = createReadlineInterface();
     const enumType = await askQuestion(rl, colors.yellow("Enum type (string/number): "));
     if (!enumTypes.includes(enumType)) {
       console.log(colors.red('\u274C Invalid enum type. Use "string" or "number"'));
       rl.close();
-      return;
+      process.exit(1);
     }
     const values = [];
     console.log(colors.cyan("\n\u{1F4DD} Define your enum values:"));
@@ -7068,74 +7028,79 @@ program2.command("enum").argument("<enum-name>", "Name of the enum to create").d
       console.log(colors.green(`\u2705 Added: ${key.toUpperCase()} = ${value}`));
     }
     rl.close();
-    const enumContent = generateTypeScriptEnum(enumName, enumType, values);
-    const enumPath = path.join(process.cwd(), "src", "enums", `${capitalize(enumName)}.ts`);
-    await fs.ensureDir(path.dirname(enumPath));
-    await fs.writeFile(enumPath, enumContent);
-    console.log(colors.green(`\u2705 Created TypeScript enum: src/enums/${capitalize(enumName)}.ts`));
-    const enumsDir = path.join(process.cwd(), "src", "enums");
-    await updateIndexExport(enumsDir, `export { ${capitalize(enumName)} } from './${capitalize(enumName)}';`);
+    const result = await createEnum({
+      projectRoot: process.cwd(),
+      name: enumName,
+      enumType,
+      values
+    });
+    console.log(colors.green(`\u2705 Created TypeScript enum: src/enums/${capitalize2(enumName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/enums/index.ts`));
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating enum:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("controller").argument("<controller-name>", "Name of the controller to create").description("Create a new TypeScript controller").action(async (controllerName) => {
   try {
-    console.log(colors.blue(`\u{1F3AE} Creating TypeScript controller: ${capitalize(controllerName)}`));
-    const controllerContent = generateTypeScriptController(controllerName);
-    const controllerPath = path.join(process.cwd(), "src", "controllers", `${toCamelCase(controllerName)}Controller.ts`);
-    await fs.ensureDir(path.dirname(controllerPath));
-    await fs.writeFile(controllerPath, controllerContent);
-    console.log(colors.green(`\u2705 Created TypeScript controller: src/controllers/${toCamelCase(controllerName)}Controller.ts`));
-    const controllersDir = path.join(process.cwd(), "src", "controllers");
-    await updateIndexExport(controllersDir, `export { default as ${toCamelCase(controllerName)}Controller } from './${toCamelCase(controllerName)}Controller';`);
+    console.log(colors.blue(`\u{1F3AE} Creating TypeScript controller: ${capitalize2(controllerName)}`));
+    const result = await createController({ projectRoot: process.cwd(), name: controllerName });
+    console.log(colors.green(`\u2705 Created TypeScript controller: src/controllers/${toCamelCase2(controllerName)}Controller.ts`));
     console.log(colors.green(`\u2705 Updated export in src/controllers/index.ts`));
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating controller:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("service").argument("<service-name>", "Name of the service to create").description("Create a new TypeScript service").action(async (serviceName) => {
   try {
-    console.log(colors.blue(`\u2699\uFE0F Creating TypeScript service: ${capitalize(serviceName)}`));
-    const serviceContent = generateTypeScriptService(serviceName);
-    const servicePath = path.join(process.cwd(), "src", "services", `${toCamelCase(serviceName)}Service.ts`);
-    await fs.ensureDir(path.dirname(servicePath));
-    await fs.writeFile(servicePath, serviceContent);
-    console.log(colors.green(`\u2705 Created TypeScript service: src/services/${toCamelCase(serviceName)}Service.ts`));
-    const servicesDir = path.join(process.cwd(), "src", "services");
-    await updateIndexExport(servicesDir, `export * from './${toCamelCase(serviceName)}Service';`);
+    console.log(colors.blue(`\u2699\uFE0F Creating TypeScript service: ${capitalize2(serviceName)}`));
+    const result = await createService({ projectRoot: process.cwd(), name: serviceName });
+    console.log(colors.green(`\u2705 Created TypeScript service: src/services/${toCamelCase2(serviceName)}Service.ts`));
     console.log(colors.green(`\u2705 Updated export in src/services/index.ts`));
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating service:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("middleware").argument("<middleware-name>", "Name of the middleware to create").description("Create a new TypeScript middleware").action(async (middlewareName) => {
   try {
-    console.log(colors.blue(`\u{1F6E1}\uFE0F Creating TypeScript middleware: ${toCamelCase(middlewareName)}`));
-    const middlewareContent = generateTypeScriptMiddleware(middlewareName);
-    const middlewarePath = path.join(process.cwd(), "src", "middleware", `${toCamelCase(middlewareName)}.ts`);
-    await fs.ensureDir(path.dirname(middlewarePath));
-    await fs.writeFile(middlewarePath, middlewareContent);
-    console.log(colors.green(`\u2705 Created TypeScript middleware: src/middleware/${toCamelCase(middlewareName)}.ts`));
-    const middlewareDir = path.join(process.cwd(), "src", "middleware");
-    await updateIndexExport(middlewareDir, `export { ${toCamelCase(middlewareName)} } from './${toCamelCase(middlewareName)}';`);
+    console.log(colors.blue(`\u{1F6E1}\uFE0F Creating TypeScript middleware: ${toCamelCase2(middlewareName)}`));
+    const result = await createMiddleware({ projectRoot: process.cwd(), name: middlewareName });
+    console.log(colors.green(`\u2705 Created TypeScript middleware: src/middleware/${toCamelCase2(middlewareName)}.ts`));
     console.log(colors.green(`\u2705 Updated export in src/middleware/index.ts`));
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating middleware:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("new").alias("create").argument("<project-name>", "Name of the project to create").option("--framework <framework>", "Framework choice: express or elysia (default: express)").description("Create a new TypeScript Bun API project").action(async (projectName, options) => {
   var _a;
   try {
-    console.log(colors.blue(`\u{1F680} Creating TypeScript Bun API project: ${projectName}`));
-    const projectPath = path.join(process.cwd(), projectName);
-    console.log(colors.dim(`\u{1F4C1} Project directory: ${projectPath}`));
-    await fs.ensureDir(projectPath);
     let framework = (_a = options == null ? void 0 : options.framework) == null ? void 0 : _a.toLowerCase();
     if (!framework) {
       if (process.stdin.isTTY) {
@@ -7154,133 +7119,12 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
       console.error(colors.red("Error: Framework must be either express or elysia"));
       process.exit(1);
     }
-    console.log(colors.dim(`\u{1F9E9} Framework: ${framework}`));
-    const templatePath = path.join(__dirname, "..", "templates", framework);
-    const sharedTemplatePath = path.join(__dirname, "..", "templates", "shared");
-    const srcPath = path.join(projectPath, "src");
-    const directories = [
-      "config",
-      "controllers",
-      "middleware",
-      "models",
-      "routes",
-      "types",
-      "utils",
-      "services",
-      "schemas",
-      "enums",
-      "validators",
-      "seeds"
-    ];
-    for (const dir of directories) {
-      await fs.ensureDir(path.join(srcPath, dir));
-      console.log(colors.green(`\u2705 Created directory: src/${dir}/`));
-    }
-    const packageJsonPath = path.join(templatePath, "package.json");
-    const readmePath = path.join(templatePath, "README.md");
-    if (await fs.pathExists(packageJsonPath)) {
-      let content = await fs.readFile(packageJsonPath, "utf-8");
-      content = content.replace(/{{PROJECT_NAME}}/g, projectName);
-      await fs.writeFile(path.join(projectPath, "package.json"), content);
-      console.log(colors.green("\u2705 Created file: package.json"));
-    }
-    if (await fs.pathExists(readmePath)) {
-      let content = await fs.readFile(readmePath, "utf-8");
-      content = content.replace(/{{PROJECT_NAME}}/g, projectName);
-      await fs.writeFile(path.join(projectPath, "README.md"), content);
-      console.log(colors.green("\u2705 Created file: README.md"));
-    }
-    const templateSrcPath = path.join(templatePath, "src");
-    const projectSrcPath = path.join(projectPath, "src");
-    const replaceInDir = async (dirPath) => {
-      const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      for (const entry of entries) {
-        const fullPath = path.join(dirPath, entry.name);
-        if (entry.isDirectory()) {
-          await replaceInDir(fullPath);
-        } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".json")) {
-          let content = await fs.readFile(fullPath, "utf-8");
-          if (content.includes("{{PROJECT_NAME}}")) {
-            content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
-            await fs.writeFile(fullPath, content);
-          }
-        }
-      }
-    };
-    if (await fs.pathExists(templateSrcPath)) {
-      await fs.copy(templateSrcPath, projectSrcPath);
-      console.log(colors.green("\u2705 Copied framework source files"));
-    }
-    const sharedSrcPath = path.join(sharedTemplatePath, "src");
-    if (await fs.pathExists(sharedSrcPath)) {
-      await fs.copy(sharedSrcPath, projectSrcPath);
-      console.log(colors.green("\u2705 Copied shared source files"));
-    }
-    if (await fs.pathExists(projectSrcPath)) {
-      await replaceInDir(projectSrcPath);
-    }
-    const additionalFiles = [
-      "tsconfig.json",
-      ".env",
-      ".env.example",
-      ".gitignore"
-    ];
-    for (const fileName of additionalFiles) {
-      const templateFilePath = path.join(templatePath, fileName);
-      const projectFilePath = path.join(projectPath, fileName);
-      if (await fs.pathExists(templateFilePath)) {
-        let content = await fs.readFile(templateFilePath, "utf-8");
-        content = content.replace(/{{PROJECT_NAME}}/g, projectName);
-        await fs.writeFile(projectFilePath, content);
-        console.log(colors.green(`\u2705 Created file: ${fileName}`));
-      }
-    }
-    await generateEssentialFiles(projectPath, projectName, framework);
-    const kotiConfig = {
+    const result = await createProject({
+      name: projectName,
       framework,
-      kotiVersion: getVersion(),
-      createdAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    await fs.writeFile(
-      path.join(projectPath, "koti.config.json"),
-      JSON.stringify(kotiConfig, null, 2)
-    );
-    console.log(colors.green("\u2705 Created file: koti.config.json"));
-    console.log(colors.green("\n\u{1F389} TypeScript project created successfully!"));
-    console.log(colors.blue("\n\u{1F4E6} Installing dependencies..."));
-    let installSuccess = false;
-    try {
-      const { execSync } = require("child_process");
-      console.log(colors.dim("Running: bun install"));
-      const result = execSync("bun install", {
-        cwd: projectPath,
-        stdio: "inherit",
-        timeout: 45e3
-        // 45 second timeout
-      });
-      console.log(colors.green("\u2705 Dependencies installed successfully with bun!"));
-      installSuccess = true;
-    } catch (error) {
-      console.log(colors.yellow("\u26A0\uFE0F  Bun install failed, trying npm install..."));
-      try {
-        const { execSync } = require("child_process");
-        console.log(colors.dim("Running: npm install"));
-        const result = execSync("npm install", {
-          cwd: projectPath,
-          stdio: "inherit",
-          timeout: 6e4
-          // 60 second timeout
-        });
-        console.log(colors.green("\u2705 Dependencies installed successfully with npm!"));
-        installSuccess = true;
-      } catch (npmError) {
-        console.log(colors.red("\u274C Failed to install dependencies automatically"));
-        console.log(colors.yellow('   Please run "bun install" or "npm install" manually in the project directory'));
-      }
-    }
-    if (installSuccess) {
-      console.log(colors.green("\u2705 Project is ready to use!"));
-    }
+      log: (m) => console.log(m)
+    });
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
     console.log(colors.cyan("\n\u{1F4CB} Next steps:"));
     console.log(`   1. cd ${projectName}`);
     console.log("   2. Update .env file with your MongoDB URI and JWT secret");
@@ -7311,31 +7155,51 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
     console.log("   \u2022 Update dependencies to latest secure versions");
     console.log(colors.green("\nHappy coding! \u{1F680}"));
   } catch (error) {
-    console.error(colors.red("\u274C Error creating project:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Error creating project:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("model:edit").argument("<model-name>", "Name of the model to edit").description("Edit an existing TypeScript model (add/delete fields)").action(async (modelName) => {
   try {
-    console.log(colors.blue(`\u270F\uFE0F Editing TypeScript model: ${capitalize(modelName)}`));
-    const { fields: existingFields, hasSchema } = await parseExistingModel(modelName);
-    if (!hasSchema) {
-      console.log(colors.red(`\u274C Model ${capitalize(modelName)} not found!`));
-      console.log(colors.yellow('\u{1F4A1} Use "koti model <name>" to create a new model'));
-      return;
+    console.log(colors.blue(`\u270F\uFE0F Editing TypeScript model: ${capitalize2(modelName)}`));
+    let existingFields;
+    try {
+      existingFields = await parseExistingModel(process.cwd(), modelName);
+    } catch (error) {
+      if (error instanceof GeneratorError) {
+        console.log(colors.red(`\u274C Model ${capitalize2(modelName)} not found!`));
+        console.log(colors.yellow('\u{1F4A1} Use "koti model <name>" to create a new model'));
+        process.exit(1);
+      }
+      throw error;
     }
-    const crudExists = await checkCRUDExists(modelName);
-    const hasCRUD = crudExists.controller || crudExists.service || crudExists.routes;
-    console.log(colors.green(`\u2705 Found model: ${capitalize(modelName)}`));
+    const editCamelName = toCamelCase2(modelName);
+    const controllerPath = path9.join(process.cwd(), "src", "controllers", `${editCamelName}Controller.ts`);
+    const servicePath = path9.join(process.cwd(), "src", "services", `${editCamelName}Service.ts`);
+    const routePath = path9.join(process.cwd(), "src", "routes", `${editCamelName}.ts`);
+    const [hasController, hasService, hasRoutes] = await Promise.all([
+      fs9.pathExists(controllerPath),
+      fs9.pathExists(servicePath),
+      fs9.pathExists(routePath)
+    ]);
+    const hasCRUD = hasController || hasService || hasRoutes;
+    console.log(colors.green(`\u2705 Found model: ${capitalize2(modelName)}`));
     console.log(colors.dim(`   Fields: ${existingFields.map((f) => f.name).join(", ")}`));
     if (hasCRUD) {
       console.log(colors.cyan("\u{1F527} CRUD operations detected:"));
-      if (crudExists.controller) console.log(colors.dim("   \u2022 Controller"));
-      if (crudExists.service) console.log(colors.dim("   \u2022 Service"));
-      if (crudExists.routes) console.log(colors.dim("   \u2022 Routes"));
+      if (hasController) console.log(colors.dim("   \u2022 Controller"));
+      if (hasService) console.log(colors.dim("   \u2022 Service"));
+      if (hasRoutes) console.log(colors.dim("   \u2022 Routes"));
     }
     const rl = createReadlineInterface();
     let updatedFields = [...existingFields];
+    const addFields = [];
+    const removeFields = [];
+    let updateCRUD = false;
     while (true) {
       console.log(colors.cyan("\n\u{1F4DD} Current fields:"));
       updatedFields.forEach((field, index) => {
@@ -7382,14 +7246,16 @@ program2.command("model:edit").argument("<model-name>", "Name of the model to ed
         const isUnique = (await askQuestion(rl, colors.yellow("Unique? (y/n): "))).toLowerCase() === "y";
         const isIndexed = (await askQuestion(rl, colors.yellow("Add index? (y/n): "))).toLowerCase() === "y";
         const defaultValue = await askQuestion(rl, colors.yellow("Default value (press enter to skip): "));
-        updatedFields.push({
+        const newField = {
           name: fieldName,
           type: fieldType,
           required: isRequired,
           unique: isUnique || void 0,
-          indexed: isIndexed || void 0,
+          index: isIndexed || void 0,
           default: defaultValue || void 0
-        });
+        };
+        updatedFields.push(newField);
+        addFields.push(newField);
         console.log(colors.green(`\u2705 Added field: ${fieldName} (${fieldType})`));
       } else if (action === "2") {
         if (updatedFields.length === 0) {
@@ -7406,62 +7272,56 @@ program2.command("model:edit").argument("<model-name>", "Name of the model to ed
         if (deleteIndex >= 0 && deleteIndex < updatedFields.length) {
           const deletedField = updatedFields.splice(deleteIndex, 1)[0];
           console.log(colors.green(`\u2705 Deleted field: ${deletedField.name}`));
+          const addedIndex = addFields.findIndex((f) => f.name === deletedField.name);
+          if (addedIndex >= 0) {
+            addFields.splice(addedIndex, 1);
+          } else {
+            removeFields.push(deletedField.name);
+          }
         } else {
           console.log(colors.red("\u274C Invalid field number"));
         }
       } else if (action === "3") {
-        const hasChanges = JSON.stringify(existingFields) !== JSON.stringify(updatedFields);
+        const hasChanges = addFields.length > 0 || removeFields.length > 0;
         if (!hasChanges) {
           console.log(colors.yellow("\u2139\uFE0F No changes detected"));
           break;
         }
         console.log(colors.cyan("\n\u{1F4BE} Saving changes..."));
-        const modelContent = generateTypeScriptModel(modelName, updatedFields);
-        const modelPath = path.join(process.cwd(), "src", "models", `${capitalize(modelName)}.ts`);
-        await fs.writeFile(modelPath, modelContent);
-        console.log(colors.green(`\u2705 Updated model: src/models/${capitalize(modelName)}.ts`));
-        let updateCRUD = false;
         if (hasCRUD) {
           console.log(colors.cyan("\n\u{1F504} CRUD operations detected"));
           updateCRUD = (await askQuestion(rl, colors.yellow("Update CRUD operations with new schema? (y/n): "))).toLowerCase() === "y";
-          if (updateCRUD) {
-            console.log(colors.blue("\u{1F504} Updating CRUD operations..."));
-            const editCamelName = toCamelCase(modelName);
-            if (crudExists.controller) {
-              const controllerPath = path.join(process.cwd(), "src", "controllers", `${editCamelName}Controller.ts`);
-              const existingController = await fs.readFile(controllerPath, "utf-8");
-              const newControllerContent = generateCRUDController(modelName, updatedFields);
-              await fs.writeFile(controllerPath + ".bak", existingController);
-              await fs.writeFile(controllerPath, newControllerContent);
-              console.log(colors.green(`\u2705 Updated controller: src/controllers/${editCamelName}Controller.ts`));
-              console.log(colors.dim(`   Backup saved: src/controllers/${editCamelName}Controller.ts.bak`));
-            }
-            if (crudExists.service) {
-              const servicePath = path.join(process.cwd(), "src", "services", `${editCamelName}Service.ts`);
-              const existingService = await fs.readFile(servicePath, "utf-8");
-              const newServiceContent = generateCRUDService(modelName, updatedFields);
-              await fs.writeFile(servicePath + ".bak", existingService);
-              await fs.writeFile(servicePath, newServiceContent);
-              console.log(colors.green(`\u2705 Updated service: src/services/${editCamelName}Service.ts`));
-              console.log(colors.dim(`   Backup saved: src/services/${editCamelName}Service.ts.bak`));
-            }
-            if (crudExists.routes) {
-              const routePath = path.join(process.cwd(), "src", "routes", `${editCamelName}.ts`);
-              const existingRoutes = await fs.readFile(routePath, "utf-8");
-              const newRouteContent = generateCRUDRoutes(modelName, updatedFields);
-              await fs.writeFile(routePath + ".bak", existingRoutes);
-              await fs.writeFile(routePath, newRouteContent);
-              console.log(colors.green(`\u2705 Updated routes: src/routes/${editCamelName}.ts`));
-              console.log(colors.dim(`   Backup saved: src/routes/${editCamelName}.ts.bak`));
-            }
-            console.log(colors.green("\n\u2705 CRUD operations updated successfully!"));
-            console.log(colors.cyan("\u{1F4A1} What happened:"));
-            console.log(colors.dim("   \u2022 Previous files saved as .bak backups"));
-            console.log(colors.dim("   \u2022 New code generated based on updated schema"));
-            console.log(colors.dim("   \u2022 Files are clean and compilable \u2014 no commented-out code"));
-            console.log(colors.dim("   \u2022 Both versions coexist in the same files for easy comparison"));
-          }
         }
+        const result = await editModel({
+          projectRoot: process.cwd(),
+          name: modelName,
+          addFields,
+          removeFields,
+          updateCrud: updateCRUD
+        });
+        console.log(colors.green(`\u2705 Updated model: src/models/${capitalize2(modelName)}.ts`));
+        if (updateCRUD) {
+          console.log(colors.blue("\u{1F504} Updating CRUD operations..."));
+          if (result.files.includes(controllerPath)) {
+            console.log(colors.green(`\u2705 Updated controller: src/controllers/${editCamelName}Controller.ts`));
+            console.log(colors.dim(`   Backup saved: src/controllers/${editCamelName}Controller.ts.bak`));
+          }
+          if (result.files.includes(servicePath)) {
+            console.log(colors.green(`\u2705 Updated service: src/services/${editCamelName}Service.ts`));
+            console.log(colors.dim(`   Backup saved: src/services/${editCamelName}Service.ts.bak`));
+          }
+          if (result.files.includes(routePath)) {
+            console.log(colors.green(`\u2705 Updated routes: src/routes/${editCamelName}.ts`));
+            console.log(colors.dim(`   Backup saved: src/routes/${editCamelName}.ts.bak`));
+          }
+          console.log(colors.green("\n\u2705 CRUD operations updated successfully!"));
+          console.log(colors.cyan("\u{1F4A1} What happened:"));
+          console.log(colors.dim("   \u2022 Previous files saved as .bak backups"));
+          console.log(colors.dim("   \u2022 New code generated based on updated schema"));
+          console.log(colors.dim("   \u2022 Files are clean and compilable \u2014 no commented-out code"));
+          console.log(colors.dim("   \u2022 Both versions coexist in the same files for easy comparison"));
+        }
+        result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
         console.log(colors.cyan("\n\u{1F389} Model edit completed successfully!"));
         console.log(colors.yellow("\n\u{1F527} Next steps:"));
         console.log("   \u2022 Run TypeScript compilation: npm run build");
@@ -7479,69 +7339,44 @@ program2.command("model:edit").argument("<model-name>", "Name of the model to ed
     }
     rl.close();
   } catch (error) {
-    console.error(colors.red("\u274C Error editing model:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Error editing model:"), error.message);
+    }
     process.exit(1);
   }
 });
 program2.command("task").argument("<task-name>", "Name of the task to create (e.g., MANAGE_USERS)").description("Add a new task to the Task enum for role-based authorization").action(async (taskName) => {
   try {
     const taskKey = taskName.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
-    const taskValue = taskKey;
     const rl = createReadlineInterface();
     const description = await askQuestion(rl, colors.yellow("Task description: "));
     rl.close();
     if (!description.trim()) {
       console.log(colors.red("\u274C Description is required"));
-      return;
+      process.exit(1);
     }
-    const enumPath = path.join(process.cwd(), "src", "enums", "Task.ts");
-    if (!await fs.pathExists(enumPath)) {
-      console.log(colors.red("\u274C Task enum not found at src/enums/Task.ts"));
-      console.log(colors.yellow('\u{1F4A1} Create a new project with "koti new" to get the Task enum'));
-      return;
-    }
-    let content = await fs.readFile(enumPath, "utf-8");
-    if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
-      console.log(colors.red(`\u274C Task "${taskKey}" already exists in the enum`));
-      return;
-    }
-    const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
-    if (!enumClosingMatch) {
-      console.log(colors.red("\u274C Could not parse Task enum. Please add the task manually."));
-      return;
-    }
-    const lastEntry = enumClosingMatch[1];
-    const closingBrace = enumClosingMatch[2];
-    const lastEntryWithComma = lastEntry.trimEnd().endsWith(",") ? lastEntry : lastEntry.replace(/(\S)\s*$/, "$1,\n");
-    const newEnumEntry = `  /** ${description} */
-  ${taskKey} = '${taskValue}',
-`;
-    content = content.replace(
-      lastEntry + closingBrace,
-      lastEntryWithComma + newEnumEntry + closingBrace
-    );
-    const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
-    if (descClosingMatch) {
-      const lastDescEntry = descClosingMatch[1];
-      const descClosing = descClosingMatch[2];
-      const lastDescWithComma = lastDescEntry.trimEnd().endsWith(",") ? lastDescEntry : lastDescEntry.replace(/(\S)\s*$/, "$1,\n");
-      const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',
-`;
-      content = content.replace(
-        lastDescEntry + descClosing,
-        lastDescWithComma + newDescEntry + descClosing
-      );
-    }
-    await fs.writeFile(enumPath, content);
+    const result = await createTask({
+      projectRoot: process.cwd(),
+      name: taskKey,
+      description
+    });
     console.log(colors.green(`\u2705 Added task: ${taskKey}`));
     console.log(colors.dim(`   Description: ${description}`));
     console.log(colors.dim(`   File: src/enums/Task.ts`));
+    result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+    result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
     console.log(colors.cyan("\n\u{1F4A1} Usage in routes:"));
     console.log(colors.dim(`   import { checkPermission } from '../middleware/checkPermission';`));
     console.log(colors.dim(`   import { Task } from '../enums/Task';`));
     console.log(colors.dim(`   router.get('/endpoint', auth, checkPermission(Task.${taskKey}), handler);`));
   } catch (error) {
-    console.error(colors.red("\u274C Error adding task:"), error.message);
+    if (error instanceof GeneratorError) {
+      console.error(colors.red(`\u274C ${error.message}`));
+    } else {
+      console.error(colors.red("\u274C Unexpected error:"), error.message);
+    }
     process.exit(1);
   }
 });
