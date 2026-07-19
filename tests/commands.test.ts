@@ -309,6 +309,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'models'));
+      // The model command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'model-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -396,11 +402,18 @@ describe('Koti CLI Commands Integration', () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
       await fs.ensureDir(path.join(projectDir, 'src', 'routes'));
       await fs.ensureDir(path.join(projectDir, 'src', 'validators'));
+      // The model command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'crud-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
 
-      // Create a minimal routes/index.ts so updateMainRoutes can append to it
+      // Create a minimal routes/index.ts with an existing router.use(...Routes) line so
+      // registerRouteInIndex (src/generators/model.ts) can locate where to splice the new route.
       await fs.writeFile(
         path.join(projectDir, 'src', 'routes', 'index.ts'),
-        `import { Router } from 'express';\nconst router = Router();\nexport default router;\n`
+        `import { Router } from 'express';\nimport authRoutes from './auth';\n\nconst router = Router();\n\nrouter.use('/auth', authRoutes);\n\nexport default router;\n`
       );
     });
 
@@ -567,6 +580,13 @@ describe('Koti CLI Commands Integration', () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
       await fs.ensureDir(path.join(projectDir, 'src', 'routes'));
       await fs.ensureDir(path.join(projectDir, 'src', 'validators'));
+      // The model command (used below to seed the Person model) now validates it's
+      // running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'edit-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
 
       // Create routes/index.ts
       await fs.writeFile(

@@ -5,12 +5,16 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as readline from 'readline';
 import * as crypto from 'crypto';
-import { GeneratorError } from './generators/context';
+import { GeneratorError, FieldSpec, resolveProject } from './generators/context';
 import { createEnum } from './generators/enum';
-import { createTask, addTaskToEnum } from './generators/task';
+import { createTask } from './generators/task';
 import { createController } from './generators/controller';
 import { createService } from './generators/service';
 import { createMiddleware } from './generators/middleware';
+import { createModel } from './generators/model';
+import { generateTypeScriptModel } from './generators/crud/modelFile';
+import { generateCRUDController, generateCRUDRoutes } from './generators/crud/express';
+import { generateCRUDService } from './generators/crud/service';
 
 // Read version from centralized location with fallback
 const getVersion = (): string => {
@@ -550,551 +554,6 @@ Generated with ❤️ by [Koti CLI](https://www.npmjs.com/package/koti)
 `
 };
 
-// Generate TypeScript Model
-const generateTypeScriptModel = (modelName: string, fields: any[]): string => {
-  const capitalizedName = capitalize(modelName);
-  const fieldsCode = fields.map(field => {
-    const options = [];
-    if (field.required) options.push('required: true');
-    if (field.unique) options.push('unique: true');
-    if (field.default) options.push(`default: ${field.type === 'String' ? `'${field.default}'` : field.default}`);
-    
-    const optionsString = options.length > 0 ? `,  ${options.join(', ')} ` : '';
-    return `  ${field.name}: { type: ${field.type}${optionsString} }`;
-  }).join(',\n');
-
-  return `import { Schema, model, Document, Types } from 'mongoose';
-
-export interface I${capitalizedName} extends Document {
-${fields.map(field => {
-  const tsType = field.type === 'ObjectId' ? 'Types.ObjectId' : 
-                 field.type === 'String' ? 'string' :
-                 field.type === 'Number' ? 'number' :
-                 field.type === 'Boolean' ? 'boolean' :
-                 field.type === 'Date' ? 'Date' :
-                 field.type === 'Array' ? 'any[]' : 'any';
-  return `  ${field.name}: ${tsType};`;
-}).join('\n')}
-}
-
-const ${capitalizedName}Schema = new Schema<I${capitalizedName}>({
-${fieldsCode}
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
-export default ${capitalizedName};
-`;
-};
-
-// Generate CRUD Controller
-const generateCRUDController = (modelName: string, fields: any[]): string => {
-  const capitalizedName = capitalize(modelName);
-  const camelCaseName = toCamelCase(modelName);
-  
-  return `import { Request, Response, NextFunction } from 'express';
-import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types/api';
-import { AppError } from '../utils/AppError';
-import ${capitalizedName}Service from '../services/${camelCaseName}Service';
-
-export class ${capitalizedName}Controller {
-  /**
-   * Get all ${capitalizedName}s with pagination
-   * @route GET /api/${camelCaseName}
-   */
-  public async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || parseInt(process.env.DEFAULT_PAGE_LIMIT || '10');
-      const search = req.query.search as string;
-      const sortBy = req.query.sortBy as string || 'createdAt';
-      const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'desc';
-
-      const result = await ${capitalizedName}Service.getAll({
-        page,
-        limit,
-        search,
-        sortBy,
-        sortOrder
-      });
-
-      const response: PaginatedResponse = {
-        success: true,
-        message: '${capitalizedName}s retrieved successfully',
-        data: result.data,
-        pagination: result.pagination
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error fetching ${capitalizedName}s\`, 500));
-    }
-  }
-
-  /**
-   * Get single ${capitalizedName} by ID
-   * @route GET /api/${camelCaseName}/:id
-   */
-  public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const ${camelCaseName} = await ${capitalizedName}Service.getById(id);
-
-      if (!${camelCaseName}) {
-        return next(new AppError('${capitalizedName} not found', 404));
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} retrieved successfully',
-        data: ${camelCaseName}
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error fetching ${capitalizedName}\`, 500));
-    }
-  }
-
-  /**
-   * Create new ${capitalizedName}
-   * @route POST /api/${camelCaseName}
-   */
-  public async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const ${camelCaseName} = await ${capitalizedName}Service.create(req.body);
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} created successfully',
-        data: ${camelCaseName}
-      };
-
-      res.status(201).json(response);
-    } catch (error) {
-      next(new AppError(\`Error creating ${capitalizedName}\`, 400));
-    }
-  }
-
-  /**
-   * Update ${capitalizedName} by ID
-   * @route PUT /api/${camelCaseName}/:id
-   */
-  public async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const ${camelCaseName} = await ${capitalizedName}Service.update(id, req.body);
-
-      if (!${camelCaseName}) {
-        return next(new AppError('${capitalizedName} not found', 404));
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} updated successfully',
-        data: ${camelCaseName}
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error updating ${capitalizedName}\`, 400));
-    }
-  }
-
-  /**
-   * Delete ${capitalizedName} by ID
-   * @route DELETE /api/${camelCaseName}/:id
-   */
-  public async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const deleted = await ${capitalizedName}Service.delete(id);
-
-      if (!deleted) {
-        return next(new AppError('${capitalizedName} not found', 404));
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} deleted successfully',
-        data: null
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error deleting ${capitalizedName}\`, 500));
-    }
-  }
-}
-
-export default new ${capitalizedName}Controller();`;
-};
-
-// Generate CRUD Service
-const generateCRUDService = (modelName: string, fields: any[]): string => {
-  const capitalizedName = capitalize(modelName);
-  const camelCaseName = toCamelCase(modelName);
-  
-  return `import { AppError } from '../utils/AppError';
-import ${capitalizedName} from '../models/${capitalizedName}';
-import { PaginationResult, QueryOptions } from '../types/api';
-
-export class ${capitalizedName}Service {
-  /**
-   * Get all ${capitalizedName}s with pagination and search
-   */
-  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
-    try {
-      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
-      const skip = (page - 1) * limit;
-
-      // Build search query
-      let query: any = {};
-      if (search) {
-        const searchFields = [${fields.filter(f => f.type === 'String').map(f => `'${f.name}'`).join(', ')}];
-        if (searchFields.length > 0) {
-          query.$or = searchFields.map(field => ({
-            [field]: { $regex: search, $options: 'i' }
-          }));
-        }
-      }
-
-      // Execute queries
-      const [data, total] = await Promise.all([
-        ${capitalizedName}.find(query)
-          .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        ${capitalizedName}.countDocuments(query)
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
-      };
-    } catch (error) {
-      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
-    }
-  }
-
-  /**
-   * Get ${capitalizedName} by ID
-   */
-  public async getById(id: string): Promise<any> {
-    try {
-      const ${camelCaseName} = await ${capitalizedName}.findById(id).lean();
-      return ${camelCaseName};
-    } catch (error) {
-      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
-    }
-  }
-
-  /**
-   * Create new ${capitalizedName}
-   */
-  public async create(data: any): Promise<any> {
-    try {
-      const ${camelCaseName} = new ${capitalizedName}(data);
-      await ${camelCaseName}.save();
-      return ${camelCaseName}.toObject();
-    } catch (error) {
-      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
-    }
-  }
-
-  /**
-   * Update ${capitalizedName} by ID
-   */
-  public async update(id: string, data: any): Promise<any> {
-    try {
-      const ${camelCaseName} = await ${capitalizedName}.findByIdAndUpdate(
-        id,
-        { ...data, updatedAt: new Date() },
-        { new: true, runValidators: true }
-      ).lean();
-      return ${camelCaseName};
-    } catch (error) {
-      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
-    }
-  }
-
-  /**
-   * Delete ${capitalizedName} by ID
-   */
-  public async delete(id: string): Promise<boolean> {
-    try {
-      const result = await ${capitalizedName}.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
-    }
-  }
-}
-
-export default new ${capitalizedName}Service();`;
-};
-
-// Generate CRUD Routes
-const generateCRUDRoutes = (modelName: string, fields: any[] = [], withTasks: boolean = false): string => {
-  const capitalizedName = capitalize(modelName);
-  const camelCaseName = toCamelCase(modelName);
-  const upperSnakeName = toUpperSnakeCase(modelName);
-
-  const hasValidation = fields.length > 0;
-  const validationImport = hasValidation
-    ? `\nimport { validate } from '../middleware/validation';\nimport { create${capitalizedName}Schema, update${capitalizedName}Schema } from '../validators/${camelCaseName}';`
-    : '';
-
-  const permissionImport = withTasks
-    ? `\nimport { checkPermission } from '../middleware/checkPermission';\nimport { Task } from '../enums/Task';`
-    : '';
-
-  // Permission middleware snippets for each route
-  const viewPerm = withTasks ? `checkPermission(Task.VIEW_${upperSnakeName}), ` : '';
-  const createPerm = withTasks ? `checkPermission(Task.CREATE_${upperSnakeName}), ` : '';
-  const updatePerm = withTasks ? `checkPermission(Task.UPDATE_${upperSnakeName}), ` : '';
-  const deletePerm = withTasks ? `checkPermission(Task.DELETE_${upperSnakeName}), ` : '';
-
-  return `import { Router } from 'express';
-import ${camelCaseName}Controller from '../controllers/${camelCaseName}Controller';
-import { auth } from '../middleware/auth';${validationImport}${permissionImport}
-
-const router = Router();
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     ${capitalizedName}:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the ${camelCaseName}
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: Creation timestamp
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           description: Last update timestamp
- */
-
-/**
- * @swagger
- * /api/${camelCaseName}:
- *   get:
- *     summary: Get all ${camelCaseName}s with pagination
- *     tags: [${capitalizedName}]
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Number of items per page
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Search term
- *       - in: query
- *         name: sortBy
- *         schema:
- *           type: string
- *           default: createdAt
- *         description: Field to sort by
- *       - in: query
- *         name: sortOrder
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *           default: desc
- *         description: Sort order
- *     responses:
- *       200:
- *         description: List of ${camelCaseName}s
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PaginatedResponse'
- */
-router.get('/', auth, ${viewPerm}${camelCaseName}Controller.getAll);
-
-/**
- * @swagger
- * /api/${camelCaseName}/{id}:
- *   get:
- *     summary: Get ${camelCaseName} by ID
- *     tags: [${capitalizedName}]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ${capitalizedName} ID
- *     responses:
- *       200:
- *         description: ${capitalizedName} details
- *       404:
- *         description: ${capitalizedName} not found
- */
-router.get('/:id', auth, ${viewPerm}${camelCaseName}Controller.getById);
-
-/**
- * @swagger
- * /api/${camelCaseName}:
- *   post:
- *     summary: Create new ${camelCaseName}
- *     tags: [${capitalizedName}]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/${capitalizedName}'
- *     responses:
- *       201:
- *         description: ${capitalizedName} created successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- */
-router.post('/', auth, ${createPerm}${hasValidation ? `validate(create${capitalizedName}Schema), ` : ''}${camelCaseName}Controller.create);
-
-/**
- * @swagger
- * /api/${camelCaseName}/{id}:
- *   put:
- *     summary: Update ${camelCaseName} by ID
- *     tags: [${capitalizedName}]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ${capitalizedName} ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/${capitalizedName}'
- *     responses:
- *       200:
- *         description: ${capitalizedName} updated successfully
- *       404:
- *         description: ${capitalizedName} not found
- *       401:
- *         description: Unauthorized
- */
-router.put('/:id', auth, ${updatePerm}${hasValidation ? `validate(update${capitalizedName}Schema), ` : ''}${camelCaseName}Controller.update);
-
-/**
- * @swagger
- * /api/${camelCaseName}/{id}:
- *   delete:
- *     summary: Delete ${camelCaseName} by ID
- *     tags: [${capitalizedName}]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ${capitalizedName} ID
- *     responses:
- *       200:
- *         description: ${capitalizedName} deleted successfully
- *       404:
- *         description: ${capitalizedName} not found
- *       401:
- *         description: Unauthorized
- */
-router.delete('/:id', auth, ${deletePerm}${camelCaseName}Controller.delete);
-
-export default router;`;
-};
-
-// Generate Joi validation schema for a model
-const generateJoiValidation = (modelName: string, fields: any[]): string => {
-  const capitalizedName = capitalize(modelName);
-
-  const joiFields = fields.map(field => {
-    let joiType = 'Joi.string()';
-    switch (field.type) {
-      case 'String': joiType = 'Joi.string()'; break;
-      case 'Number': joiType = 'Joi.number()'; break;
-      case 'Boolean': joiType = 'Joi.boolean()'; break;
-      case 'Date': joiType = 'Joi.date()'; break;
-      case 'Array': joiType = 'Joi.array()'; break;
-      case 'ObjectId': joiType = 'Joi.string()'; break;
-      default: joiType = 'Joi.any()'; break;
-    }
-
-    const chain = [joiType];
-    if (field.required) chain.push('.required()');
-    else chain.push('.optional()');
-
-    return `  ${field.name}: ${chain.join('')}`;
-  }).join(',\n');
-
-  return `import Joi from 'joi';
-
-export const create${capitalizedName}Schema = Joi.object({
-${joiFields}
-});
-
-export const update${capitalizedName}Schema = Joi.object({
-${fields.map(field => {
-    let joiType = 'Joi.string()';
-    switch (field.type) {
-      case 'String': joiType = 'Joi.string()'; break;
-      case 'Number': joiType = 'Joi.number()'; break;
-      case 'Boolean': joiType = 'Joi.boolean()'; break;
-      case 'Date': joiType = 'Joi.date()'; break;
-      case 'Array': joiType = 'Joi.array()'; break;
-      case 'ObjectId': joiType = 'Joi.string()'; break;
-      default: joiType = 'Joi.any()'; break;
-    }
-    return `  ${field.name}: ${joiType}.optional()`;
-  }).join(',\n')}
-}).min(1);
-`;
-};
-
-// Update main routes to register new route
 /**
  * Append an export line to an index.ts barrel file.
  * Creates the index.ts if it doesn't exist yet.
@@ -1120,55 +579,6 @@ const updateIndexExport = async (dirPath: string, exportLine: string): Promise<v
     await fs.writeFile(indexPath, content + separator + exportLine + '\n');
   } catch {
     // Non-fatal – the index file is a convenience, not a requirement
-  }
-};
-
-const updateMainRoutes = async (modelName: string): Promise<void> => {
-  const camelCaseName = toCamelCase(modelName);
-  const routesIndexPath = path.join(process.cwd(), 'src', 'routes', 'index.ts');
-  
-  try {
-    const currentContent = await fs.readFile(routesIndexPath, 'utf-8');
-    
-    // Add import statement
-    const importStatement = `import ${camelCaseName}Routes from './${camelCaseName}';`;
-    const routeUsage = `router.use('/${camelCaseName}', ${camelCaseName}Routes);`;
-    
-    // Check if already exists
-    if (currentContent.includes(importStatement)) {
-      return;
-    }
-    
-    // Find the last import statement and add after it
-    const lines = currentContent.split('\n');
-    let lastImportIndex = -1;
-    let routerUseIndex = -1;
-    
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('import') && lines[i].includes('from')) {
-        lastImportIndex = i;
-      }
-      if (lines[i].includes('router.use') && lines[i].includes('Routes')) {
-        routerUseIndex = i;
-      }
-    }
-    
-    // Insert import after last import
-    if (lastImportIndex >= 0) {
-      lines.splice(lastImportIndex + 1, 0, importStatement);
-    }
-    
-    // Insert route usage after last router.use
-    if (routerUseIndex >= 0) {
-      lines.splice(routerUseIndex + 1, 0, routeUsage);
-    }
-    
-    const updatedContent = lines.join('\n');
-    await fs.writeFile(routesIndexPath, updatedContent);
-    
-  } catch (error) {
-    console.log(colors.yellow('⚠️  Could not update routes/index.ts automatically'));
-    console.log(colors.dim(`   Please add: router.use('/${camelCaseName}', ${camelCaseName}Routes);`));
   }
 };
 
@@ -1928,10 +1338,10 @@ program
   .action(async (modelName: string) => {
     try {
       console.log(colors.blue(`🏗️ Creating TypeScript model: ${capitalize(modelName)}`));
-      
+
       const rl = createReadlineInterface();
-      const fields: { name: string; type: string; required: boolean; unique?: boolean; indexed?: boolean; default?: string }[] = [];
-      
+      const fields: FieldSpec[] = [];
+
       console.log(colors.cyan('\n📝 Define your model fields:'));
       console.log(colors.dim('Available data types:'));
       console.log(colors.dim('1. String    2. Number    3. Date      4. Boolean'));
@@ -1943,7 +1353,7 @@ program
       let fieldName = '';
       while (fieldName !== 'done') {
         fieldName = await askQuestion(rl, colors.yellow('Field name (or "done" to finish): '));
-        
+
         if (fieldName === 'done') break;
         if (!fieldName.trim()) continue;
 
@@ -1952,15 +1362,15 @@ program
         dataTypes.forEach((type, index) => {
           console.log(colors.dim(`${index + 1}. ${type}`));
         });
-        
+
         const typeChoice = await askQuestion(rl, colors.yellow('Enter type number (1-8): '));
         const typeIndex = parseInt(typeChoice) - 1;
-        
+
         if (typeIndex < 0 || typeIndex >= dataTypes.length) {
           console.log(colors.red('❌ Invalid choice. Please select 1-8.'));
           continue;
         }
-        
+
         const fieldType = dataTypes[typeIndex];
         const isRequired = (await askQuestion(rl, colors.yellow('Required? (y/n): '))).toLowerCase() === 'y';
         const isUnique = (await askQuestion(rl, colors.yellow('Unique? (y/n): '))).toLowerCase() === 'y';
@@ -1969,10 +1379,10 @@ program
 
         fields.push({
           name: fieldName,
-          type: fieldType,
+          type: fieldType as FieldSpec['type'],
           required: isRequired,
           unique: isUnique || undefined,
-          indexed: isIndexed || undefined,
+          index: isIndexed || undefined,
           default: defaultValue || undefined
         });
 
@@ -1990,113 +1400,62 @@ program
 
       rl.close();
 
-      // Generate TypeScript model file
-      const modelContent = generateTypeScriptModel(modelName, fields);
-      const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
+      const result = await createModel({
+        projectRoot: process.cwd(),
+        name: modelName,
+        fields,
+        crud: generateCRUD,
+        tasks: withTasks,
+      });
 
-      await fs.ensureDir(path.dirname(modelPath));
-      await fs.writeFile(modelPath, modelContent);
+      // Determine framework only for display purposes (createModel already resolved it internally).
+      const ctx = await resolveProject(process.cwd());
+      const isElysia = ctx.framework === 'elysia';
+      const crudCamelName = toCamelCase(modelName);
 
       console.log(colors.green(`✅ Created TypeScript model: src/models/${capitalize(modelName)}.ts`));
-
-      // Update models/index.ts
-      const modelsDir = path.join(process.cwd(), 'src', 'models');
-      await updateIndexExport(modelsDir, `export { default as ${capitalize(modelName)}, I${capitalize(modelName)} } from './${capitalize(modelName)}';`);
       console.log(colors.green(`✅ Updated export in src/models/index.ts`));
 
+      const indexedFieldNames = fields.filter(f => f.index).map(f => f.name);
+      if (indexedFieldNames.length > 0) {
+        console.log(colors.dim(`   Indexed fields (now applied to the schema): ${indexedFieldNames.join(', ')}`));
+      }
+
       if (generateCRUD) {
+        // Did createModel actually add the RBAC tasks, or fall back (Task.ts missing/duplicate)?
+        const tasksActuallyAdded = withTasks && result.files.some(f => f.endsWith(path.join('src', 'enums', 'Task.ts')));
 
-      const crudCamelName = toCamelCase(modelName);
-      const upperSnakeName = toUpperSnakeCase(modelName);
-
-      // Add CRUD tasks to Task enum if requested
-      if (withTasks) {
-        const taskEntries = [
-          { key: `VIEW_${upperSnakeName}`, desc: `View the list of ${toCamelCase(modelName)}s and ${toCamelCase(modelName)} details` },
-          { key: `CREATE_${upperSnakeName}`, desc: `Create new ${toCamelCase(modelName)} records` },
-          { key: `UPDATE_${upperSnakeName}`, desc: `Update existing ${toCamelCase(modelName)} records` },
-          { key: `DELETE_${upperSnakeName}`, desc: `Delete ${toCamelCase(modelName)} records` },
-        ];
-
-        let tasksAdded = 0;
-        for (const entry of taskEntries) {
-          const added = await addTaskToEnum(process.cwd(), entry.key, entry.desc);
-          if (added) tasksAdded++;
+        if (withTasks) {
+          if (tasksActuallyAdded) {
+            const upperSnakeName = toUpperSnakeCase(modelName);
+            console.log(colors.green(`✅ Added CRUD tasks to src/enums/Task.ts`));
+            console.log(colors.dim(`   VIEW_${upperSnakeName}, CREATE_${upperSnakeName}, UPDATE_${upperSnakeName}, DELETE_${upperSnakeName}`));
+          } else {
+            console.log(colors.yellow(`⚠️  Could not add tasks (Task.ts not found or tasks already exist)`));
+          }
         }
 
-        if (tasksAdded > 0) {
-          console.log(colors.green(`✅ Added ${tasksAdded} CRUD tasks to src/enums/Task.ts`));
-          console.log(colors.dim(`   VIEW_${upperSnakeName}, CREATE_${upperSnakeName}, UPDATE_${upperSnakeName}, DELETE_${upperSnakeName}`));
-        } else {
-          console.log(colors.yellow(`⚠️  Could not add tasks (Task.ts not found or tasks already exist)`));
-          withTasks = false; // Disable permission middleware in routes since tasks weren't added
+        console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${crudCamelName}Controller.ts`));
+        console.log(colors.green(`✅ Created TypeScript service: src/services/${crudCamelName}Service.ts`));
+        console.log(colors.green(`✅ Created ${isElysia ? 'TypeBox validator' : 'Joi validation'}: src/validators/${crudCamelName}.ts`));
+        console.log(colors.green(`✅ Created TypeScript routes: src/routes/${crudCamelName}.ts`));
+        console.log(colors.green(`✅ Registered route in src/routes/index.ts`));
+
+        console.log(colors.cyan('\n📚 Generated CRUD system includes:'));
+        console.log('   • Model with Mongoose schema and TypeScript types');
+        console.log('   • Controller with full CRUD operations (GET, POST, PUT, DELETE)');
+        console.log('   • Service layer with business logic and pagination');
+        console.log('   • Routes with Swagger documentation');
+        console.log('   • Pagination support (configurable in .env - DEFAULT_PAGE_LIMIT)');
+        console.log('   • Automatic route registration');
+        if (tasksActuallyAdded) {
+          console.log('   • CRUD tasks added to Task enum (VIEW, CREATE, UPDATE, DELETE)');
+          console.log('   • Routes protected with checkPermission middleware');
         }
-      }
-
-      // Generate CRUD Controller
-      const controllerContent = generateCRUDController(modelName, fields);
-      const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${crudCamelName}Controller.ts`);
-
-      await fs.ensureDir(path.dirname(controllerPath));
-      await fs.writeFile(controllerPath, controllerContent);
-
-      console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${crudCamelName}Controller.ts`));
-
-      // Update controllers/index.ts
-      const controllersDir = path.join(process.cwd(), 'src', 'controllers');
-      await updateIndexExport(controllersDir, `export { default as ${crudCamelName}Controller } from './${crudCamelName}Controller';`);
-
-      // Generate CRUD Service
-      const serviceContent = generateCRUDService(modelName, fields);
-      const servicePath = path.join(process.cwd(), 'src', 'services', `${crudCamelName}Service.ts`);
-
-      await fs.ensureDir(path.dirname(servicePath));
-      await fs.writeFile(servicePath, serviceContent);
-
-      console.log(colors.green(`✅ Created TypeScript service: src/services/${crudCamelName}Service.ts`));
-
-      // Update services/index.ts
-      const servicesDir = path.join(process.cwd(), 'src', 'services');
-      await updateIndexExport(servicesDir, `export * from './${crudCamelName}Service';`);
-
-      // Generate Joi validation schema
-      const validationContent = generateJoiValidation(modelName, fields);
-      const validationPath = path.join(process.cwd(), 'src', 'validators', `${crudCamelName}.ts`);
-
-      await fs.ensureDir(path.dirname(validationPath));
-      await fs.writeFile(validationPath, validationContent);
-
-      console.log(colors.green(`✅ Created Joi validation: src/validators/${crudCamelName}.ts`));
-
-      // Generate CRUD Routes (with validation and optional permission checks)
-      const routeContent = generateCRUDRoutes(modelName, fields, withTasks);
-      const routePath = path.join(process.cwd(), 'src', 'routes', `${crudCamelName}.ts`);
-
-      await fs.ensureDir(path.dirname(routePath));
-      await fs.writeFile(routePath, routeContent);
-
-      console.log(colors.green(`✅ Created TypeScript routes: src/routes/${crudCamelName}.ts`));
-
-      // Update main routes/index.ts to register the new route
-      await updateMainRoutes(modelName);
-      
-      console.log(colors.green(`✅ Registered route in src/routes/index.ts`));
-      
-      console.log(colors.cyan('\n📚 Generated CRUD system includes:'));
-      console.log('   • Model with Mongoose schema and TypeScript types');
-      console.log('   • Controller with full CRUD operations (GET, POST, PUT, DELETE)');
-      console.log('   • Service layer with business logic and pagination');
-      console.log('   • Routes with Swagger documentation');
-      console.log('   • Pagination support (configurable in .env - DEFAULT_PAGE_LIMIT)');
-      console.log('   • Automatic route registration');
-      if (withTasks) {
-        console.log('   • CRUD tasks added to Task enum (VIEW, CREATE, UPDATE, DELETE)');
-        console.log('   • Routes protected with checkPermission middleware');
-      }
 
         console.log(colors.yellow('\n🔧 Next steps:'));
         console.log('   • Update .env file with DEFAULT_PAGE_LIMIT (default: 10)');
-        if (withTasks) {
+        if (tasksActuallyAdded) {
           console.log('   • Assign the new tasks to roles via your admin panel or seed script');
         }
         console.log('   • Run TypeScript compilation: npm run build');
@@ -2109,8 +1468,15 @@ program
         console.log('   • Run TypeScript compilation: npm run build');
       }
 
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
+
     } catch (error) {
-      console.error(colors.red('❌ Error creating model:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });

@@ -198,17 +198,17 @@ describe('Koti CLI', () => {
 
   describe('Generated code consistency', () => {
     it('CRUD generators should use toCamelCase not toLowerCase', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-
-      // Find all generateCRUD* function bodies and check they use toCamelCase
+      // generateCRUDController/generateCRUDRoutes live in crud/express.ts,
+      // generateCRUDService lives in crud/service.ts (moved out of cli.ts in Task 7).
       const crudFunctions = [
-        'generateCRUDController',
-        'generateCRUDService',
-        'generateCRUDRoutes',
+        { fn: 'generateCRUDController', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
+        { fn: 'generateCRUDService', file: path.join(ROOT, 'src', 'generators', 'crud', 'service.ts') },
+        { fn: 'generateCRUDRoutes', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
       ];
 
-      for (const fn of crudFunctions) {
-        const fnMatch = cliContent.match(
+      for (const { fn, file } of crudFunctions) {
+        const content = fs.readFileSync(file, 'utf-8');
+        const fnMatch = content.match(
           new RegExp(`const ${fn}[\\s\\S]*?^};`, 'm')
         );
         if (fnMatch) {
@@ -225,9 +225,10 @@ describe('Koti CLI', () => {
     });
 
     it('should generate Joi validation for CRUD models', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-      expect(cliContent).toContain('generateJoiValidation');
-      expect(cliContent).toContain("import Joi from 'joi'");
+      // generateJoiValidation lives in crud/express.ts (moved out of cli.ts in Task 7).
+      const expressContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'crud', 'express.ts'), 'utf-8');
+      expect(expressContent).toContain('generateJoiValidation');
+      expect(expressContent).toContain("import Joi from 'joi'");
     });
   });
 });
