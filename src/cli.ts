@@ -11,10 +11,7 @@ import { createTask } from './generators/task';
 import { createController } from './generators/controller';
 import { createService } from './generators/service';
 import { createMiddleware } from './generators/middleware';
-import { createModel } from './generators/model';
-import { generateTypeScriptModel } from './generators/crud/modelFile';
-import { generateCRUDController, generateCRUDRoutes } from './generators/crud/express';
-import { generateCRUDService } from './generators/crud/service';
+import { createModel, editModel, parseExistingModel } from './generators/model';
 
 // Read version from centralized location with fallback
 const getVersion = (): string => {
@@ -121,108 +118,6 @@ const toKebabCase = (str: string): string => {
 // Helper function to convert to UPPER_SNAKE_CASE (e.g., UserProfile → USER_PROFILE)
 const toUpperSnakeCase = (str: string): string => {
   return str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
-};
-
-// Helper function to parse existing model schema
-const parseExistingModel = async (modelName: string): Promise<{ fields: any[]; hasSchema: boolean }> => {
-  const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
-  
-  if (!await fs.pathExists(modelPath)) {
-    return { fields: [], hasSchema: false };
-  }
-  
-  const content = await fs.readFile(modelPath, 'utf-8');
-  const fields: any[] = [];
-  
-  // Simple regex parsing to extract schema fields
-  // Match from `({` to `}, {` (the boundary between schema fields and schema options)
-  const schemaMatch = content.match(/const\s+\w+Schema\s*=\s*new\s+Schema<.*?>\(\{([\s\S]*?)\},\s*\{/);
-  
-  if (schemaMatch) {
-    const schemaContent = schemaMatch[1];
-    const fieldMatches = schemaContent.match(/(\w+):\s*\{[^}]+\}/g);
-    
-    if (fieldMatches) {
-      fieldMatches.forEach(fieldMatch => {
-        const nameMatch = fieldMatch.match(/(\w+):/);
-        const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
-        const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
-        const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
-        const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
-        
-        if (nameMatch && typeMatch) {
-          fields.push({
-            name: nameMatch[1],
-            type: typeMatch[1],
-            required: requiredMatch ? requiredMatch[1] === 'true' : false,
-            unique: uniqueMatch ? uniqueMatch[1] === 'true' : false,
-            default: defaultMatch ? defaultMatch[1].replace(/['"]/g, '') : undefined
-          });
-        }
-      });
-    }
-  }
-  
-  return { fields, hasSchema: true };
-};
-
-// Helper function to check if CRUD operations exist
-const checkCRUDExists = async (modelName: string): Promise<{ controller: boolean; service: boolean; routes: boolean }> => {
-  const camelName = toCamelCase(modelName);
-  const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${camelName}Controller.ts`);
-  const servicePath = path.join(process.cwd(), 'src', 'services', `${camelName}Service.ts`);
-  const routePath = path.join(process.cwd(), 'src', 'routes', `${camelName}.ts`);
-  
-  const [controller, service, routes] = await Promise.all([
-    fs.pathExists(controllerPath),
-    fs.pathExists(servicePath),
-    fs.pathExists(routePath)
-  ]);
-  
-  return { controller, service, routes };
-};
-
-// Helper function to create commented backup with new code
-const createBackupWithNewCode = (existingCode: string, newCode: string, fileType: string): string => {
-  const timestamp = new Date().toISOString();
-  const commentedOldCode = existingCode
-    .split('\n')
-    .map(line => `// ${line}`)
-    .join('\n');
-  
-  return `/*
-====================================
-PREVIOUS ${fileType.toUpperCase()} CODE (BACKUP)
-====================================
-Updated on: ${timestamp}
-Reason: Model schema changed - fields added/removed
-Note: You can safely remove this commented section after reviewing
-====================================
-*/
-${commentedOldCode}
-
-/*
-====================================
-NEW ${fileType.toUpperCase()} CODE (AUTO-GENERATED)
-====================================
-Generated on: ${timestamp}
-Note: This code was auto-generated based on updated model schema
-====================================
-*/
-${newCode}`;
-};
-
-// Helper function to read existing schemas
-const readExistingSchemas = async (projectPath: string): Promise<string[]> => {
-  const schemasPath = path.join(projectPath, 'src', 'schemas');
-  if (!await fs.pathExists(schemasPath)) {
-    return [];
-  }
-  
-  const files = await fs.readdir(schemasPath);
-  return files
-    .filter(file => file.endsWith('.ts'))
-    .map(file => file.replace('.ts', ''));
 };
 
 // Project templates as a constant object
@@ -1871,33 +1766,48 @@ program
   .action(async (modelName: string) => {
     try {
       console.log(colors.blue(`✏️ Editing TypeScript model: ${capitalize(modelName)}`));
-      
+
       // Check if model exists
-      const { fields: existingFields, hasSchema } = await parseExistingModel(modelName);
-      
-      if (!hasSchema) {
-        console.log(colors.red(`❌ Model ${capitalize(modelName)} not found!`));
-        console.log(colors.yellow('💡 Use "koti model <name>" to create a new model'));
-        return;
+      let existingFields: FieldSpec[];
+      try {
+        existingFields = await parseExistingModel(process.cwd(), modelName);
+      } catch (error) {
+        if (error instanceof GeneratorError) {
+          console.log(colors.red(`❌ Model ${capitalize(modelName)} not found!`));
+          console.log(colors.yellow('💡 Use "koti model <name>" to create a new model'));
+          process.exit(1);
+        }
+        throw error;
       }
-      
+
       // Check if CRUD operations exist
-      const crudExists = await checkCRUDExists(modelName);
-      const hasCRUD = crudExists.controller || crudExists.service || crudExists.routes;
-      
+      const editCamelName = toCamelCase(modelName);
+      const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${editCamelName}Controller.ts`);
+      const servicePath = path.join(process.cwd(), 'src', 'services', `${editCamelName}Service.ts`);
+      const routePath = path.join(process.cwd(), 'src', 'routes', `${editCamelName}.ts`);
+      const [hasController, hasService, hasRoutes] = await Promise.all([
+        fs.pathExists(controllerPath),
+        fs.pathExists(servicePath),
+        fs.pathExists(routePath),
+      ]);
+      const hasCRUD = hasController || hasService || hasRoutes;
+
       console.log(colors.green(`✅ Found model: ${capitalize(modelName)}`));
       console.log(colors.dim(`   Fields: ${existingFields.map(f => f.name).join(', ')}`));
-      
+
       if (hasCRUD) {
         console.log(colors.cyan('🔧 CRUD operations detected:'));
-        if (crudExists.controller) console.log(colors.dim('   • Controller'));
-        if (crudExists.service) console.log(colors.dim('   • Service'));
-        if (crudExists.routes) console.log(colors.dim('   • Routes'));
+        if (hasController) console.log(colors.dim('   • Controller'));
+        if (hasService) console.log(colors.dim('   • Service'));
+        if (hasRoutes) console.log(colors.dim('   • Routes'));
       }
-      
+
       const rl = createReadlineInterface();
-      let updatedFields = [...existingFields];
-      
+      let updatedFields: FieldSpec[] = [...existingFields];
+      const addFields: FieldSpec[] = [];
+      const removeFields: string[] = [];
+      let updateCRUD = false;
+
       while (true) {
         console.log(colors.cyan('\n📝 Current fields:'));
         updatedFields.forEach((field, index) => {
@@ -1908,163 +1818,154 @@ program
           const attrStr = attrs.length > 0 ? ` (${attrs.join(', ')})` : '';
           console.log(colors.dim(`   ${index + 1}. ${field.name}: ${field.type}${attrStr}`));
         });
-        
+
         console.log(colors.yellow('\n🔧 Available actions:'));
         console.log('   1. Add new field');
         console.log('   2. Delete field');
         console.log('   3. Save changes');
         console.log('   4. Cancel');
-        
+
         const action = await askQuestion(rl, colors.yellow('Choose action (1-4): '));
-        
+
         if (action === '1') {
           // Add new field
           console.log(colors.cyan('\n➕ Adding new field:'));
           console.log(colors.dim('Available data types:'));
           console.log(colors.dim('1. String    2. Number    3. Date      4. Boolean'));
           console.log(colors.dim('5. ObjectId  6. Array     7. Mixed     8. JSON'));
-          
+
           const dataTypes = ['String', 'Number', 'Date', 'Boolean', 'ObjectId', 'Array', 'Mixed', 'JSON'];
-          
+
           const fieldName = await askQuestion(rl, colors.yellow('Field name: '));
           if (!fieldName.trim()) {
             console.log(colors.red('❌ Field name cannot be empty'));
             continue;
           }
-          
+
           // Check if field already exists
           if (updatedFields.some(f => f.name === fieldName)) {
             console.log(colors.red(`❌ Field "${fieldName}" already exists`));
             continue;
           }
-          
+
           console.log(colors.cyan('\nSelect data type:'));
           dataTypes.forEach((type, index) => {
             console.log(colors.dim(`${index + 1}. ${type}`));
           });
-          
+
           const typeChoice = await askQuestion(rl, colors.yellow('Enter type number (1-8): '));
           const typeIndex = parseInt(typeChoice) - 1;
-          
+
           if (typeIndex < 0 || typeIndex >= dataTypes.length) {
             console.log(colors.red('❌ Invalid choice. Please select 1-8.'));
             continue;
           }
-          
+
           const fieldType = dataTypes[typeIndex];
           const isRequired = (await askQuestion(rl, colors.yellow('Required? (y/n): '))).toLowerCase() === 'y';
           const isUnique = (await askQuestion(rl, colors.yellow('Unique? (y/n): '))).toLowerCase() === 'y';
           const isIndexed = (await askQuestion(rl, colors.yellow('Add index? (y/n): '))).toLowerCase() === 'y';
           const defaultValue = await askQuestion(rl, colors.yellow('Default value (press enter to skip): '));
-          
-          updatedFields.push({
+
+          const newField: FieldSpec = {
             name: fieldName,
-            type: fieldType,
+            type: fieldType as FieldSpec['type'],
             required: isRequired,
             unique: isUnique || undefined,
-            indexed: isIndexed || undefined,
-            default: defaultValue || undefined
-          });
-          
+            index: isIndexed || undefined,
+            default: defaultValue || undefined,
+          };
+
+          updatedFields.push(newField);
+          addFields.push(newField);
+
           console.log(colors.green(`✅ Added field: ${fieldName} (${fieldType})`));
-          
+
         } else if (action === '2') {
           // Delete field
           if (updatedFields.length === 0) {
             console.log(colors.red('❌ No fields to delete'));
             continue;
           }
-          
+
           console.log(colors.cyan('\n🗑️ Delete field:'));
           updatedFields.forEach((field, index) => {
             console.log(colors.dim(`   ${index + 1}. ${field.name}: ${field.type}`));
           });
-          
+
           const deleteChoice = await askQuestion(rl, colors.yellow('Enter field number to delete (or enter to cancel): '));
           if (!deleteChoice.trim()) continue;
-          
+
           const deleteIndex = parseInt(deleteChoice) - 1;
           if (deleteIndex >= 0 && deleteIndex < updatedFields.length) {
             const deletedField = updatedFields.splice(deleteIndex, 1)[0];
             console.log(colors.green(`✅ Deleted field: ${deletedField.name}`));
+
+            // If the field was only added earlier in this session, drop it from addFields
+            // instead of recording a remove (it never existed in the persisted model).
+            const addedIndex = addFields.findIndex(f => f.name === deletedField.name);
+            if (addedIndex >= 0) {
+              addFields.splice(addedIndex, 1);
+            } else {
+              removeFields.push(deletedField.name);
+            }
           } else {
             console.log(colors.red('❌ Invalid field number'));
           }
-          
+
         } else if (action === '3') {
           // Save changes
-          const hasChanges = JSON.stringify(existingFields) !== JSON.stringify(updatedFields);
-          
+          const hasChanges = addFields.length > 0 || removeFields.length > 0;
+
           if (!hasChanges) {
             console.log(colors.yellow('ℹ️ No changes detected'));
             break;
           }
-          
+
           console.log(colors.cyan('\n💾 Saving changes...'));
-          
-          // Regenerate model file
-          const modelContent = generateTypeScriptModel(modelName, updatedFields);
-          const modelPath = path.join(process.cwd(), 'src', 'models', `${capitalize(modelName)}.ts`);
-          await fs.writeFile(modelPath, modelContent);
-          
-          console.log(colors.green(`✅ Updated model: src/models/${capitalize(modelName)}.ts`));
-          
+
           // Ask about updating CRUD operations
-          let updateCRUD = false;
           if (hasCRUD) {
             console.log(colors.cyan('\n🔄 CRUD operations detected'));
             updateCRUD = (await askQuestion(rl, colors.yellow('Update CRUD operations with new schema? (y/n): '))).toLowerCase() === 'y';
-            
-            if (updateCRUD) {
-              console.log(colors.blue('🔄 Updating CRUD operations...'));
-              const editCamelName = toCamelCase(modelName);
-
-              // Regenerate controller if exists
-              if (crudExists.controller) {
-                const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${editCamelName}Controller.ts`);
-                const existingController = await fs.readFile(controllerPath, 'utf-8');
-                const newControllerContent = generateCRUDController(modelName, updatedFields);
-
-                // Save backup to .bak file, then do a clean replacement
-                await fs.writeFile(controllerPath + '.bak', existingController);
-                await fs.writeFile(controllerPath, newControllerContent);
-                console.log(colors.green(`✅ Updated controller: src/controllers/${editCamelName}Controller.ts`));
-                console.log(colors.dim(`   Backup saved: src/controllers/${editCamelName}Controller.ts.bak`));
-              }
-
-              // Regenerate service if exists
-              if (crudExists.service) {
-                const servicePath = path.join(process.cwd(), 'src', 'services', `${editCamelName}Service.ts`);
-                const existingService = await fs.readFile(servicePath, 'utf-8');
-                const newServiceContent = generateCRUDService(modelName, updatedFields);
-
-                await fs.writeFile(servicePath + '.bak', existingService);
-                await fs.writeFile(servicePath, newServiceContent);
-                console.log(colors.green(`✅ Updated service: src/services/${editCamelName}Service.ts`));
-                console.log(colors.dim(`   Backup saved: src/services/${editCamelName}Service.ts.bak`));
-              }
-
-              // Regenerate routes if exists
-              if (crudExists.routes) {
-                const routePath = path.join(process.cwd(), 'src', 'routes', `${editCamelName}.ts`);
-                const existingRoutes = await fs.readFile(routePath, 'utf-8');
-                const newRouteContent = generateCRUDRoutes(modelName, updatedFields);
-
-                await fs.writeFile(routePath + '.bak', existingRoutes);
-                await fs.writeFile(routePath, newRouteContent);
-                console.log(colors.green(`✅ Updated routes: src/routes/${editCamelName}.ts`));
-                console.log(colors.dim(`   Backup saved: src/routes/${editCamelName}.ts.bak`));
-              }
-
-              console.log(colors.green('\n✅ CRUD operations updated successfully!'));
-              console.log(colors.cyan('💡 What happened:'));
-              console.log(colors.dim('   • Previous files saved as .bak backups'));
-              console.log(colors.dim('   • New code generated based on updated schema'));
-              console.log(colors.dim('   • Files are clean and compilable — no commented-out code'));
-              console.log(colors.dim('   • Both versions coexist in the same files for easy comparison'));
-            }
           }
-          
+
+          const result = await editModel({
+            projectRoot: process.cwd(),
+            name: modelName,
+            addFields,
+            removeFields,
+            updateCrud: updateCRUD,
+          });
+
+          console.log(colors.green(`✅ Updated model: src/models/${capitalize(modelName)}.ts`));
+
+          if (updateCRUD) {
+            console.log(colors.blue('🔄 Updating CRUD operations...'));
+
+            if (result.files.includes(controllerPath)) {
+              console.log(colors.green(`✅ Updated controller: src/controllers/${editCamelName}Controller.ts`));
+              console.log(colors.dim(`   Backup saved: src/controllers/${editCamelName}Controller.ts.bak`));
+            }
+            if (result.files.includes(servicePath)) {
+              console.log(colors.green(`✅ Updated service: src/services/${editCamelName}Service.ts`));
+              console.log(colors.dim(`   Backup saved: src/services/${editCamelName}Service.ts.bak`));
+            }
+            if (result.files.includes(routePath)) {
+              console.log(colors.green(`✅ Updated routes: src/routes/${editCamelName}.ts`));
+              console.log(colors.dim(`   Backup saved: src/routes/${editCamelName}.ts.bak`));
+            }
+
+            console.log(colors.green('\n✅ CRUD operations updated successfully!'));
+            console.log(colors.cyan('💡 What happened:'));
+            console.log(colors.dim('   • Previous files saved as .bak backups'));
+            console.log(colors.dim('   • New code generated based on updated schema'));
+            console.log(colors.dim('   • Files are clean and compilable — no commented-out code'));
+            console.log(colors.dim('   • Both versions coexist in the same files for easy comparison'));
+          }
+
+          result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
+
           console.log(colors.cyan('\n🎉 Model edit completed successfully!'));
           console.log(colors.yellow('\n🔧 Next steps:'));
           console.log('   • Run TypeScript compilation: npm run build');
@@ -2072,9 +1973,9 @@ program
           if (hasCRUD && !updateCRUD) {
             console.log('   • Consider manually updating CRUD operations if needed');
           }
-          
+
           break;
-          
+
         } else if (action === '4') {
           // Cancel
           console.log(colors.yellow('✖️ Edit cancelled'));
@@ -2083,11 +1984,15 @@ program
           console.log(colors.red('❌ Invalid choice. Please select 1-4.'));
         }
       }
-      
+
       rl.close();
-      
+
     } catch (error) {
-      console.error(colors.red('❌ Error editing model:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Error editing model:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
