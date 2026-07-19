@@ -185,6 +185,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'controllers'));
+      // The controller command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'ctrl-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -221,6 +227,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
+      // The service command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'svc-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -255,6 +267,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'middleware'));
+      // The middleware command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'mw-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {

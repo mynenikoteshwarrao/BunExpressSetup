@@ -8,6 +8,9 @@ import * as crypto from 'crypto';
 import { GeneratorError } from './generators/context';
 import { createEnum } from './generators/enum';
 import { createTask, addTaskToEnum } from './generators/task';
+import { createController } from './generators/controller';
+import { createService } from './generators/service';
+import { createMiddleware } from './generators/middleware';
 
 // Read version from centralized location with fallback
 const getVersion = (): string => {
@@ -584,231 +587,6 @@ ${fieldsCode}
 
 export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
 export default ${capitalizedName};
-`;
-};
-
-// Generate TypeScript Controller
-const generateTypeScriptController = (controllerName: string): string => {
-  const capitalizedName = capitalize(controllerName);
-  const camelCaseName = toCamelCase(controllerName);
-  
-  return `import { Request, Response, NextFunction } from 'express';
-import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types/api';
-import { AppError } from '../utils/AppError';
-
-export class ${capitalizedName}Controller {
-  /**
-   * Get all ${controllerName}s with pagination
-   * @route GET /api/${toKebabCase(controllerName)}
-   */
-  public async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const skip = (page - 1) * limit;
-
-      // TODO: Implement actual data fetching logic
-      const data = []; // Replace with actual data fetching
-      const total = 0; // Replace with actual count
-
-      const response: PaginatedResponse = {
-        success: true,
-        message: '${capitalizedName}s retrieved successfully',
-        data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasNext: page < Math.ceil(total / limit),
-          hasPrev: page > 1
-        }
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error fetching ${controllerName}s\`, 500));
-    }
-  }
-
-  /**
-   * Get single ${controllerName} by ID
-   * @route GET /api/${toKebabCase(controllerName)}/:id
-   */
-  public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      // TODO: Implement actual data fetching logic
-      const data = null; // Replace with actual data fetching
-
-      if (!data) {
-        return next(new AppError('${capitalizedName} not found', 404));
-      }
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} retrieved successfully',
-        data
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error fetching ${controllerName}\`, 500));
-    }
-  }
-
-  /**
-   * Create new ${controllerName}
-   * @route POST /api/${toKebabCase(controllerName)}
-   */
-  public async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { body } = req;
-
-      // TODO: Implement validation and creation logic
-      const data = body; // Replace with actual creation logic
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} created successfully',
-        data
-      };
-
-      res.status(201).json(response);
-    } catch (error) {
-      next(new AppError(\`Error creating ${controllerName}\`, 400));
-    }
-  }
-
-  /**
-   * Update ${controllerName} by ID
-   * @route PUT /api/${toKebabCase(controllerName)}/:id
-   */
-  public async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { body } = req;
-
-      // TODO: Implement actual update logic
-      const data = body; // Replace with actual update logic
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} updated successfully',
-        data
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error updating ${controllerName}\`, 400));
-    }
-  }
-
-  /**
-   * Delete ${controllerName} by ID
-   * @route DELETE /api/${toKebabCase(controllerName)}/:id
-   */
-  public async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      // TODO: Implement actual deletion logic
-
-      const response: ApiResponse = {
-        success: true,
-        message: '${capitalizedName} deleted successfully'
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(new AppError(\`Error deleting ${controllerName}\`, 400));
-    }
-  }
-}
-
-export default new ${capitalizedName}Controller();
-`;
-};
-
-// Generate TypeScript Service
-const generateTypeScriptService = (serviceName: string): string => {
-  const capitalizedName = capitalize(serviceName);
-  
-  return `import { AppError } from '../utils/AppError';
-
-export class ${capitalizedName}Service {
-  /**
-   * Service method example
-   * @param data - Input data
-   * @returns Promise<any>
-   */
-  public async performOperation(data: any): Promise<any> {
-    try {
-      // TODO: Implement service logic here
-      return data;
-    } catch (error) {
-      throw new AppError(\`${capitalizedName} service error: \${error}\`, 500);
-    }
-  }
-
-  /**
-   * Validation method example
-   * @param data - Data to validate
-   * @returns boolean
-   */
-  public validateData(data: any): boolean {
-    // TODO: Implement validation logic
-    return data !== null && data !== undefined;
-  }
-
-  /**
-   * Process data method example
-   * @param rawData - Raw data to process
-   * @returns Processed data
-   */
-  public processData(rawData: any): any {
-    // TODO: Implement data processing logic
-    return rawData;
-  }
-}
-
-export default new ${capitalizedName}Service();
-`;
-};
-
-// Generate TypeScript Middleware
-const generateTypeScriptMiddleware = (middlewareName: string): string => {
-  const camelCaseName = toCamelCase(middlewareName);
-  
-  return `import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/AppError';
-
-/**
- * ${capitalize(middlewareName)} middleware
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Express next function
- */
-export const ${camelCaseName} = (req: Request, res: Response, next: NextFunction): void => {
-  try {
-    // TODO: Implement middleware logic here
-    console.log(\`${capitalize(middlewareName)} middleware executed for \${req.method} \${req.path}\`);
-    
-    // Example: Check some condition
-    const isValid = true; // Replace with actual validation logic
-    
-    if (!isValid) {
-      return next(new AppError('${capitalize(middlewareName)} validation failed', 400));
-    }
-    
-    next();
-  } catch (error) {
-    next(new AppError(\`${capitalize(middlewareName)} middleware error\`, 500));
-  }
-};
-
-export default ${camelCaseName};
 `;
 };
 
@@ -2411,22 +2189,20 @@ program
   .action(async (controllerName: string) => {
     try {
       console.log(colors.blue(`🎮 Creating TypeScript controller: ${capitalize(controllerName)}`));
-      
-      const controllerContent = generateTypeScriptController(controllerName);
-      const controllerPath = path.join(process.cwd(), 'src', 'controllers', `${toCamelCase(controllerName)}Controller.ts`);
-      
-      await fs.ensureDir(path.dirname(controllerPath));
-      await fs.writeFile(controllerPath, controllerContent);
-      
-      console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${toCamelCase(controllerName)}Controller.ts`));
 
-      // Update controllers/index.ts
-      const controllersDir = path.join(process.cwd(), 'src', 'controllers');
-      await updateIndexExport(controllersDir, `export { default as ${toCamelCase(controllerName)}Controller } from './${toCamelCase(controllerName)}Controller';`);
+      const result = await createController({ projectRoot: process.cwd(), name: controllerName });
+
+      console.log(colors.green(`✅ Created TypeScript controller: src/controllers/${toCamelCase(controllerName)}Controller.ts`));
       console.log(colors.green(`✅ Updated export in src/controllers/index.ts`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
 
     } catch (error) {
-      console.error(colors.red('❌ Error creating controller:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
@@ -2439,22 +2215,20 @@ program
   .action(async (serviceName: string) => {
     try {
       console.log(colors.blue(`⚙️ Creating TypeScript service: ${capitalize(serviceName)}`));
-      
-      const serviceContent = generateTypeScriptService(serviceName);
-      const servicePath = path.join(process.cwd(), 'src', 'services', `${toCamelCase(serviceName)}Service.ts`);
-      
-      await fs.ensureDir(path.dirname(servicePath));
-      await fs.writeFile(servicePath, serviceContent);
-      
-      console.log(colors.green(`✅ Created TypeScript service: src/services/${toCamelCase(serviceName)}Service.ts`));
 
-      // Update services/index.ts
-      const servicesDir = path.join(process.cwd(), 'src', 'services');
-      await updateIndexExport(servicesDir, `export * from './${toCamelCase(serviceName)}Service';`);
+      const result = await createService({ projectRoot: process.cwd(), name: serviceName });
+
+      console.log(colors.green(`✅ Created TypeScript service: src/services/${toCamelCase(serviceName)}Service.ts`));
       console.log(colors.green(`✅ Updated export in src/services/index.ts`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
 
     } catch (error) {
-      console.error(colors.red('❌ Error creating service:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
@@ -2467,22 +2241,20 @@ program
   .action(async (middlewareName: string) => {
     try {
       console.log(colors.blue(`🛡️ Creating TypeScript middleware: ${toCamelCase(middlewareName)}`));
-      
-      const middlewareContent = generateTypeScriptMiddleware(middlewareName);
-      const middlewarePath = path.join(process.cwd(), 'src', 'middleware', `${toCamelCase(middlewareName)}.ts`);
-      
-      await fs.ensureDir(path.dirname(middlewarePath));
-      await fs.writeFile(middlewarePath, middlewareContent);
-      
-      console.log(colors.green(`✅ Created TypeScript middleware: src/middleware/${toCamelCase(middlewareName)}.ts`));
 
-      // Update middleware/index.ts
-      const middlewareDir = path.join(process.cwd(), 'src', 'middleware');
-      await updateIndexExport(middlewareDir, `export { ${toCamelCase(middlewareName)} } from './${toCamelCase(middlewareName)}';`);
+      const result = await createMiddleware({ projectRoot: process.cwd(), name: middlewareName });
+
+      console.log(colors.green(`✅ Created TypeScript middleware: src/middleware/${toCamelCase(middlewareName)}.ts`));
       console.log(colors.green(`✅ Updated export in src/middleware/index.ts`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
 
     } catch (error) {
-      console.error(colors.red('❌ Error creating middleware:'), (error as Error).message);
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });
