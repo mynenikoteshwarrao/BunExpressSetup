@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateTypeScriptModel } from '../../src/generators/crud/modelFile';
 import { generateCRUDService } from '../../src/generators/crud/service';
 import { FieldSpec } from '../../src/generators/context';
+import { generateCRUDController, generateJoiValidation, generateCRUDRoutes } from '../../src/generators/crud/express';
 
 const fields: FieldSpec[] = [
   { name: 'title', type: 'String', required: true },
@@ -32,5 +33,38 @@ describe('generateCRUDService', () => {
     expect(src).toContain(`['title', 'sku']`);
     expect(src).toContain(`import Product from '../models/Product'`);
     expect(src).toContain('export default new ProductService()');
+  });
+});
+
+describe('generateCRUDController (express)', () => {
+  it('emits the class controller wired to the service', () => {
+    const src = generateCRUDController('Product', fields);
+    expect(src).toContain(`from 'express'`);
+    expect(src).toContain(`import ProductService from '../services/productService'`);
+    expect(src).toContain('export default new ProductController()');
+  });
+});
+
+describe('generateJoiValidation', () => {
+  it('emits create and update schemas with required/optional chains', () => {
+    const src = generateJoiValidation('Product', fields);
+    expect(src).toContain('export const createProductSchema');
+    expect(src).toContain('title: Joi.string().required()');
+    expect(src).toContain('export const updateProductSchema');
+    expect(src).toContain('.min(1)');
+  });
+});
+
+describe('generateCRUDRoutes (express)', () => {
+  it('includes permission middleware when withTasks is true', () => {
+    const src = generateCRUDRoutes('Product', fields, true);
+    expect(src).toContain('checkPermission(Task.VIEW_PRODUCT)');
+    expect(src).toContain('validate(createProductSchema)');
+    expect(src).toContain('@swagger');
+  });
+  it('omits permission middleware when withTasks is false', () => {
+    const src = generateCRUDRoutes('Product', fields, false);
+    expect(src).not.toContain('checkPermission');
+    expect(src).toContain(`router.get('/', auth, productController.getAll)`);
   });
 });
