@@ -219,9 +219,13 @@ describe('Koti CLI', () => {
     });
 
     it('should auto-generate JWT secrets (not use placeholder)', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-      expect(cliContent).toContain('generateSecret');
-      expect(cliContent).toContain('crypto.randomBytes');
+      // generateSecret lives in generators/context.ts (moved out of cli.ts in Task 9);
+      // createProject (generators/project.ts) imports and uses it for JWT_SECRET/JWT_REFRESH_SECRET.
+      const contextContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'context.ts'), 'utf-8');
+      expect(contextContent).toContain('generateSecret');
+      expect(contextContent).toContain('crypto.randomBytes');
+      const projectContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'project.ts'), 'utf-8');
+      expect(projectContent).toContain('generateSecret');
     });
 
     it('should generate Joi validation for CRUD models', () => {
