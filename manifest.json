@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "koti-mcp",
   "display_name": "Koti — API Project Scaffolding",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Scaffold Bun + (Express or Elysia) + MongoDB TypeScript API projects with RBAC, JWT auth, and Swagger docs through natural language.",
   "long_description": "Koti MCP server lets AI assistants create and manage full-stack TypeScript API projects (Express or Elysia).\n\n**9 Tools:**\n- `create_project` — Scaffold a complete project (Express or Elysia) with auth, RBAC, Swagger, security middleware\n- `create_model` — Define Mongoose models with optional CRUD endpoints and RBAC permissions\n- `edit_model` — Add or remove fields on an existing model; regenerates CRUD files with .bak backups\n- `create_controller` / `create_service` / `create_middleware` — Generate architectural components\n- `create_enum` — Create TypeScript enums\n- `create_task` — Add RBAC permission tasks\n- `seed_database` — Populate MongoDB with default roles and admin users\n\n**3 Resources:** Inspect project structure, existing models, and RBAC tasks\n\n**2 Prompts:** Guided workflows for full API scaffolding and model creation\n\nInstead of running 10+ interactive CLI commands, describe what you want and the AI does it all.",
   "icon": "icon.png",

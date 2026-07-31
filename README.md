@@ -2,9 +2,29 @@
 
 A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and MongoDB. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on either framework.
 
-## Current Version: 3.1.0
+## Current Version: 3.1.1
 
 > **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
+
+## What's New in v3.1.1 🛠️
+
+Bug-fix release for the model generators (CLI and MCP alike):
+
+- **Array fields now typecheck** — generated models emit Array-typed fields as `[{ type: Schema.Types.Mixed, ...options }]` instead of `{ type: Array }`, which Mongoose 8's TypeScript types reject. Models with Array fields now compile cleanly, alone or combined with `required`/`unique`/`index`/`default`.
+- **`koti model:edit` no longer corrupts models** — editing a model previously dropped every `index: true` flag and silently removed Array-typed fields (the field parser couldn't read either back). Both are now parsed and preserved through regeneration.
+- **Safer edits** — the model file is backed up to `.bak` before an edit overwrites it, matching the existing behavior for regenerated CRUD files.
+- **Internal cleanup** — `cli.ts` reuses the shared generator helpers instead of local duplicates, `--framework` validation is driven by the shared `FRAMEWORKS` constant, and the publishing docs now describe what `npm run update-version` actually updates.
+
+## What's New in v3.1.0 ⚙️
+
+The shared generator core release — one code-generation engine behind both the CLI and the MCP server:
+
+- **Framework-aware component generators** — `koti model`, `controller`, `service`, and `middleware` now emit idiomatic code for the project's framework (detected from `koti.config.json`). Elysia projects get Elysia controllers/routes and TypeBox validators; Express projects keep Joi. This delivers the follow-up promised in v3.0.0.
+- **`koti model:edit` rebuilt** — permission-preserving CRUD regeneration with validator refresh, plus `index`/`default` support on model fields.
+- **MCP server rewritten on the shared generators** — all 9 tools (`create_project`, `create_model`, `edit_model`, `create_enum`, `create_task`, `create_controller`, `create_service`, `create_middleware`, `seed_database`) call the generator core directly: real errors instead of false successes, no CLI stdin puppeteering, and a JSON-RPC stdio integration test covering every tool and resource.
+- **`create_project` hardening** — optional `skipInstall`, hardened dependency install, and ~1,500 lines of dead code removed.
+- **Version sync tooling** — `version.json` is the single source of truth; `npm run update-version` propagates it to `package.json`, `manifest.json`, `npm-package.json`, and the README install line.
+- **Real install docs + fresh bundle** — MCP install docs now describe the three real channels (global npm install + `koti-mcp`, `.mcpb` bundle, from source), with a fresh `.mcpb` built per release and `@modelcontextprotocol/sdk` pinned to 1.22.0 for stdio stability.
 
 ## What's New in v3.0.1 🔒
 
@@ -108,7 +128,7 @@ Koti ships an MCP server so AI agents can scaffold and grow projects directly:
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g koti@3.1.0
+npm install -g koti@3.1.1
 ```
 
 ### Development Setup
@@ -381,4 +401,4 @@ MIT License — free for personal and commercial use.
 
 ---
 
-**Generated with Koti CLI v3.0.1** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
+**Generated with Koti CLI v3.1.1** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
