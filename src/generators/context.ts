@@ -53,6 +53,14 @@ export const assertValidName = (value: string, pattern: RegExp, what: string): v
 // --- naming transforms: moved verbatim from cli.ts:97-114 ---
 export const capitalize = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);
 export const toCamelCase = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
+
+/**
+ * Wraps a value as a single-quoted TypeScript literal. Every emitter that
+ * inlines user input (field defaults, most of all) has to go through this —
+ * an unescaped apostrophe ends the literal and the generated file stops parsing.
+ */
+export const jsQuoted = (raw: string): string =>
+  `'${raw.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 export const toKebabCase = (str: string): string => str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 export const toUpperSnakeCase = (str: string): string => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
 

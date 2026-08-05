@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import ts from 'typescript';
 import { generateDrizzleModel } from '../../src/generators/crud/drizzle/modelFile';
 import { generateDrizzleCRUDService } from '../../src/generators/crud/drizzle/service';
 import { FieldSpec } from '../../src/generators/context';
@@ -71,6 +72,23 @@ describe('generateDrizzleModel', () => {
     expect(src).toContain('.default(true)');
     expect(src).toContain('.defaultNow()');
     expect(src).toContain(".default(sql`'[]'::jsonb`)");
+  });
+
+  // The emitted default lands inside a TypeScript literal, so it needs JS
+  // escaping. SQL-style quote doubling produced `.default('O''Brien')` —
+  // two adjacent string literals, which is a syntax error.
+  it('escapes defaults for the TypeScript literal they are emitted into', () => {
+    const src = generateDrizzleModel('Product', [
+      { name: 'owner', type: 'String', default: "O'Brien" },
+      { name: 'meta', type: 'JSON', default: '{"note":"it\'s here","path":"c:\\\\tmp"}' },
+    ]);
+    expect(src).toContain(".default('O\\'Brien')");
+    // The jsonb default is a SQL literal inside a JS template literal, so
+    // doubling is right there — but nowhere in a plain TypeScript literal.
+    expect(src.match(/^\s*owner:.*$/m)?.[0]).not.toContain("''");
+
+    const emitted = ts.transpileModule(src, { reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ES2020 } });
+    expect(emitted.diagnostics?.map(d => ts.flattenDiagnosticMessageText(d.messageText, ' ')) ?? []).toEqual([]);
   });
 
   it('warns and omits the default when it cannot be mapped, instead of throwing', () => {

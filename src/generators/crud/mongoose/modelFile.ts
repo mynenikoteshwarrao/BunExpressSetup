@@ -1,4 +1,4 @@
-import { FieldSpec, capitalize } from '../../context';
+import { FieldSpec, capitalize, jsQuoted } from '../../context';
 
 // Generate TypeScript Model
 // moved from cli.ts:554-591 (generateTypeScriptModel) with fixes:
@@ -12,7 +12,7 @@ export const generateTypeScriptModel = (modelName: string, fields: FieldSpec[]):
     if (field.required) options.push('required: true');
     if (field.unique) options.push('unique: true');
     if (field.index) options.push('index: true');
-    if (field.default) options.push(`default: ${field.type === 'String' ? `'${field.default}'` : field.default}`);
+    if (field.default) options.push(`default: ${field.type === 'String' ? jsQuoted(field.default) : field.default}`);
 
     const optionsString = options.length > 0 ? `,  ${options.join(', ')}` : '';
     if (field.type === 'Array') {

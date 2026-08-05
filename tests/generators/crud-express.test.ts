@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import ts from 'typescript';
 import { generateTypeScriptModel } from '../../src/generators/crud/mongoose/modelFile';
 import { generateCRUDService } from '../../src/generators/crud/mongoose/service';
 import { FieldSpec } from '../../src/generators/context';
@@ -31,6 +32,14 @@ describe('generateTypeScriptModel', () => {
     expect(src).toContain('tags: [{ type: Schema.Types.Mixed }]');
     expect(src).toContain('tags: any[];');
     expect(src).not.toContain('tags: { type: Array }');
+  });
+  // Same hazard the drizzle emitter had: an unescaped apostrophe closes the
+  // literal and the generated model stops parsing.
+  it('escapes defaults for the TypeScript literal they are emitted into', () => {
+    const src = generateTypeScriptModel('Product', [{ name: 'owner', type: 'String', default: "O'Brien" }]);
+    expect(src).toContain("default: 'O\\'Brien'");
+    const emitted = ts.transpileModule(src, { reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ES2020 } });
+    expect(emitted.diagnostics?.map(d => ts.flattenDiagnosticMessageText(d.messageText, ' ')) ?? []).toEqual([]);
   });
 });
 

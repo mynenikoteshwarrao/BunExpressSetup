@@ -4938,6 +4938,7 @@ var assertValidName = (value, pattern, what) => {
 };
 var capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 var toCamelCase = (str) => str.charAt(0).toLowerCase() + str.slice(1);
+var jsQuoted = (raw) => `'${raw.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 var toKebabCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 var toUpperSnakeCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
 var generateSecret = (bytes = 64) => import_crypto.default.randomBytes(bytes).toString("hex");
@@ -5523,7 +5524,7 @@ var generateTypeScriptModel = (modelName, fields) => {
     if (field.required) options.push("required: true");
     if (field.unique) options.push("unique: true");
     if (field.index) options.push("index: true");
-    if (field.default) options.push(`default: ${field.type === "String" ? `'${field.default}'` : field.default}`);
+    if (field.default) options.push(`default: ${field.type === "String" ? jsQuoted(field.default) : field.default}`);
     const optionsString = options.length > 0 ? `,  ${options.join(", ")}` : "";
     if (field.type === "Array") {
       return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
@@ -5696,6 +5697,7 @@ var columnFor = (field) => {
       return `${COLUMN_BUILDER[field.type]}('${col}')`;
   }
 };
+var sqlInTemplate = (raw) => raw.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${").replace(/'/g, "''");
 var defaultFor = (field, warnings) => {
   const raw = field.default;
   if (raw === void 0 || raw === "") return "";
@@ -5705,7 +5707,7 @@ var defaultFor = (field, warnings) => {
   };
   switch (field.type) {
     case "String":
-      return `.default('${raw.replace(/'/g, "''")}')`;
+      return `.default(${jsQuoted(raw)})`;
     case "Number": {
       const n = Number(raw);
       return Number.isFinite(n) ? `.default(${n})` : skip("is not a number");
@@ -5724,7 +5726,7 @@ var defaultFor = (field, warnings) => {
       } catch {
         return skip("is not valid JSON");
       }
-      return `.default(sql\`'${raw.replace(/'/g, "''")}'::jsonb\`)`;
+      return `.default(sql\`'${sqlInTemplate(raw)}'::jsonb\`)`;
     default:
       return skip("has no postgres equivalent");
   }

@@ -1,4 +1,4 @@
-import { FieldSpec, FieldType, capitalize, toCamelCase } from '../../context';
+import { FieldSpec, FieldType, capitalize, jsQuoted, toCamelCase } from '../../context';
 
 const toSnakeCase = (str: string): string =>
   str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
@@ -37,6 +37,14 @@ const columnFor = (field: FieldSpec): string => {
 };
 
 /**
+ * Escapes a value for a SQL string literal that itself sits inside an emitted
+ * JS template literal: SQL doubles the quote, JS needs backslashes, backticks
+ * and `${` neutralised or the generated file will not parse.
+ */
+const sqlInTemplate = (raw: string): string =>
+  raw.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${').replace(/'/g, "''");
+
+/**
  * Mongo accepts defaults Postgres has no column-level equivalent for, and a
  * db:switch must not die on one — an unmappable default is dropped with a
  * warning rather than throwing.
@@ -51,7 +59,7 @@ const defaultFor = (field: FieldSpec, warnings: string[]): string => {
 
   switch (field.type) {
     case 'String':
-      return `.default('${raw.replace(/'/g, "''")}')`;
+      return `.default(${jsQuoted(raw)})`;
     case 'Number': {
       const n = Number(raw);
       return Number.isFinite(n) ? `.default(${n})` : skip('is not a number');
@@ -70,7 +78,7 @@ const defaultFor = (field: FieldSpec, warnings: string[]): string => {
       } catch {
         return skip('is not valid JSON');
       }
-      return `.default(sql\`'${raw.replace(/'/g, "''")}'::jsonb\`)`;
+      return `.default(sql\`'${sqlInTemplate(raw)}'::jsonb\`)`;
     default:
       return skip('has no postgres equivalent');
   }
