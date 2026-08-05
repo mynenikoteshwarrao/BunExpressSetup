@@ -358,6 +358,24 @@ describe('Koti CLI', () => {
       expect(src.match(/leftJoin\(users/g)).toHaveLength(2);
     });
 
+    // Token redemption looks rows up by token, and the tag search issues an
+    // array-overlap (&&) that a btree index can never serve.
+    it('postgres indexes the lookup columns mongo indexes, with GIN for tags', async () => {
+      const user = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/User.ts'), 'utf8');
+      expect(user).toContain('t.passwordResetToken');
+      expect(user).toContain('t.emailVerificationToken');
+
+      const doc = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/Document.ts'), 'utf8');
+      expect(doc).toMatch(/documents_tags_idx'\)\.using\('gin'/);
+
+      // The shipped migration has to agree with the schema, or a fresh project
+      // silently runs without the indexes its models declare.
+      const sql = await fs.readFile(path.join(ROOT, 'templates/db/postgres/drizzle/0000_init.sql'), 'utf8');
+      expect(sql).toContain('"password_reset_token"');
+      expect(sql).toContain('"email_verification_token"');
+      expect(sql).toMatch(/CREATE INDEX "documents_tags_idx" ON "documents" USING gin/);
+    });
+
     it('both service barrels re-export the same five modules', async () => {
       const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
       const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));

@@ -25,7 +25,9 @@ export const documents = pgTable('documents', {
 }, (t) => [
   index('documents_user_uploaded_idx').on(t.userId, t.uploadedAt),
   index('documents_mime_type_idx').on(t.mimeType),
-  index('documents_tags_idx').on(t.tags),
+  // GIN, not btree: documentService searches tags with the array-overlap
+  // operator (&&), which a btree index cannot serve.
+  index('documents_tags_idx').using('gin', t.tags),
   index('documents_is_public_idx').on(t.isPublic),
   index('documents_is_deleted_idx').on(t.isDeleted),
 ]);

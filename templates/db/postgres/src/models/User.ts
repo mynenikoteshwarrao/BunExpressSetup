@@ -29,6 +29,10 @@ export const users = pgTable('users', {
   uniqueIndex('users_google_id_unique').on(t.googleId).where(sql`${t.googleId} IS NOT NULL`),
   index('users_is_active_idx').on(t.isActive),
   index('users_is_deleted_idx').on(t.isDeleted),
+  // Token redemption looks the row up by token, exactly as mongo's
+  // UserSchema.index({ passwordResetToken }) / ({ emailVerificationToken }) do.
+  index('users_password_reset_token_idx').on(t.passwordResetToken),
+  index('users_email_verification_token_idx').on(t.emailVerificationToken),
 ]);
 
 export type User = typeof users.$inferSelect;

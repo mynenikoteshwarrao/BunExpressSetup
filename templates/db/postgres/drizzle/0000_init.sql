@@ -95,12 +95,14 @@ CREATE INDEX "audit_logs_user_idx" ON "audit_logs" USING btree ("user_id","times
 CREATE INDEX "audit_logs_action_idx" ON "audit_logs" USING btree ("action","timestamp");--> statement-breakpoint
 CREATE INDEX "documents_user_uploaded_idx" ON "documents" USING btree ("user_id","uploaded_at");--> statement-breakpoint
 CREATE INDEX "documents_mime_type_idx" ON "documents" USING btree ("mime_type");--> statement-breakpoint
-CREATE INDEX "documents_tags_idx" ON "documents" USING btree ("tags");--> statement-breakpoint
+CREATE INDEX "documents_tags_idx" ON "documents" USING gin ("tags");--> statement-breakpoint
 CREATE INDEX "documents_is_public_idx" ON "documents" USING btree ("is_public");--> statement-breakpoint
 CREATE INDEX "documents_is_deleted_idx" ON "documents" USING btree ("is_deleted");--> statement-breakpoint
 CREATE UNIQUE INDEX "users_google_id_unique" ON "users" USING btree ("google_id") WHERE "users"."google_id" IS NOT NULL;--> statement-breakpoint
 CREATE INDEX "users_is_active_idx" ON "users" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX "users_is_deleted_idx" ON "users" USING btree ("is_deleted");--> statement-breakpoint
+CREATE INDEX "users_password_reset_token_idx" ON "users" USING btree ("password_reset_token");--> statement-breakpoint
+CREATE INDEX "users_email_verification_token_idx" ON "users" USING btree ("email_verification_token");--> statement-breakpoint
 CREATE INDEX "roles_is_active_idx" ON "roles" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX "user_roles_role_id_idx" ON "user_roles" USING btree ("role_id");--> statement-breakpoint
 CREATE INDEX "tiny_urls_created_at_idx" ON "tiny_urls" USING btree ("created_at");
