@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { globTsFiles } from './helpers/glob';
 
 const ROOT = path.resolve(__dirname, '..');
 const CLI_PATH = path.join(ROOT, 'dist', 'cli.js');
@@ -117,6 +118,20 @@ describe('Koti CLI', () => {
       for (const file of requiredFiles) {
         expect(fs.existsSync(path.join(ROOT, file))).toBe(true);
       }
+    });
+
+    it('framework layers never import mongoose (single-axis rule)', async () => {
+      for (const dir of ['templates/express/src', 'templates/elysia/src', 'templates/shared/src']) {
+        const files = await globTsFiles(path.join(ROOT, dir));
+        for (const f of files) {
+          expect(await fs.readFile(f, 'utf8'), `${f} imports mongoose`).not.toMatch(/from 'mongoose'/);
+        }
+      }
+    });
+
+    it('db config exports the lifecycle contract', async () => {
+      const src = await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/config/database.ts'), 'utf8');
+      for (const name of ['connectDB', 'closeDB', 'isValidId']) expect(src).toContain(`export const ${name}`);
     });
 
     it('template server.ts should not have hardcoded version', () => {

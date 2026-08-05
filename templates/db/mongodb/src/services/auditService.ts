@@ -1,11 +1,10 @@
-import { Types } from 'mongoose';
 import { AuditLog, IAuditLog } from '../models/AuditLog';
 
 export interface AuditLogEntry {
   entityType: string;
-  entityId: Types.ObjectId;
+  entityId: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE';
-  userId: Types.ObjectId;
+  userId: string;
   changes?: {
     field: string;
     oldValue: any;
@@ -37,7 +36,7 @@ export class AuditService {
    */
   static async getEntityHistory(
     entityType: string,
-    entityId: Types.ObjectId,
+    entityId: string,
     limit: number = 50,
     skip: number = 0
   ): Promise<IAuditLog[]> {
@@ -56,7 +55,7 @@ export class AuditService {
    * Get audit history for a specific user
    */
   static async getUserHistory(
-    userId: Types.ObjectId,
+    userId: string,
     limit: number = 50,
     skip: number = 0
   ): Promise<IAuditLog[]> {
@@ -181,7 +180,7 @@ export class AuditService {
    */
   static async getAuditStats(
     entityType?: string,
-    userId?: Types.ObjectId,
+    userId?: string,
     startDate?: Date,
     endDate?: Date
   ): Promise<{

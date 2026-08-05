@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { Types } from 'mongoose';
 import { DocumentModel, IDocument } from '../models/Document';
 import { s3Config } from '../config/s3';
 import { logger } from '../config/logger';
@@ -220,9 +219,9 @@ class DocumentService {
     if (deletedBy) {
       await AuditService.logAction({
         entityType: 'Document',
-        entityId: document._id,
+        entityId: String(document._id),
         action: 'DELETE',
-        userId: new Types.ObjectId(deletedBy),
+        userId: deletedBy,
         changes: [
           { field: 'isDeleted', oldValue: false, newValue: true },
           { field: 'deletedAt', oldValue: null, newValue: new Date() }
@@ -273,9 +272,9 @@ class DocumentService {
       if (changes.length > 0) {
         await AuditService.logAction({
           entityType: 'Document',
-          entityId: new Types.ObjectId(documentId),
+          entityId: documentId,
           action: 'UPDATE',
-          userId: new Types.ObjectId(updatedBy),
+          userId: updatedBy,
           changes
         });
       }

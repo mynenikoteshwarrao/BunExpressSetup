@@ -14,8 +14,7 @@
  */
 
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import { connectDB } from '../config/database';
+import { connectDB, closeDB } from '../config/database';
 import Role from '../models/Role';
 import { Task } from '../enums/Task';
 
@@ -68,8 +67,8 @@ const seedRoles = async (): Promise<void> => {
   } catch (error) {
     console.error('❌ Seed failed:', error);
   } finally {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed');
+    await closeDB();
+    console.log('Database connection closed');
   }
 };
 

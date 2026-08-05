@@ -195,7 +195,7 @@ export const isValidId: (id: string) => boolean;   // mongodb: Types.ObjectId.is
 ```
 - Produces: `AuditLogEntry` fields `userId`/`entityId` become `string` (were `Types.ObjectId`) — all callers pass strings from here on.
 
-- [ ] **Step 1: Write failing static locks** — add to the `cli.test.ts` security/template block:
+- [x] **Step 1: Write failing static locks** — add to the `cli.test.ts` security/template block:
 
 ```ts
 // globTsFiles lives in tests/helpers/glob.ts (recursive .ts collection) — Tasks 12 and 14 import it too
@@ -213,12 +213,12 @@ it('db config exports the lifecycle contract', async () => {
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (server.ts ×2 and audit controllers ×2 still import mongoose).
+- [x] **Step 2: Run — expect FAIL** (server.ts ×2 and audit controllers ×2 still import mongoose).
 
-- [ ] **Step 3: Implement the seam.** `database.ts` adds `export const closeDB = async (): Promise<void> => { await mongoose.connection.close(); };` and `export const isValidId = (id: string): boolean => Types.ObjectId.isValid(id);`. Both `server.ts` files: drop the mongoose import, import `{ connectDB, closeDB }`, graceful shutdown calls `await closeDB()` (connect timing untouched: express fire-and-forget at 35, elysia top-level await at 15). Audit controllers: replace `Types.ObjectId.isValid(x)` with `isValidId(x)` imported from `'../config/database'`, drop casts, pass plain strings. `auditService.ts`: `AuditLogEntry.userId/entityId: string`; internal writes let Mongoose cast strings to ObjectId (it does this natively for ObjectId schema paths). Seeds: import `closeDB` and call it in `finally`.
+- [x] **Step 3: Implement the seam.** `database.ts` adds `export const closeDB = async (): Promise<void> => { await mongoose.connection.close(); };` and `export const isValidId = (id: string): boolean => Types.ObjectId.isValid(id);`. Both `server.ts` files: drop the mongoose import, import `{ connectDB, closeDB }`, graceful shutdown calls `await closeDB()` (connect timing untouched: express fire-and-forget at 35, elysia top-level await at 15). Audit controllers: replace `Types.ObjectId.isValid(x)` with `isValidId(x)` imported from `'../config/database'`, drop casts, pass plain strings. `auditService.ts`: `AuditLogEntry.userId/entityId: string`; internal writes let Mongoose cast strings to ObjectId (it does this natively for ObjectId schema paths). Seeds: import `closeDB` and call it in `finally`.
 
-- [ ] **Step 4: Full suite green** — `npx vitest run`.
-- [ ] **Step 5: Commit** — `git commit -am "refactor(templates): connection-lifecycle + id-validation seam (connectDB/closeDB/isValidId)"`
+- [x] **Step 4: Full suite green** — `npx vitest run`.
+- [x] **Step 5: Commit** — `git commit -am "refactor(templates): connection-lifecycle + id-validation seam (connectDB/closeDB/isValidId)"`
 
 ---
 

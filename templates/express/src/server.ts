@@ -6,8 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
-import mongoose from 'mongoose';
-import { connectDB } from './config/database';
+import { connectDB, closeDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSwagger } from './config/swagger';
 
@@ -87,10 +86,10 @@ app.use('*', (req: Request, res: Response) => {
 const gracefulShutdown = async (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed.');
+    await closeDB();
+    console.log('Database connection closed.');
   } catch (err) {
-    console.error('Error closing MongoDB connection:', err);
+    console.error('Error closing database connection:', err);
   }
   process.exit(0);
 };
