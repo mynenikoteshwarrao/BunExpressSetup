@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { makeFakeProject } from '../helpers/fakeProject';
-import { createModel, importManifestFromSource } from '../../src/generators/model';
+import { createModel, editModel, importManifestFromSource } from '../../src/generators/model';
 import { FieldSpec } from '../../src/generators/context';
 
 const fields: FieldSpec[] = [
@@ -113,6 +113,37 @@ describe('createModel (postgres)', () => {
     const cfg = JSON.parse(await fs.readFile(path.join(root, 'koti.config.json'), 'utf8'));
     expect(cfg.models.Product).toEqual({ fields, crud: true, rbacTasks: false });
   });
+
+  // spec 6.4: drizzle sources are never parsed. Falling back to the mongoose
+  // regex on a pgTable threw a misleading "Could not parse schema".
+  it('editModel refuses to guess when the manifest has lost a postgres model', async () => {
+    const root = await makeFakeProject('express', 'postgres'); roots.push(root);
+    await createModel({ projectRoot: root, name: 'Product', fields, crud: true, tasks: false });
+
+    const cfgPath = path.join(root, 'koti.config.json');
+    const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8'));
+    delete cfg.models.Product;
+    await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+
+    const failure = await editModel({ projectRoot: root, name: 'Product', addFields: [{ name: 'sku', type: 'String' }] })
+      .catch((e: Error) => e);
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain('koti.config.json');
+    expect((failure as Error).message).not.toContain('Could not parse schema');
+  });
+});
+
+describe('validateFields reserved names', () => {
+  // The emitters inject id/createdAt/updatedAt themselves, so a field with one
+  // of these names is a duplicate property on mongoose and silently replaces
+  // the uuid primary key on drizzle.
+  for (const reserved of ['id', '_id', 'createdAt', 'updatedAt']) {
+    it(`rejects a field named ${reserved}`, async () => {
+      const root = await makeFakeProject('express'); roots.push(root);
+      await expect(createModel({ projectRoot: root, name: 'Product', fields: [{ name: reserved, type: 'String' }] }))
+        .rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    });
+  }
 });
 
 describe('createModel (elysia)', () => {

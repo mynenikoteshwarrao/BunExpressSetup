@@ -29,10 +29,23 @@ export interface EditModelOptions {
   updateCrud?: boolean;
 }
 
+/**
+ * Names the emitters inject themselves. A user field with one of these becomes
+ * a duplicate property on mongoose and silently displaces the uuid primary key
+ * on drizzle, so it is rejected up front on both databases.
+ */
+const RESERVED_FIELD_NAMES = ['id', '_id', 'createdAt', 'updatedAt'];
+
 const validateFields = (fields: FieldSpec[]): void => {
   if (fields.length === 0) throw new GeneratorError('INVALID_INPUT', 'At least one field is required');
   for (const f of fields) {
     assertValidName(f.name, /^[a-zA-Z_][a-zA-Z0-9_]*$/, 'field name');
+    if (RESERVED_FIELD_NAMES.includes(f.name)) {
+      throw new GeneratorError(
+        'INVALID_INPUT',
+        `Field name "${f.name}" is reserved — every model already gets ${RESERVED_FIELD_NAMES.join(', ')} from the generator`,
+      );
+    }
     if (!FIELD_TYPES.includes(f.type)) {
       throw new GeneratorError('INVALID_INPUT', `Unknown field type "${f.type}" (valid: ${FIELD_TYPES.join(', ')})`);
     }
@@ -301,6 +314,16 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
   const manifest = await readModelManifest(ctx.root);
   let entry: ModelManifestEntry | undefined = manifest[capitalizedName];
   if (!entry) {
+    // spec 6.4: Drizzle sources are never parsed, so a postgres project with no
+    // manifest entry has nothing to regenerate from — say so instead of running
+    // the mongoose regex over a pgTable and reporting a parse failure.
+    if (ctx.database === 'postgres') {
+      throw new GeneratorError(
+        'IO_ERROR',
+        `${capitalizedName} is not in the models manifest, and Drizzle sources are never parsed. ` +
+        `Restore its entry under "models" in koti.config.json before editing it.`,
+      );
+    }
     const parsed = await parseExistingModel(ctx.root, opts.name);
     entry = { fields: parsed, ...(await sniffModelFlags(ctx.root, camelName)) };
     await upsertModelManifest(ctx.root, capitalizedName, entry);

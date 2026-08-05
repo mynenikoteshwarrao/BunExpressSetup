@@ -18467,10 +18467,17 @@ export default ${camelCaseName}Routes;
 };
 
 // src/generators/model.ts
+var RESERVED_FIELD_NAMES = ["id", "_id", "createdAt", "updatedAt"];
 var validateFields = (fields) => {
   if (fields.length === 0) throw new GeneratorError("INVALID_INPUT", "At least one field is required");
   for (const f of fields) {
     assertValidName(f.name, /^[a-zA-Z_][a-zA-Z0-9_]*$/, "field name");
+    if (RESERVED_FIELD_NAMES.includes(f.name)) {
+      throw new GeneratorError(
+        "INVALID_INPUT",
+        `Field name "${f.name}" is reserved \u2014 every model already gets ${RESERVED_FIELD_NAMES.join(", ")} from the generator`
+      );
+    }
     if (!FIELD_TYPES.includes(f.type)) {
       throw new GeneratorError("INVALID_INPUT", `Unknown field type "${f.type}" (valid: ${FIELD_TYPES.join(", ")})`);
     }
@@ -18685,6 +18692,12 @@ var editModel = async (opts) => {
   const manifest = await readModelManifest(ctx.root);
   let entry = manifest[capitalizedName];
   if (!entry) {
+    if (ctx.database === "postgres") {
+      throw new GeneratorError(
+        "IO_ERROR",
+        `${capitalizedName} is not in the models manifest, and Drizzle sources are never parsed. Restore its entry under "models" in koti.config.json before editing it.`
+      );
+    }
     const parsed = await parseExistingModel(ctx.root, opts.name);
     entry = { fields: parsed, ...await sniffModelFlags(ctx.root, camelName) };
     await upsertModelManifest(ctx.root, capitalizedName, entry);
