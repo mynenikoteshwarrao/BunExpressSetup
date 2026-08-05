@@ -7423,7 +7423,7 @@ var askQuestion = (rl, question) => {
     });
   });
 };
-program2.name("koti").description("\u26A0\uFE0F  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express and MongoDB\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.").version(getVersion());
+program2.name("koti").description("\u26A0\uFE0F  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express or Elysia and MongoDB or PostgreSQL\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.").version(getVersion());
 program2.command("model").argument("<model-name>", "Name of the model to create").description("Create a new TypeScript model with schema registry").action(async (modelName) => {
   try {
     console.log(colors.blue(`\u{1F3D7}\uFE0F Creating TypeScript model: ${capitalize(modelName)}`));

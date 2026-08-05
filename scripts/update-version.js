@@ -23,7 +23,6 @@ const updateJsonVersion = (file) => {
 
 updateJsonVersion('package.json');
 updateJsonVersion('manifest.json');
-updateJsonVersion('npm-package.json');
 
 const readmePath = path.join(root, 'README.md');
 if (fs.existsSync(readmePath)) {

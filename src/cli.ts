@@ -62,7 +62,7 @@ const askQuestion = (rl: readline.Interface, question: string): Promise<string> 
 
 program
   .name('koti')
-  .description('⚠️  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express and MongoDB\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.')
+  .description('⚠️  DEVELOPMENT VERSION: CLI tool to generate TypeScript Bun API projects with Express or Elysia and MongoDB or PostgreSQL\n    This is an initial development release and may contain errors or bugs.\n    Use at your own discretion and always review generated code before production use.')
   .version(getVersion());
 
 // TypeScript Model Generation Command

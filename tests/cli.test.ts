@@ -309,10 +309,13 @@ describe('Koti CLI', () => {
       expect(content).not.toContain('beta.1-beta.1');
     });
 
-    it('should not claim UUID support that is not implemented', () => {
+    // The UUID prohibition is retired in v3.2.0: postgres projects really do
+    // get uuid primary keys, so the README is now required to document the
+    // database axis instead of denying it.
+    it('should document the database choice and the switch command', () => {
       const content = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');
-      expect(content).not.toContain('UUID Primary Keys');
-      expect(content).not.toContain('uuid: UUID generation');
+      expect(content).toContain('--database');
+      expect(content).toContain('db:switch');
     });
   });
 

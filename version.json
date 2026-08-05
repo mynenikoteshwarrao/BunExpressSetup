@@ -1,4 +1,4 @@
 {
-  "version": "3.1.1",
-  "description": "Generator bug fixes: Array-field schemas now typecheck, edit_model preserves index flags and Array fields"
+  "version": "3.2.0",
+  "description": "Database choice: scaffold with MongoDB (Mongoose) or PostgreSQL (Drizzle), convert with koti db:switch"
 }

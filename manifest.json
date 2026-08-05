@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "koti-mcp",
   "display_name": "Koti — API Project Scaffolding",
-  "version": "3.1.1",
-  "description": "Scaffold Bun + (Express or Elysia) + MongoDB TypeScript API projects with RBAC, JWT auth, and Swagger docs through natural language.",
-  "long_description": "Koti MCP server lets AI assistants create and manage full-stack TypeScript API projects (Express or Elysia).\n\n**9 Tools:**\n- `create_project` — Scaffold a complete project (Express or Elysia) with auth, RBAC, Swagger, security middleware\n- `create_model` — Define Mongoose models with optional CRUD endpoints and RBAC permissions\n- `edit_model` — Add or remove fields on an existing model; regenerates CRUD files with .bak backups\n- `create_controller` / `create_service` / `create_middleware` — Generate architectural components\n- `create_enum` — Create TypeScript enums\n- `create_task` — Add RBAC permission tasks\n- `seed_database` — Populate MongoDB with default roles and admin users\n\n**3 Resources:** Inspect project structure, existing models, and RBAC tasks\n\n**2 Prompts:** Guided workflows for full API scaffolding and model creation\n\nInstead of running 10+ interactive CLI commands, describe what you want and the AI does it all.",
+  "version": "3.2.0",
+  "description": "Scaffold Bun + (Express or Elysia) + (MongoDB or PostgreSQL) TypeScript API projects with RBAC, JWT auth, and Swagger docs through natural language.",
+  "long_description": "Koti MCP server lets AI assistants create and manage full-stack TypeScript API projects (Express or Elysia, MongoDB or PostgreSQL).\n\n**10 Tools:**\n- `create_project` — Scaffold a complete project (Express or Elysia, MongoDB or PostgreSQL) with auth, RBAC, Swagger, security middleware\n- `create_model` — Define data models (Mongoose or Drizzle) with optional CRUD endpoints and RBAC permissions\n- `edit_model` — Add or remove fields on an existing model; regenerates CRUD files with .bak backups\n- `create_controller` / `create_service` / `create_middleware` — Generate architectural components\n- `create_enum` — Create TypeScript enums\n- `create_task` — Add RBAC permission tasks\n- `seed_database` — Populate the project database with default roles and admin users\n- `switch_database` — Convert an existing project between MongoDB and PostgreSQL (code only)\n\n**3 Resources:** Inspect project structure, existing models, and RBAC tasks\n\n**2 Prompts:** Guided workflows for full API scaffolding and model creation\n\nInstead of running 10+ interactive CLI commands, describe what you want and the AI does it all.",
   "icon": "icon.png",
   "author": {
     "name": "Koteshwar Rao Myneni",
@@ -31,11 +31,11 @@
   "tools": [
     {
       "name": "create_project",
-      "description": "Scaffold a complete Bun + MongoDB API project with your choice of Express or Elysia framework (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email)."
+      "description": "Scaffold a complete Bun API project with your choice of Express or Elysia framework and MongoDB or PostgreSQL database (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email)."
     },
     {
       "name": "create_model",
-      "description": "Creates a TypeScript Mongoose model with interface definition, optional CRUD endpoints (controller, service, routes, validation), and optional RBAC task generation."
+      "description": "Creates a TypeScript data model (Mongoose or Drizzle, matching the project database) with optional CRUD endpoints (controller, service, routes, validation), and optional RBAC task generation."
     },
     {
       "name": "edit_model",
@@ -63,7 +63,11 @@
     },
     {
       "name": "seed_database",
-      "description": "Runs the seed script to populate MongoDB with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running."
+      "description": "Runs the seed script to populate the project database with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running."
+    },
+    {
+      "name": "switch_database",
+      "description": "Convert an existing Koti project between MongoDB and PostgreSQL (code-only; data does not move; originals kept as .bak)."
     }
   ],
   "prompts": [
@@ -88,7 +92,11 @@
   "keywords": [
     "bun",
     "express",
+    "elysia",
     "mongodb",
+    "drizzle",
+    "postgresql",
+    "postgres",
     "api",
     "scaffold",
     "typescript",

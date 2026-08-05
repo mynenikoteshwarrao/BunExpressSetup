@@ -11,7 +11,9 @@ Before starting, make sure you have:
 - **Node.js** >= 16 (recommended: 18+)
 - **npm** >= 8
 - **Git** (for version control and GitHub releases)
-- **MongoDB** running locally (only needed for `seed_database` tool testing)
+- **MongoDB** running locally (only needed for `seed_database` against a MongoDB project)
+- **PostgreSQL** running locally (only needed for `seed_database` against a PostgreSQL project;
+  run the project's `npm run db:migrate` first)
 
 ---
 

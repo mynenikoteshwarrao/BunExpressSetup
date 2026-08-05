@@ -19440,7 +19440,7 @@ server.registerTool(
 server.registerTool(
   "edit_model",
   {
-    title: "Edit Mongoose Model",
+    title: "Edit Data Model",
     description: "Add or remove fields on an existing model; regenerates CRUD files with .bak backups.",
     inputSchema: {
       modelName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Product", "UserProfile")').describe("Model name in PascalCase"),

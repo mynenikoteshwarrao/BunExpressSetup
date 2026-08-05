@@ -39,11 +39,11 @@ koti/
 ├── templates/
 │   ├── express/          # Express framework template
 │   ├── elysia/           # Elysia framework template
-│   └── shared/           # Framework-agnostic models/services/utils/…
+│   ├── shared/           # Framework- and database-agnostic code
+│   └── db/               # mongodb/ and postgres/ database layers
 ├── tests/                # vitest suite (NOT published)
 ├── version.json          # ← source of truth for the version number
 ├── package.json          # npm metadata + "files" whitelist + scripts
-├── npm-package.json      # mirror updated by `update-version` (legacy artifact)
 ├── manifest.json         # MCP bundle manifest (has its own version field)
 ├── README.md             # Published docs
 └── LICENSE
@@ -53,8 +53,8 @@ koti/
 
 `version.json` is the single source of truth. Bump the version there, then run
 **`npm run update-version`** — it reads `version.json` and propagates that
-version into `package.json`, `manifest.json`, and `npm-package.json`, and
-updates the `npm install -g koti@X` line in `README.md`. No other file needs
+version into `package.json` and `manifest.json`, and updates the
+`npm install -g koti@X` line in `README.md`. No other file needs
 to be edited by hand.
 
 | File | Field | Updated by |
@@ -62,7 +62,6 @@ to be edited by hand.
 | `version.json` | `version` | manual (source of truth) |
 | `package.json` | `version` | `npm run update-version` |
 | `manifest.json` | `version` | `npm run update-version` |
-| `npm-package.json` | `version` | `npm run update-version` |
 | `README.md` | `npm install -g koti@X` | `npm run update-version` |
 
 Follow semver: bug/security fixes → patch (`3.0.0 → 3.0.1`); new
@@ -73,14 +72,14 @@ backwards-compatible features → minor; breaking changes → major.
 ### 1. Bump the version
 
 Edit `version.json` to the new version (e.g. `3.0.1`) — `npm run update-version`
-(next step) propagates it to `package.json`, `manifest.json`, `npm-package.json`,
-and the README install line. Add a matching **"What's New"** section at the top
+(next step) propagates it to `package.json`, `manifest.json`, and the
+README install line. Add a matching **"What's New"** section at the top
 of `README.md`.
 
 ### 2. Propagate, build, and test
 
 ```bash
-npm run update-version     # writes npm-package.json + README install line
+npm run update-version     # writes package.json/manifest.json + README install line
 npm run build              # esbuild → dist/cli.js + dist/mcp-server.js
 npm test                   # vitest — all green before publishing
 ```

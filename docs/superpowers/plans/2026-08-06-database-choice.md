@@ -792,11 +792,11 @@ And in `commands.test.ts`: run `node dist/cli.js db:switch postgres` inside a sc
 
 **Interfaces:** none new — this task is the §9 checklist executed.
 
-- [ ] **Step 1: Flip the README locks first (failing):** delete the two UUID prohibitions; add `expect(readme).toContain('--database')` and `expect(readme).toContain('db:switch')`. Run — FAIL (README not yet updated).
-- [ ] **Step 2: Write the docs + wording sweep** per Files. README's Database Choice section documents: create-time choice, switch semantics (code-only, `.bak`, data does not move, migration-history caveat), the field-type mapping table, and the roadmap ladder (spec §10) as "planned".
-- [ ] **Step 3: Version bump:** set `version.json` to `3.2.0` (+ release-notes line), run `npm run update-version`, verify README install line + manifest/package versions moved.
-- [ ] **Step 4: Full verification battery:** `npx vitest run` (everything), `npm run build`, `npm run pack:mcpb` (preflight passes; bundle contains `templates/db/`). Scaffold all four variants with `skipInstall` and eyeball `koti.config.json` + zero-mongoose gate one last time.
-- [ ] **Step 5: Commit** — `git commit -am "release: v3.2.0 — database choice (MongoDB or Postgres), db:switch, drizzle emitters"`
+- [x] **Step 1: Flip the README locks first (failing):** delete the two UUID prohibitions; add `expect(readme).toContain('--database')` and `expect(readme).toContain('db:switch')`. Run — FAIL (README not yet updated).
+- [x] **Step 2: Write the docs + wording sweep** per Files. README's Database Choice section documents: create-time choice, switch semantics (code-only, `.bak`, data does not move, migration-history caveat), the field-type mapping table, and the roadmap ladder (spec §10) as "planned".
+- [x] **Step 3: Version bump:** set `version.json` to `3.2.0` (+ release-notes line), run `npm run update-version`, verify README install line + manifest/package versions moved.
+- [x] **Step 4: Full verification battery:** `npx vitest run` (everything), `npm run build`, `npm run pack:mcpb` (preflight passes; bundle contains `templates/db/`). Scaffold all four variants with `skipInstall` and eyeball `koti.config.json` + zero-mongoose gate one last time.
+- [x] **Step 5: Commit** — `git commit -am "release: v3.2.0 — database choice (MongoDB or Postgres), db:switch, drizzle emitters"`
 
 ---
 

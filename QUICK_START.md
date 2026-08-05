@@ -8,8 +8,11 @@ The Koti CLI is now published to npm! Install and use it with:
 # Install globally
 npm install -g koti
 
-# Create a new Bun API project
+# Create a new Bun API project (prompts for framework and database)
 koti new my-awesome-api
+
+# Or choose both up front
+koti new my-awesome-api --framework elysia --database postgres
 
 # Navigate to project and start
 cd my-awesome-api
@@ -62,7 +65,7 @@ When users run `koti new project-name`, they get:
 project-name/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts         # MongoDB connection
+│   │   ├── database.ts         # Database connection (Mongoose or Drizzle)
 │   │   ├── email.ts            # Email configuration (nodemailer)
 │   │   ├── logger.ts           # Logger configuration
 │   │   ├── passport.ts         # Google OAuth Passport.js configuration
@@ -158,7 +161,10 @@ Update the `.env` file with your settings:
 ```env
 NODE_ENV=development
 PORT=8000
+# MongoDB projects
 MONGODB_URI=mongodb://localhost:27017/my-blog-api
+# PostgreSQL projects
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/my-blog-api
 JWT_SECRET=your-secure-jwt-secret-here
 JWT_REFRESH_SECRET=your-secure-refresh-secret-here
 ```
@@ -212,8 +218,8 @@ koti service EmailService
 
 - **TypeScript First**: Full TypeScript support with type safety
 - **Bun Runtime**: High-performance JavaScript runtime
-- **Express.js**: Web framework with comprehensive security middleware
-- **MongoDB**: Database with Mongoose ODM
+- **Express.js or Elysia**: Web framework with comprehensive security middleware
+- **MongoDB or PostgreSQL**: Mongoose ODM or Drizzle ORM — chosen at create time, switchable with `koti db:switch`
 - **JWT Authentication**: Complete auth system with refresh tokens
 - **Google OAuth**: Optional Google authentication with Passport.js
 - **Email Service**: Nodemailer integration for email notifications
@@ -418,9 +424,6 @@ bun run test
 
 ### 2. Manual Setup
 ```bash
-# Copy package configuration
-cp npm-package.json package.json
-
 # Make executable
 chmod +x koti
 
@@ -447,13 +450,24 @@ npm publish
 
 ### Common Issues
 
-1. **MongoDB Connection Error**
+1. **Database Connection Error**
+
+   MongoDB projects:
    ```bash
    # Make sure MongoDB is running
    mongod
-   
+
    # Or use MongoDB Atlas connection string
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database
+   ```
+
+   PostgreSQL projects:
+   ```bash
+   # Make sure Postgres is running and DATABASE_URL points at it
+   DATABASE_URL=postgres://postgres:postgres@localhost:5432/my-blog-api
+
+   # Then apply the migrations before seeding
+   npm run db:migrate
    ```
 
 2. **Port Already in Use**
@@ -490,7 +504,7 @@ DEBUG=true
 For issues or questions:
 1. Check the generated project's README.md
 2. Review the main README.md for comprehensive documentation
-3. Ensure MongoDB is running and environment variables are configured
+3. Ensure your database (MongoDB or PostgreSQL) is running and environment variables are configured
 4. Create an issue in the GitHub repository
 
 ---

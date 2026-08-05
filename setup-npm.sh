@@ -19,15 +19,6 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-# Copy npm package.json to the correct location
-if [ -f "npm-package.json" ]; then
-    echo "📦 Copying npm-package.json to package.json..."
-    cp npm-package.json package.json
-else
-    echo "❌ npm-package.json not found. Please ensure it exists."
-    exit 1
-fi
-
 # Make koti executable
 if [ -f "koti" ]; then
     echo "🔧 Making koti executable..."
