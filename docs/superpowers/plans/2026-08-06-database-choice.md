@@ -146,7 +146,7 @@ export { default as TinyUrl, ITinyUrl } from './TinyUrl';
 ```
 (Verify each model's actual default/named exports first — `IUser` etc. are named type exports in the model files; the old barrel's phantom named `User` re-export bug must not be reproduced.)
 
-- [ ] **Step 1: Write failing test updates** — in `tests/cli.test.ts` required-files list: replace `templates/express/src/config/database.ts`, `templates/shared/src/models/User.ts`, `templates/shared/src/services/authService.ts` with `templates/db/mongodb/src/config/database.ts`, `templates/db/mongodb/src/models/User.ts`, `templates/db/mongodb/src/services/authService.ts`; add `templates/db/mongodb/src/seeds/seed.ts`. In `tests/generators/project.test.ts` add:
+- [x] **Step 1: Write failing test updates** — in `tests/cli.test.ts` required-files list: replace `templates/express/src/config/database.ts`, `templates/shared/src/models/User.ts`, `templates/shared/src/services/authService.ts` with `templates/db/mongodb/src/config/database.ts`, `templates/db/mongodb/src/models/User.ts`, `templates/db/mongodb/src/services/authService.ts`; add `templates/db/mongodb/src/seeds/seed.ts`. In `tests/generators/project.test.ts` add:
 
 ```ts
 it('scaffolded express project still contains the db-owned files', async () => {
@@ -158,11 +158,11 @@ it('scaffolded express project still contains the db-owned files', async () => {
 });
 ```
 
-- [ ] **Step 2: Run** — `npx vitest run tests/cli.test.ts tests/generators/project.test.ts`. Expected: FAIL (paths don't exist yet / auditMiddleware still copied).
+- [x] **Step 2: Run** — `npx vitest run tests/cli.test.ts tests/generators/project.test.ts`. Expected: FAIL (paths don't exist yet / auditMiddleware still copied).
 
-- [ ] **Step 3: Execute the moves** exactly as listed in Files (use `git mv`; create `templates/db/mongodb/src/` first). Fix the barrel as shown in Interfaces. Delete the three dead paths.
+- [x] **Step 3: Execute the moves** exactly as listed in Files (use `git mv`; create `templates/db/mongodb/src/` first). Fix the barrel as shown in Interfaces. Delete the three dead paths.
 
-- [ ] **Step 4: Wire the db overlay in `project.ts`** — after the shared overlay copy (383-387), add:
+- [x] **Step 4: Wire the db overlay in `project.ts`** — after the shared overlay copy (383-387), add:
 
 ```ts
 const dbTemplateSrc = path.join(templatesDir(), 'db', database, 'src');
@@ -172,9 +172,9 @@ if (await fs.pathExists(dbTemplateSrc)) {
 ```
 For this task `database` is the literal `'mongodb'` (the parameter arrives in Task 12) — declare `const database = 'mongodb' as const;` at the top of `createProject` with a `// widened to a parameter in the --database task` comment.
 
-- [ ] **Step 5: Run the full suite** — `npx vitest run`. Expected: green. The `commands.test.ts` full-scaffold test exercises the new copy path for real.
+- [x] **Step 5: Run the full suite** — `npx vitest run`. Expected: green. The `commands.test.ts` full-scaffold test exercises the new copy path for real.
 
-- [ ] **Step 6: Commit** — `git commit -am "refactor(templates): extract db/mongodb layer; delete dead auditMiddleware + crud-template"`
+- [x] **Step 6: Commit** — `git commit -am "refactor(templates): extract db/mongodb layer; delete dead auditMiddleware + crud-template"`
 
 ---
 

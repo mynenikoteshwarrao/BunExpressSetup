@@ -330,6 +330,8 @@ export const createProject = async (
     }
   }
 
+  const database = 'mongodb' as const; // widened to a parameter in the --database task
+
   log(`🚀 Creating TypeScript Bun API project: ${opts.name}`);
   log(`📁 Project directory: ${projectPath}`);
   await fs.ensureDir(projectPath);
@@ -384,6 +386,12 @@ export const createProject = async (
   if (await fs.pathExists(sharedSrcPath)) {
     await fs.copy(sharedSrcPath, projectSrcPath);
     log('✅ Copied shared source files');
+  }
+
+  const dbTemplateSrc = path.join(templatesDir(), 'db', database, 'src');
+  if (await fs.pathExists(dbTemplateSrc)) {
+    await fs.copy(dbTemplateSrc, projectSrcPath);
+    log(`✅ Copied ${database} source files`);
   }
 
   if (await fs.pathExists(projectSrcPath)) {

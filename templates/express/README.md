@@ -103,7 +103,6 @@ Generated code is provided "as-is" without warranty of any kind.
 │   │   ├── Task.ts            # Task enumeration for RBAC
 │   │   └── index.ts           # Enum exports
 │   ├── middleware/
-│   │   ├── auditMiddleware.ts  # Audit trail middleware
 │   │   ├── auth.ts            # JWT authentication middleware
 │   │   ├── authorize.ts       # Authorization middleware with RBAC
 │   │   ├── checkPermission.ts # Independent permission check middleware

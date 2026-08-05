@@ -17222,6 +17222,7 @@ var createProject = async (opts) => {
       throw new GeneratorError("DUPLICATE", `Target already exists: "${projectPath}"`);
     }
   }
+  const database = "mongodb";
   log(`\u{1F680} Creating TypeScript Bun API project: ${opts.name}`);
   log(`\u{1F4C1} Project directory: ${projectPath}`);
   await import_fs_extra2.default.ensureDir(projectPath);
@@ -17275,6 +17276,11 @@ var createProject = async (opts) => {
   if (await import_fs_extra2.default.pathExists(sharedSrcPath)) {
     await import_fs_extra2.default.copy(sharedSrcPath, projectSrcPath);
     log("\u2705 Copied shared source files");
+  }
+  const dbTemplateSrc = import_path2.default.join(templatesDir(), "db", database, "src");
+  if (await import_fs_extra2.default.pathExists(dbTemplateSrc)) {
+    await import_fs_extra2.default.copy(dbTemplateSrc, projectSrcPath);
+    log(`\u2705 Copied ${database} source files`);
   }
   if (await import_fs_extra2.default.pathExists(projectSrcPath)) {
     await replaceInDir(projectSrcPath, opts.name);

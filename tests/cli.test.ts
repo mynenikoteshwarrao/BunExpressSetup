@@ -89,11 +89,10 @@ describe('Koti CLI', () => {
 
   describe('Template files', () => {
     it('should have all required template source files', () => {
-      // Templates are split into per-framework (express/elysia) + shared layers.
+      // Templates are split into per-framework (express/elysia) + shared + db layers.
       const requiredFiles = [
         // Express framework template
         'templates/express/src/server.ts',
-        'templates/express/src/config/database.ts',
         'templates/express/src/config/swagger.ts',
         'templates/express/src/middleware/auth.ts',
         'templates/express/src/middleware/errorHandler.ts',
@@ -106,10 +105,13 @@ describe('Koti CLI', () => {
         'templates/elysia/src/routes/auth.ts',
         'templates/elysia/src/routes/index.ts',
         // Shared (framework-agnostic) layer
-        'templates/shared/src/models/User.ts',
-        'templates/shared/src/services/authService.ts',
         'templates/shared/src/types/api.ts',
         'templates/shared/src/utils/AppError.ts',
+        // MongoDB db layer
+        'templates/db/mongodb/src/config/database.ts',
+        'templates/db/mongodb/src/models/User.ts',
+        'templates/db/mongodb/src/services/authService.ts',
+        'templates/db/mongodb/src/seeds/seed.ts',
       ];
 
       for (const file of requiredFiles) {

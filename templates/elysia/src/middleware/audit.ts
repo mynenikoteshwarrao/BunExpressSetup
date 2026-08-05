@@ -2,9 +2,9 @@
  * Audit logging is performed INSIDE the services (parity with Express):
  * `documentService.updateDocument/deleteDocument` and `userService.deleteUser`
  * call `AuditService.logAction` directly, threaded with an `updatedBy`/`deletedBy`
- * actor id from the controller. The Express `auditMiddleware` (a res.json override
- * gated on `req.sessionID`) is DEAD/UNWIRED code and is intentionally NOT ported —
- * a global response hook here would double-log.
+ * actor id from the controller. Express once shipped an `auditMiddleware` (a res.json
+ * override gated on `req.sessionID`); it was dead/unwired code, was never ported here,
+ * and was deleted in v3.2 — a global response hook here would double-log.
  *
  * This module provides only a small helper to derive request metadata
  * (ip + user-agent) for any service-level audit entry, since Elysia has no

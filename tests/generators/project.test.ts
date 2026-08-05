@@ -8,6 +8,12 @@ const dirs: string[] = [];
 const tmp = async () => { const d = await fs.mkdtemp(path.join(os.tmpdir(), 'koti-proj-')); dirs.push(d); return d; };
 afterEach(async () => { while (dirs.length) await fs.remove(dirs.pop()!); });
 
+const createTestProject = async (framework: 'express' | 'elysia' = 'express'): Promise<string> => {
+  const parent = await tmp();
+  const { projectPath } = await createProject({ name: `${framework}-app`, framework, directory: parent, skipInstall: true });
+  return projectPath;
+};
+
 describe('createProject', () => {
   it('scaffolds an express project with secrets and koti.config.json (skipInstall)', async () => {
     const parent = await tmp();
@@ -37,6 +43,13 @@ describe('createProject', () => {
     const server = await fs.readFile(path.join(root, 'src', 'server.ts'), 'utf-8');
     expect(server).toContain('Elysia');
     expect(await fs.pathExists(path.join(root, 'src', 'models', 'User.ts'))).toBe(true);
+  }, 60000);
+  it('scaffolded express project still contains the db-owned files', async () => {
+    const dir = await createTestProject('express');
+    for (const f of ['src/config/database.ts', 'src/models/User.ts', 'src/services/authService.ts', 'src/seeds/seed.ts']) {
+      expect(await fs.pathExists(path.join(dir, f))).toBe(true);
+    }
+    expect(await fs.pathExists(path.join(dir, 'src/middleware/auditMiddleware.ts'))).toBe(false);
   }, 60000);
   it('rejects bad names, bad frameworks, and existing targets', async () => {
     const parent = await tmp();
