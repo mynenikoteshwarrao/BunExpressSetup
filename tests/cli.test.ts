@@ -127,6 +127,14 @@ describe('Koti CLI', () => {
           expect(await fs.readFile(f, 'utf8'), `${f} imports mongoose`).not.toMatch(/from 'mongoose'/);
         }
       }
+      // middleware must not query models directly — RBAC goes through userService
+      for (const f of ['templates/express/src/middleware/authorize.ts',
+                       'templates/express/src/middleware/checkPermission.ts',
+                       'templates/elysia/src/middleware/auth.ts',
+                       'templates/express/src/config/passport.ts']) {
+        const src = await fs.readFile(path.join(ROOT, f), 'utf8');
+        expect(src, `${f} touches User model directly`).not.toMatch(/User\.(findById|findOne)|from '\.\.\/models/);
+      }
     });
 
     it('db config exports the lifecycle contract', async () => {

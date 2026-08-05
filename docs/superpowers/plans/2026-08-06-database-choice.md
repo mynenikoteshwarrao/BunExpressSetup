@@ -242,7 +242,7 @@ export async function getUserWithRoles(id: string): Promise<UserWithRoles | null
 ```
 - Consumes: `authService.googleAuth(profile)` — already exists in the mongo authService (lines ~125-150); passport now delegates to it (the elysia `oauth.ts` precedent).
 
-- [ ] **Step 1: Extend the failing lock** — add to the single-axis test's assertions:
+- [x] **Step 1: Extend the failing lock** — add to the single-axis test's assertions:
 
 ```ts
 // middleware must not query models directly — RBAC goes through userService
@@ -255,12 +255,12 @@ for (const f of ['templates/express/src/middleware/authorize.ts',
 }
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (all four files hit the pattern).
+- [x] **Step 2: Run — expect FAIL** (all four files hit the pattern).
 
-- [ ] **Step 3: Implement.** `getUserWithRoles` in mongo userService: `const user = await User.findById(id).populate<{ roles: IRole[] }>('roles').lean(); if (!user) return null; return { id: String(user._id), isActive: user.isActive, roles: (user.roles ?? []).map(r => ({ name: r.name, tasks: r.tasks ?? [], isActive: r.isActive ?? true })) };`. Rewire the three middleware files to call it (imports via `'../services/userService'`), preserving each file's existing SUPER_ADMIN / task-check logic on the returned shape. `passport.ts`: verify callback body becomes `const user = await authService.googleAuth({ googleId: profile.id, email, firstName, lastName }); done(null, user);` matching authService.googleAuth's existing parameter shape (read it first and match exactly); `deserializeUser` uses `getUserWithRoles`.
+- [x] **Step 3: Implement.** `getUserWithRoles` in mongo userService: `const user = await User.findById(id).populate<{ roles: IRole[] }>('roles').lean(); if (!user) return null; return { id: String(user._id), isActive: user.isActive, roles: (user.roles ?? []).map(r => ({ name: r.name, tasks: r.tasks ?? [], isActive: r.isActive ?? true })) };`. Rewire the three middleware files to call it (imports via `'../services/userService'`), preserving each file's existing SUPER_ADMIN / task-check logic on the returned shape. `passport.ts`: verify callback body becomes `const user = await authService.googleAuth({ googleId: profile.id, email, firstName, lastName }); done(null, user);` matching authService.googleAuth's existing parameter shape (read it first and match exactly); `deserializeUser` uses `getUserWithRoles`.
 
-- [ ] **Step 4: Full suite green.** The security-hardening locks (`cli.test.ts:141-150`) must still pass untouched.
-- [ ] **Step 5: Commit** — `git commit -am "refactor(templates): RBAC + OAuth read through userService/authService seam"`
+- [x] **Step 4: Full suite green.** The security-hardening locks (`cli.test.ts:141-150`) must still pass untouched.
+- [x] **Step 5: Commit** — `git commit -am "refactor(templates): RBAC + OAuth read through userService/authService seam"`
 
 ---
 

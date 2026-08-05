@@ -20,6 +20,17 @@ export interface IUpdateUserInput {
   isActive?: boolean;
 }
 
+/**
+ * Minimal user shape the RBAC middleware needs. Both db layers expose
+ * `getUserWithRoles` with this exact signature — it is the auth-path seam
+ * that keeps the middleware framework-only.
+ */
+export interface UserWithRoles {
+  id: string;
+  isActive: boolean;
+  roles: Array<{ name: string; tasks: string[]; isActive: boolean }>;
+}
+
 export interface IUserListOptions {
   page?: number;
   limit?: number;
@@ -214,4 +225,22 @@ export const assignRoles = async (userId: string, roleIds: string[]) => {
   await user.save();
 
   return getUserById(userId);
+};
+
+/**
+ * Load a user's active-role tasks for RBAC checks.
+ * Returns null when the user does not exist.
+ */
+export const getUserWithRoles = async (id: string): Promise<UserWithRoles | null> => {
+  const user = await User.findById(id).populate<{ roles: IRole[] }>('roles').lean();
+  if (!user) return null;
+  return {
+    id: String(user._id),
+    isActive: user.isActive,
+    roles: (user.roles ?? []).map(r => ({
+      name: r.name,
+      tasks: r.tasks ?? [],
+      isActive: r.isActive ?? true,
+    })),
+  };
 };

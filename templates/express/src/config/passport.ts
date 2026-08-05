@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import User from '../models/User';
+import { googleAuth } from '../services/authService';
+import { getUserWithRoles } from '../services/userService';
 import { AppError } from '../utils/AppError';
 
 // Configure Google OAuth strategy if enabled
@@ -16,57 +17,40 @@ if (process.env.ENABLE_GOOGLE_AUTH === 'true') {
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // Check if user already exists with this Google ID
-      let user = await User.findOne({ googleId: profile.id });
-
-      if (user) {
-        return done(null, user);
-      }
-
-      // Check if user exists with the same email
       const email = profile.emails?.[0]?.value;
-      if (email) {
-        user = await User.findOne({ email });
-        if (user) {
-          // Link Google account to existing user
-          user.googleId = profile.id;
-          await user.save();
-          return done(null, user);
-        }
+      if (!email) {
+        return done(new AppError('Google account has no email address', 400), undefined);
       }
 
-      // Create new user
-      const newUser = new User({
+      // Single home for the find-by-googleId / link-by-email / create upsert.
+      const { user } = await googleAuth({
         googleId: profile.id,
+        email,
         username: profile.displayName || `user_${profile.id}`,
-        email: email,
         firstName: profile.name?.givenName,
         lastName: profile.name?.familyName,
-        profilePicture: profile.photos?.[0]?.value,
-        isEmailVerified: true, // Google emails are pre-verified
-        authProvider: 'google'
+        profilePicture: profile.photos?.[0]?.value
       });
 
-      await newUser.save();
-      return done(null, newUser);
+      return done(null, user);
     } catch (error) {
-      return done(error, null);
+      return done(error as Error, undefined);
     }
   }));
 }
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {
-  done(null, user._id);
+  done(null, String(user._id ?? user.id));
 });
 
 // Deserialize user from session
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user = await User.findById(id);
+    const user = await getUserWithRoles(id);
     done(null, user);
   } catch (error) {
-    done(error, null);
+    done(error as Error, null);
   }
 });
 
