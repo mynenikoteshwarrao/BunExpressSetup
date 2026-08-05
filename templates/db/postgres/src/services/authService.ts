@@ -8,6 +8,7 @@ import { userRoles } from '../models/UserRole';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/tokenUtils';
 import { AppError } from '../utils/AppError';
 import { sendEmail, emailTemplates } from '../config/email';
+import { normalizeEmail, normalizeUsername } from './normalize';
 import { PublicUser, toPublic } from './serialize';
 
 export interface IUserSignup {
@@ -58,7 +59,7 @@ const addRefreshToken = async (userId: string, token: string): Promise<void> => 
 
 export const login = async (email: string, password: string): Promise<IAuthResult & { roles: any[]; tasks: string[] }> => {
   // Login is the one read that needs the hidden password column.
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db.select().from(users).where(eq(users.email, normalizeEmail(email))).limit(1);
   if (!user) {
     throw new AppError('Invalid email or password', 401);
   }
@@ -98,19 +99,22 @@ export const login = async (email: string, password: string): Promise<IAuthResul
 
 export const signup = async (userData: IUserSignup): Promise<{ user?: PublicUser; message?: string }> => {
   try {
+    const email = normalizeEmail(userData.email);
+    const username = normalizeUsername(userData.username);
+
     const existing = await db.select({ email: users.email }).from(users)
-      .where(sql`${users.email} = ${userData.email} OR ${users.username} = ${userData.username}`).limit(1);
+      .where(sql`${users.email} = ${email} OR ${users.username} = ${username}`).limit(1);
 
     if (existing.length > 0) {
-      if (existing[0].email === userData.email) {
+      if (existing[0].email === email) {
         return { message: 'User already exists with this email' };
       }
       return { message: 'Username is already taken' };
     }
 
     const [newUser] = await db.insert(users).values({
-      username: userData.username,
-      email: userData.email,
+      username,
+      email,
       password: await hashPassword(userData.password),
       firstName: userData.firstName,
       lastName: userData.lastName,
@@ -119,9 +123,9 @@ export const signup = async (userData: IUserSignup): Promise<{ user?: PublicUser
     }).returning();
 
     try {
-      const welcomeTemplate = emailTemplates.welcomeEmail(userData.username);
+      const welcomeTemplate = emailTemplates.welcomeEmail(username);
       await sendEmail({
-        to: userData.email,
+        to: email,
         subject: welcomeTemplate.subject,
         html: welcomeTemplate.html,
         text: welcomeTemplate.text
@@ -147,7 +151,7 @@ export const googleAuth = async (googleUserData: IGoogleUserData): Promise<IAuth
     const [byGoogleId] = await tx.select().from(users).where(eq(users.googleId, googleUserData.googleId)).limit(1);
     if (byGoogleId) return byGoogleId;
 
-    const [byEmail] = await tx.select().from(users).where(eq(users.email, googleUserData.email)).limit(1);
+    const [byEmail] = await tx.select().from(users).where(eq(users.email, normalizeEmail(googleUserData.email))).limit(1);
     if (byEmail) {
       const [linked] = await tx.update(users).set({
         googleId: googleUserData.googleId,
@@ -160,8 +164,8 @@ export const googleAuth = async (googleUserData: IGoogleUserData): Promise<IAuth
 
     const [created] = await tx.insert(users).values({
       googleId: googleUserData.googleId,
-      username: googleUserData.username,
-      email: googleUserData.email,
+      username: normalizeUsername(googleUserData.username),
+      email: normalizeEmail(googleUserData.email),
       firstName: googleUserData.firstName,
       lastName: googleUserData.lastName,
       profilePicture: googleUserData.profilePicture,
@@ -220,7 +224,7 @@ export const resetPassword = async (token: string, newPassword: string): Promise
 };
 
 export const forgotPassword = async (email: string): Promise<void> => {
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db.select().from(users).where(eq(users.email, normalizeEmail(email))).limit(1);
 
   if (!user) {
     // Don't reveal if email exists
@@ -317,7 +321,7 @@ export const verifyEmailToken = async (token: string): Promise<void> => {
 };
 
 export const resendEmailVerification = async (email: string): Promise<void> => {
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db.select().from(users).where(eq(users.email, normalizeEmail(email))).limit(1);
 
   if (!user) {
     throw new AppError('User not found', 404);

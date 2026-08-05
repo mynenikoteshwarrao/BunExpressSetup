@@ -5,6 +5,7 @@ import { roles } from '../models/Role';
 import { userRoles } from '../models/UserRole';
 import { AppError } from '../utils/AppError';
 import { hashPassword } from './authService';
+import { normalizeEmail, normalizeUsername } from './normalize';
 import { PublicUser, toPublic } from './serialize';
 
 export interface ICreateUserInput {
@@ -143,11 +144,14 @@ export const getUserById = async (userId: string) => {
  * one transaction — a user must never exist without its intended roles.
  */
 export const createUser = async (data: ICreateUserInput) => {
+  const email = normalizeEmail(data.email);
+  const username = normalizeUsername(data.username);
+
   const existing = await db.select({ id: users.id, email: users.email }).from(users)
-    .where(or(eq(users.email, data.email), eq(users.username, data.username))).limit(1);
+    .where(or(eq(users.email, email), eq(users.username, username))).limit(1);
 
   if (existing.length > 0) {
-    if (existing[0].email === data.email) {
+    if (existing[0].email === email) {
       throw new AppError('A user with this email already exists', 409);
     }
     throw new AppError('This username is already taken', 409);
@@ -167,8 +171,8 @@ export const createUser = async (data: ICreateUserInput) => {
 
   const created = await db.transaction(async (tx) => {
     const [row] = await tx.insert(users).values({
-      username: data.username,
-      email: data.email,
+      username,
+      email,
       password,
       firstName: data.firstName,
       lastName: data.lastName,
@@ -197,21 +201,25 @@ export const updateUser = async (userId: string, data: IUpdateUserInput) => {
     throw new AppError('User not found', 404);
   }
 
-  if (data.username && data.username !== user.username) {
-    const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.username, data.username)).limit(1);
+  const changes = { ...data };
+  if (changes.username !== undefined) changes.username = normalizeUsername(changes.username);
+  if (changes.email !== undefined) changes.email = normalizeEmail(changes.email);
+
+  if (changes.username && changes.username !== user.username) {
+    const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.username, changes.username)).limit(1);
     if (taken) {
       throw new AppError('This username is already taken', 409);
     }
   }
 
-  if (data.email && data.email !== user.email) {
-    const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
+  if (changes.email && changes.email !== user.email) {
+    const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.email, changes.email)).limit(1);
     if (taken) {
       throw new AppError('A user with this email already exists', 409);
     }
   }
 
-  await db.update(users).set(data).where(eq(users.id, userId));
+  await db.update(users).set(changes).where(eq(users.id, userId));
 
   return getUserById(userId);
 };

@@ -304,6 +304,34 @@ describe('Koti CLI', () => {
       }
     });
 
+    // Mongo lowercases/trims email and trims username in the schema, on writes
+    // and on query filters alike. Postgres has no schema layer, so every site
+    // has to normalize explicitly or "John@Example.com" can never log in.
+    it('postgres normalizes email and username at every read and write', async () => {
+      const dir = path.join(ROOT, 'templates/db/postgres/src/services');
+      const auth = await fs.readFile(path.join(dir, 'authService.ts'), 'utf8');
+      const user = await fs.readFile(path.join(dir, 'userService.ts'), 'utf8');
+      expect(await fs.pathExists(path.join(dir, 'normalize.ts'))).toBe(true);
+
+      for (const [name, src] of [['authService', auth], ['userService', user]] as const) {
+        expect(src, `${name} does not import the normalizer`).toContain("from './normalize'");
+        // A request payload's field must never be compared or written straight
+        // through — it goes via the normalizer or a normalized local.
+        const RAW_INPUT = /\b(data|userData|googleUserData|input)\.(email|username)\b/;
+        const raw = (expr: string) => !/normalize/i.test(expr) && RAW_INPUT.test(expr);
+        for (const m of src.matchAll(/eq\(users\.(email|username),\s*([^)]+)\)/g)) {
+          expect(raw(m[2]), `${name} compares a raw ${m[1]}: ${m[0]}`).toBe(false);
+        }
+        for (const m of src.matchAll(/(?:^|[\s,{])(email|username):\s*([^,\n]+)/gm)) {
+          expect(raw(m[2]), `${name} writes a raw ${m[1]}: ${m[0].trim()}`).toBe(false);
+        }
+      }
+      for (const fn of ['login', 'signup', 'googleAuth', 'forgotPassword', 'resendEmailVerification']) {
+        const body = auth.slice(auth.indexOf(`export const ${fn} =`));
+        expect(body.slice(0, 900), `${fn} does not normalize`).toMatch(/normalizeEmail|normalizeUsername/);
+      }
+    });
+
     it('both service barrels re-export the same five modules', async () => {
       const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
       const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));
