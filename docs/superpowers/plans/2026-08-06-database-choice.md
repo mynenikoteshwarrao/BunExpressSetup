@@ -44,7 +44,7 @@
   // GeneratorError gains code 'UNSUPPORTED_DATABASE'
   ```
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/generators/context.test.ts`:
+- [x] **Step 1: Write the failing tests** — append to `tests/generators/context.test.ts`:
 
 ```ts
 describe('resolveProject database detection', () => {
@@ -87,7 +87,7 @@ describe('resolveProject database detection', () => {
 });
 ```
 
-- [ ] **Step 2: Update the fixture** — `tests/helpers/fakeProject.ts`:
+- [x] **Step 2: Update the fixture** — `tests/helpers/fakeProject.ts`:
 
 ```ts
 export async function makeFakeProject(
@@ -107,9 +107,9 @@ export async function makeFakeProject(
 ```
 Every existing call site compiles unchanged (`database` optional). Existing detection tests must stay green — the pre-3.2 fixture still carries the mongoose dep they rely on.
 
-- [ ] **Step 3: Run tests, verify the 5 new ones fail** — `npx vitest run tests/generators/context.test.ts`. Expected: new describe block fails (`ctx.database` undefined / no UNSUPPORTED_DATABASE).
+- [x] **Step 3: Run tests, verify the 5 new ones fail** — `npx vitest run tests/generators/context.test.ts`. Expected: new describe block fails (`ctx.database` undefined / no UNSUPPORTED_DATABASE).
 
-- [ ] **Step 4: Implement in `context.ts`:**
+- [x] **Step 4: Implement in `context.ts`:**
 
 ```ts
 export type Database = 'mongodb' | 'postgres';
@@ -119,9 +119,9 @@ Add `'UNSUPPORTED_DATABASE'` to the GeneratorError code union. Add `database: Da
 - config path: `if (config.database === undefined) { database = 'mongodb'; warnings.push("koti.config.json has no \"database\" key (pre-3.2 project) — assuming mongodb. Run koti db:switch or add the key to silence this."); } else if (!DATABASES.includes(config.database)) { throw new GeneratorError('UNSUPPORTED_DATABASE', `Unknown database "${config.database}" in koti.config.json. Supported: ${DATABASES.join(', ')}`); } else { database = config.database; }`
 - sniff path (config absent, existing fallback block at 105-118): frameworks sniff as today (elysia dep → elysia; express dep → express); database: `deps['drizzle-orm'] || deps.pg ? 'postgres' : deps.mongoose ? 'mongodb' : 'mongodb'` — and drop `deps.mongoose` from the *framework* condition at line 114 (`deps.express || deps.mongoose` becomes `deps.express || deps.mongoose || deps.pg || deps['drizzle-orm']` so DB-only dep sets still mark a koti project with framework defaulting to express + warning). Update the NOT_KOTI_PROJECT message at 118 to name `express/elysia/mongoose/drizzle-orm/pg`.
 
-- [ ] **Step 5: Run the full suite** — `npx vitest run`. Expected: all green (127 + 5).
+- [x] **Step 5: Run the full suite** — `npx vitest run`. Expected: all green (127 + 5).
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat(context): Database axis — type, detection, UNSUPPORTED_DATABASE"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "feat(context): Database axis — type, detection, UNSUPPORTED_DATABASE"`
 
 ---
 

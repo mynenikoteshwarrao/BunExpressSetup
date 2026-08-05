@@ -16817,6 +16817,7 @@ var import_fs_extra = __toESM(require_lib());
 var import_path = __toESM(require("path"));
 var import_crypto = __toESM(require("crypto"));
 var FRAMEWORKS = ["express", "elysia"];
+var DATABASES = ["mongodb", "postgres"];
 var FIELD_TYPES = ["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"];
 var GeneratorError = class extends Error {
   constructor(code, message) {
@@ -16869,12 +16870,24 @@ var resolveProject = async (root) => {
   if (await import_fs_extra.default.pathExists(configPath)) {
     try {
       const config = await import_fs_extra.default.readJson(configPath);
+      let framework = "express";
       if (config.framework === "express" || config.framework === "elysia") {
-        return { root, framework: config.framework, warnings };
+        framework = config.framework;
+      } else {
+        warnings.push(`Unknown framework "${config.framework}" in koti.config.json \u2014 defaulting to express`);
       }
-      warnings.push(`Unknown framework "${config.framework}" in koti.config.json \u2014 defaulting to express`);
-      return { root, framework: "express", warnings };
-    } catch {
+      let database2;
+      if (config.database === void 0) {
+        database2 = "mongodb";
+        warnings.push('koti.config.json has no "database" key (pre-3.2 project) \u2014 assuming mongodb. Run koti db:switch or add the key to silence this.');
+      } else if (!DATABASES.includes(config.database)) {
+        throw new GeneratorError("UNSUPPORTED_DATABASE", `Unknown database "${config.database}" in koti.config.json. Supported: ${DATABASES.join(", ")}`);
+      } else {
+        database2 = config.database;
+      }
+      return { root, framework, database: database2, warnings };
+    } catch (err) {
+      if (err instanceof GeneratorError) throw err;
       warnings.push("Unreadable koti.config.json \u2014 falling back to dependency detection");
     }
   }
@@ -16885,15 +16898,16 @@ var resolveProject = async (root) => {
   } catch {
     throw new GeneratorError("NOT_KOTI_PROJECT", `${root} has an unreadable package.json`);
   }
+  const database = deps["drizzle-orm"] || deps.pg ? "postgres" : "mongodb";
   if (deps.elysia) {
     warnings.push('No koti.config.json \u2014 framework "elysia" inferred from dependencies');
-    return { root, framework: "elysia", warnings };
+    return { root, framework: "elysia", database, warnings };
   }
-  if (deps.express || deps.mongoose) {
+  if (deps.express || deps.mongoose || deps.pg || deps["drizzle-orm"]) {
     warnings.push('No koti.config.json \u2014 framework "express" inferred from dependencies');
-    return { root, framework: "express", warnings };
+    return { root, framework: "express", database, warnings };
   }
-  throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose dependency)`);
+  throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose/drizzle-orm/pg dependency)`);
 };
 var updateIndexExport = async (dirPath, exportLine) => {
   const indexPath = import_path.default.join(dirPath, "index.ts");

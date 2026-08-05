@@ -2,20 +2,30 @@ import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
 
-export async function makeFakeProject(framework: 'express' | 'elysia'): Promise<string> {
+export async function makeFakeProject(
+  framework: 'express' | 'elysia',
+  database?: 'mongodb' | 'postgres', // undefined = pre-3.2 fixture: no database key, mongoose dep
+): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'koti-test-'));
+  const deps: Record<string, string> =
+    framework === 'elysia' ? { elysia: '^1.0.0' } : { express: '^4.18.0' };
+  if (database === 'postgres') {
+    deps['drizzle-orm'] = '^0.44.0';
+    deps.pg = '^8.16.0';
+  } else {
+    deps.mongoose = '^8.0.0';
+  }
   await fs.writeJson(path.join(root, 'package.json'), {
     name: 'fake-project',
     version: '1.0.0',
-    dependencies: {
-      mongoose: '^8.0.0',
-      ...(framework === 'express' ? { express: '^4.18.0' } : { elysia: '^1.0.0' }),
-    },
+    dependencies: deps,
     scripts: { seed: 'node -e "console.log(\'seeded\')"', 'seed:roles': 'node -e "console.log(\'roles-seeded\')"' },
   });
-  await fs.writeJson(path.join(root, 'koti.config.json'), {
+  const config: Record<string, unknown> = {
     framework, kotiVersion: '3.1.0', createdAt: '2026-07-19T00:00:00.000Z',
-  });
+  };
+  if (database) config.database = database;
+  await fs.writeJson(path.join(root, 'koti.config.json'), config);
   for (const d of ['models', 'controllers', 'services', 'middleware', 'routes', 'enums', 'validators']) {
     await fs.ensureDir(path.join(root, 'src', d));
   }

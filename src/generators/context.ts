@@ -5,6 +5,9 @@ import crypto from 'crypto';
 export type Framework = 'express' | 'elysia';
 export const FRAMEWORKS: readonly Framework[] = ['express', 'elysia'] as const;
 
+export type Database = 'mongodb' | 'postgres';
+export const DATABASES: readonly Database[] = ['mongodb', 'postgres'] as const;
+
 export type FieldType = 'String' | 'Number' | 'Date' | 'Boolean' | 'ObjectId' | 'Array' | 'Mixed' | 'JSON';
 export const FIELD_TYPES: readonly FieldType[] = ['String', 'Number', 'Date', 'Boolean', 'ObjectId', 'Array', 'Mixed', 'JSON'] as const;
 export const ENUM_TYPES = ['string', 'number'] as const;
@@ -20,7 +23,7 @@ export interface FieldSpec {
 
 export type GeneratorErrorCode =
   | 'NOT_KOTI_PROJECT' | 'DUPLICATE' | 'INVALID_INPUT'
-  | 'UNSUPPORTED_FRAMEWORK' | 'IO_ERROR' | 'INSTALL_FAILED';
+  | 'UNSUPPORTED_FRAMEWORK' | 'UNSUPPORTED_DATABASE' | 'IO_ERROR' | 'INSTALL_FAILED';
 
 export class GeneratorError extends Error {
   constructor(public readonly code: GeneratorErrorCode, message: string) {
@@ -37,6 +40,7 @@ export interface GeneratorResult {
 export interface ProjectContext {
   root: string;
   framework: Framework;
+  database: Database;
   warnings: string[];
 }
 
@@ -91,12 +95,24 @@ export const resolveProject = async (root: string): Promise<ProjectContext> => {
   if (await fs.pathExists(configPath)) {
     try {
       const config = await fs.readJson(configPath);
+      let framework: Framework = 'express';
       if (config.framework === 'express' || config.framework === 'elysia') {
-        return { root, framework: config.framework, warnings };
+        framework = config.framework;
+      } else {
+        warnings.push(`Unknown framework "${config.framework}" in koti.config.json — defaulting to express`);
       }
-      warnings.push(`Unknown framework "${config.framework}" in koti.config.json — defaulting to express`);
-      return { root, framework: 'express', warnings };
-    } catch {
+      let database: Database;
+      if (config.database === undefined) {
+        database = 'mongodb';
+        warnings.push('koti.config.json has no "database" key (pre-3.2 project) — assuming mongodb. Run koti db:switch or add the key to silence this.');
+      } else if (!DATABASES.includes(config.database)) {
+        throw new GeneratorError('UNSUPPORTED_DATABASE', `Unknown database "${config.database}" in koti.config.json. Supported: ${DATABASES.join(', ')}`);
+      } else {
+        database = config.database;
+      }
+      return { root, framework, database, warnings };
+    } catch (err) {
+      if (err instanceof GeneratorError) throw err;
       warnings.push('Unreadable koti.config.json — falling back to dependency detection');
     }
   }
@@ -107,15 +123,16 @@ export const resolveProject = async (root: string): Promise<ProjectContext> => {
   } catch {
     throw new GeneratorError('NOT_KOTI_PROJECT', `${root} has an unreadable package.json`);
   }
+  const database: Database = deps['drizzle-orm'] || deps.pg ? 'postgres' : 'mongodb';
   if (deps.elysia) {
     warnings.push('No koti.config.json — framework "elysia" inferred from dependencies');
-    return { root, framework: 'elysia', warnings };
+    return { root, framework: 'elysia', database, warnings };
   }
-  if (deps.express || deps.mongoose) {
+  if (deps.express || deps.mongoose || deps.pg || deps['drizzle-orm']) {
     warnings.push('No koti.config.json — framework "express" inferred from dependencies');
-    return { root, framework: 'express', warnings };
+    return { root, framework: 'express', database, warnings };
   }
-  throw new GeneratorError('NOT_KOTI_PROJECT', `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose dependency)`);
+  throw new GeneratorError('NOT_KOTI_PROJECT', `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose/drizzle-orm/pg dependency)`);
 };
 
 // --- moved verbatim from cli.ts:1404-1422 ---
