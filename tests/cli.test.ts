@@ -276,11 +276,22 @@ describe('Koti CLI', () => {
       // HS256 pinning itself lives in the shared tokenUtils, locked by test #4 above.
     });
 
-    it('postgres serializer strips every secret field from wire responses', async () => {
-      const c = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/serialize.ts'), 'utf8');
-      for (const secret of ['password', 'refreshTokens', 'passwordResetToken', 'passwordResetExpires', 'emailVerificationToken']) {
-        expect(c, `serialize.ts does not strip ${secret}`).toContain(`'${secret}'`);
-      }
+    // Derived, not hand-listed: mongo's toJSON transform is the source of
+    // truth, so adding a secret there without teaching the postgres serializer
+    // about it fails here instead of leaking on the wire.
+    it('postgres serializer strips exactly the fields mongo deletes in toJSON', async () => {
+      const userModel = await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/models/User.ts'), 'utf8');
+      const transform = userModel.slice(userModel.indexOf('toJSON:'), userModel.indexOf('toObject:'));
+      // `_id`/`__v` are mongo bookkeeping, not secrets — postgres has neither.
+      const mongoSecrets = [...transform.matchAll(/delete ret\.(\w+);/g)]
+        .map(m => m[1]).filter(f => !['_id', '__v'].includes(f)).sort();
+      expect(mongoSecrets.length, 'no delete list found in the toJSON transform').toBeGreaterThan(0);
+
+      const serialize = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/serialize.ts'), 'utf8');
+      const block = serialize.slice(serialize.indexOf('SECRET_FIELDS = ['), serialize.indexOf('] as const'));
+      const pgSecrets = [...block.matchAll(/'(\w+)'/g)].map(m => m[1]).sort();
+
+      expect(pgSecrets).toEqual(mongoSecrets);
     });
 
     // Mongoose hashes in a pre('save') hook. Postgres has none, so every write

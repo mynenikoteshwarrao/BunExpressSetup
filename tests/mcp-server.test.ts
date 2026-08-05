@@ -109,12 +109,36 @@ describe('koti-mcp end to end', () => {
     expect(alive.result.tools.length).toBe(10);
   });
 
+  // The resources have to resolve against a postgres project too, and this is
+  // the only window in which pg-api is still on postgres.
+  it('the models resource reads a postgres project', async () => {
+    const projDir = path.join(workDir, 'pg-api');
+    const created = await client.callTool('create_model', {
+      modelName: 'Invoice', fields: [{ name: 'total', type: 'Number' }],
+      generateCrud: true, generateTasks: false, projectPath: projDir,
+    });
+    expect(created.result.isError).toBeFalsy();
+    expect(await fs.readFile(path.join(projDir, 'src/models/Invoice.ts'), 'utf-8')).toContain('pgTable');
+
+    const pgClient = new McpTestClient(SERVER, { KOTI_PROJECT_ROOT: projDir });
+    try {
+      await pgClient.init();
+      const res = await pgClient.request('resources/read', { uri: 'koti://project/models' });
+      expect(res.result.contents[0].text).toContain('Invoice');
+    } finally {
+      pgClient.kill();
+    }
+  }, 120_000);
+
   it('switch_database converts a scaffolded project', async () => {
     const projDir = path.join(workDir, 'pg-api');   // scaffolded mongodb-free above
     const res = await client.callTool('switch_database', { projectPath: projDir, database: 'mongodb' });
     expect(res.result.isError).toBeFalsy();
     const cfg = await fs.readJson(path.join(projDir, 'koti.config.json'));
     expect(cfg.database).toBe('mongodb');
+    // The manifest survives the switch, and the model came back in mongo idiom.
+    expect(cfg.models?.Invoice).toBeDefined();
+    expect(await fs.readFile(path.join(projDir, 'src/models/Invoice.ts'), 'utf-8')).toContain('new Schema<');
   }, 60_000);
 
   it('resources resolve against KOTI_PROJECT_ROOT', async () => {

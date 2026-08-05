@@ -108,6 +108,18 @@ describe('generateDrizzleCRUDService', () => {
     expect(src).toContain('count()');
   });
 
+  // ilike over a jsonb column is a runtime type error in postgres, so the
+  // jsonb-backed types have to stay out of the search clause — not just the
+  // ones that happen to be non-String today.
+  it('never applies ilike to a jsonb-backed column', () => {
+    const src = generateDrizzleCRUDService('Product', fields);
+    for (const jsonb of ['meta', 'tags']) {
+      expect(src, `search includes jsonb field ${jsonb}`).not.toContain(`ilike(products.${jsonb}`);
+    }
+    const searched = [...src.matchAll(/ilike\(products\.(\w+),/g)].map(m => m[1]).sort();
+    expect(searched).toEqual(fields.filter(f => f.type === 'String').map(f => f.name).sort());
+  });
+
   it('keeps the mongoose service API surface', () => {
     const src = generateDrizzleCRUDService('Product', fields);
     for (const method of ['getAll', 'getById', 'create', 'update', 'delete']) {
