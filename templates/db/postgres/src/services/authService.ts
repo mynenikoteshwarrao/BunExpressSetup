@@ -8,7 +8,7 @@ import { userRoles } from '../models/UserRole';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/tokenUtils';
 import { AppError } from '../utils/AppError';
 import { sendEmail, emailTemplates } from '../config/email';
-import { normalizeEmail, normalizeUsername } from './normalize';
+import { definedOnly, normalizeEmail, normalizeUsername } from './normalize';
 import { PublicUser, toPublic } from './serialize';
 
 export interface IUserSignup {
@@ -361,6 +361,12 @@ export const resendEmailVerification = async (email: string): Promise<void> => {
 
 // Update user profile
 export const updateUserProfile = async (userId: string, updates: Partial<typeof users.$inferInsert>): Promise<PublicUser | null> => {
-  const [updated] = await db.update(users).set(updates).where(eq(users.id, userId)).returning();
+  const changes = definedOnly(updates);
+  // An empty patch is a no-op on mongo, not a 500 — return the row as it is.
+  if (Object.keys(changes).length === 0) {
+    const [current] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    return current ? toPublic(current) : null;
+  }
+  const [updated] = await db.update(users).set(changes).where(eq(users.id, userId)).returning();
   return updated ? toPublic(updated) : null;
 };

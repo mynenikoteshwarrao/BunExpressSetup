@@ -5,7 +5,7 @@ import { roles } from '../models/Role';
 import { userRoles } from '../models/UserRole';
 import { AppError } from '../utils/AppError';
 import { hashPassword } from './authService';
-import { normalizeEmail, normalizeUsername } from './normalize';
+import { definedOnly, normalizeEmail, normalizeUsername } from './normalize';
 import { PublicUser, toPublic } from './serialize';
 
 export interface ICreateUserInput {
@@ -201,9 +201,15 @@ export const updateUser = async (userId: string, data: IUpdateUserInput) => {
     throw new AppError('User not found', 404);
   }
 
-  const changes = { ...data };
+  const changes = definedOnly(data);
   if (changes.username !== undefined) changes.username = normalizeUsername(changes.username);
   if (changes.email !== undefined) changes.email = normalizeEmail(changes.email);
+
+  // Mongo's Object.assign + save() answered 200 unchanged for an empty patch;
+  // drizzle would throw "No values to set".
+  if (Object.keys(changes).length === 0) {
+    return getUserById(userId);
+  }
 
   if (changes.username && changes.username !== user.username) {
     const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.username, changes.username)).limit(1);

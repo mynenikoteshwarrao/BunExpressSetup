@@ -332,6 +332,19 @@ describe('Koti CLI', () => {
       }
     });
 
+    // Mongo's Object.assign + save() treats an all-undefined patch as a no-op
+    // and answers 200. Drizzle throws "No values to set" — a 500 for a request
+    // mongo accepted, so every update path filters first and short-circuits.
+    it('postgres update paths drop undefined keys and no-op on an empty patch', async () => {
+      const dir = path.join(ROOT, 'templates/db/postgres/src/services');
+      for (const file of ['userService.ts', 'authService.ts', 'documentService.ts']) {
+        const src = await fs.readFile(path.join(dir, file), 'utf8');
+        expect(src, `${file} does not filter undefined update keys`).toContain('definedOnly');
+      }
+      const helper = await fs.readFile(path.join(dir, 'normalize.ts'), 'utf8');
+      expect(helper).toContain('export const definedOnly');
+    });
+
     it('both service barrels re-export the same five modules', async () => {
       const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
       const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));

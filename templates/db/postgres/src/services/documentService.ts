@@ -8,6 +8,7 @@ import { s3Config } from '../config/s3';
 import { logger } from '../config/logger';
 import { AuditService } from './auditService';
 import { AppError } from '../utils/AppError';
+import { definedOnly } from './normalize';
 
 interface UploadOptions {
   description?: string;
@@ -272,7 +273,13 @@ class DocumentService {
       throw new AppError('Document not found', 404);
     }
 
-    const [updatedDoc] = await db.update(documents).set(updates).where(live).returning();
+    const changes = definedOnly(updates);
+    // Mongo treated an empty patch as a no-op; drizzle would throw here.
+    if (Object.keys(changes).length === 0) {
+      return originalDoc;
+    }
+
+    const [updatedDoc] = await db.update(documents).set(changes).where(live).returning();
 
     // Log audit trail
     if (updatedDoc && updatedBy) {
