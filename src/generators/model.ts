@@ -6,8 +6,8 @@ import {
   BUILTIN_MODELS, ModelManifestEntry, readModelManifest, upsertModelManifest,
 } from './context';
 import { addTaskToEnum } from './task';
-import { generateTypeScriptModel } from './crud/modelFile';
-import { generateCRUDService } from './crud/service';
+import { generateTypeScriptModel } from './crud/mongoose/modelFile';
+import { generateCRUDService } from './crud/mongoose/service';
 import { generateCRUDController, generateJoiValidation, generateCRUDRoutes } from './crud/express';
 import { generateElysiaCrudController, generateTypeBoxValidator, generateElysiaCrudRoutes } from './crud/elysia';
 
@@ -248,7 +248,7 @@ export const parseExistingModel = async (projectRoot: string, name: string): Pro
   const schemaContent = schemaMatch[1];
   // Optional `[` / `]` wrapper matches the array-of-mixed form generateTypeScriptModel
   // emits for Array fields, e.g. `tags: [{ type: Schema.Types.Mixed, index: true }]`
-  // (see generators/crud/modelFile.ts) — the plain `word: { ... }` form covers everything else.
+  // (see generators/crud/mongoose/modelFile.ts) — the plain `word: { ... }` form covers everything else.
   const fieldMatches = schemaContent.match(/(\w+):\s*(\[)?\{[^}]+\}(\])?/g);
 
   if (fieldMatches) {

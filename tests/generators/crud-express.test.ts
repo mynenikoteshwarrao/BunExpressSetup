@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateTypeScriptModel } from '../../src/generators/crud/modelFile';
-import { generateCRUDService } from '../../src/generators/crud/service';
+import { generateTypeScriptModel } from '../../src/generators/crud/mongoose/modelFile';
+import { generateCRUDService } from '../../src/generators/crud/mongoose/service';
 import { FieldSpec } from '../../src/generators/context';
 import { generateCRUDController, generateJoiValidation, generateCRUDRoutes } from '../../src/generators/crud/express';
 
@@ -73,5 +73,14 @@ describe('generateCRUDRoutes (express)', () => {
     const src = generateCRUDRoutes('Product', fields, false);
     expect(src).not.toContain('checkPermission');
     expect(src).toContain(`router.get('/', auth, productController.getAll)`);
+  });
+});
+
+describe('generateTypeScriptModel ObjectId emission', () => {
+  it('emits Schema.Types.ObjectId for ObjectId fields (regression: bare ObjectId was unbound)', () => {
+    const out = generateTypeScriptModel('Order', [{ name: 'ownerId', type: 'ObjectId', required: true }]);
+    expect(out).toContain('ownerId: { type: Schema.Types.ObjectId,  required: true }');
+    expect(out).not.toMatch(/type: ObjectId[,\s}]/);
+    expect(out).toContain('ownerId: Types.ObjectId;'); // interface side unchanged
   });
 });

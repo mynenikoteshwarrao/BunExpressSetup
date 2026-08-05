@@ -5514,7 +5514,7 @@ var createMiddleware = async (opts) => {
 var import_fs_extra7 = __toESM(require_lib());
 var import_path7 = __toESM(require("path"));
 
-// src/generators/crud/modelFile.ts
+// src/generators/crud/mongoose/modelFile.ts
 var generateTypeScriptModel = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
   const fieldsCode = fields.map((field) => {
@@ -5527,7 +5527,7 @@ var generateTypeScriptModel = (modelName, fields) => {
     if (field.type === "Array") {
       return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
     }
-    const mongooseType = field.type === "Mixed" || field.type === "JSON" ? "Schema.Types.Mixed" : field.type;
+    const mongooseType = field.type === "Mixed" || field.type === "JSON" ? "Schema.Types.Mixed" : field.type === "ObjectId" ? "Schema.Types.ObjectId" : field.type;
     return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
   }).join(",\n");
   return `import { Schema, model, Document, Types } from 'mongoose';
@@ -5552,7 +5552,7 @@ export default ${capitalizedName};
 `;
 };
 
-// src/generators/crud/service.ts
+// src/generators/crud/mongoose/service.ts
 var generateCRUDService = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
   const camelCaseName = toCamelCase(modelName);

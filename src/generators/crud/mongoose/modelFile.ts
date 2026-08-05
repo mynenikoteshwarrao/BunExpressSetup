@@ -1,4 +1,4 @@
-import { FieldSpec, capitalize } from '../context';
+import { FieldSpec, capitalize } from '../../context';
 
 // Generate TypeScript Model
 // moved from cli.ts:554-591 (generateTypeScriptModel) with fixes:
@@ -23,7 +23,11 @@ export const generateTypeScriptModel = (modelName: string, fields: FieldSpec[]):
       // form and typechecks cleanly against `any[]`.
       return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
     }
-    const mongooseType = (field.type === 'Mixed' || field.type === 'JSON') ? 'Schema.Types.Mixed' : field.type;
+    // Only `Schema, model, Document, Types` are imported by the emitted file, so a
+    // bare `ObjectId` would be an unbound identifier — it must be namespaced.
+    const mongooseType = (field.type === 'Mixed' || field.type === 'JSON') ? 'Schema.Types.Mixed'
+      : field.type === 'ObjectId' ? 'Schema.Types.ObjectId'
+      : field.type;
     return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
   }).join(',\n');
 

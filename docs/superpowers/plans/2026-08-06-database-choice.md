@@ -342,7 +342,7 @@ it('importManifestFromSource skips built-ins and index.ts, tolerates parse failu
 **Interfaces:**
 - Produces: `generateTypeScriptModel(modelName: string, fields: FieldSpec[]): string` and `generateCRUDService(modelName: string, fields: FieldSpec[]): string` — same signatures, new module paths `../crud/mongoose/modelFile` / `../crud/mongoose/service`.
 
-- [ ] **Step 1: Failing test** (this is the live-bug regression, spec §6.2 †):
+- [x] **Step 1: Failing test** (this is the live-bug regression, spec §6.2 †):
 
 ```ts
 it('emits Schema.Types.ObjectId for ObjectId fields (regression: bare ObjectId was unbound)', () => {
@@ -353,10 +353,10 @@ it('emits Schema.Types.ObjectId for ObjectId fields (regression: bare ObjectId w
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (`type: ObjectId` emitted today).
-- [ ] **Step 3: Implement** — in the moved `modelFile.ts`, the type emission (old lines 26-27) becomes: Mixed/JSON → `Schema.Types.Mixed` (existing), **ObjectId → `Schema.Types.ObjectId` (new)**, everything else verbatim. Update `model.ts` import paths. Preserve the double-space emission convention exactly (edit-model.test.ts:81 asserts it).
-- [ ] **Step 4: Full suite green.**
-- [ ] **Step 5: Commit** — `git commit -am "fix(generators): ObjectId fields emit Schema.Types.ObjectId; emitters move to crud/mongoose/"`
+- [x] **Step 2: Run — expect FAIL** (`type: ObjectId` emitted today).
+- [x] **Step 3: Implement** — in the moved `modelFile.ts`, the type emission (old lines 26-27) becomes: Mixed/JSON → `Schema.Types.Mixed` (existing), **ObjectId → `Schema.Types.ObjectId` (new)**, everything else verbatim. Update `model.ts` import paths. Preserve the double-space emission convention exactly (edit-model.test.ts:81 asserts it).
+- [x] **Step 4: Full suite green.**
+- [x] **Step 5: Commit** — `git commit -am "fix(generators): ObjectId fields emit Schema.Types.ObjectId; emitters move to crud/mongoose/"`
 
 ---
 

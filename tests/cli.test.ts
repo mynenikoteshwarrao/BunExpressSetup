@@ -224,10 +224,10 @@ describe('Koti CLI', () => {
   describe('Generated code consistency', () => {
     it('CRUD generators should use toCamelCase not toLowerCase', () => {
       // generateCRUDController/generateCRUDRoutes live in crud/express.ts,
-      // generateCRUDService lives in crud/service.ts (moved out of cli.ts in Task 7).
+      // generateCRUDService lives in crud/mongoose/service.ts (moved out of cli.ts in Task 7).
       const crudFunctions = [
         { fn: 'generateCRUDController', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
-        { fn: 'generateCRUDService', file: path.join(ROOT, 'src', 'generators', 'crud', 'service.ts') },
+        { fn: 'generateCRUDService', file: path.join(ROOT, 'src', 'generators', 'crud', 'mongoose', 'service.ts') },
         { fn: 'generateCRUDRoutes', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
       ];
 

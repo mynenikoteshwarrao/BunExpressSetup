@@ -1,4 +1,4 @@
-import { FieldSpec, capitalize, toCamelCase } from '../context';
+import { FieldSpec, capitalize, toCamelCase } from '../../context';
 
 // Generate CRUD Service
 // moved verbatim from cli.ts:737-848 (generateCRUDService), typed signature (FieldSpec[] instead of any[])
