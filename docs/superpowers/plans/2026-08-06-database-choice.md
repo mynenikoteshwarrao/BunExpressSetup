@@ -560,9 +560,9 @@ Implementation notes that MUST be honored (each maps to a spec §5 bullet):
   - `documentService`: metadata dot-path query becomes `sql`${documents.metadata}->>'type' = 'profile_image'``; soft-delete via `update … set isDeleted`; pagination identical envelope.
   - `tinyUrlService.resolve`: adds `and(eq(tinyUrls.shortCode, code), gt(tinyUrls.createdAt, sql`now() - interval '7 days'`))` — the TTL replacement; `cleanupUrls.ts` deletes expired rows and is wired to `cleanup:urls` (fragment from Task 8).
   - Seeds: same role/user data and idempotence checks as mongo seeds (read them first), through `db` + `closeDB()` in `finally`; **same filenames** `seed.ts`/`seedRoles.ts` so `seed`/`seed:roles` scripts and MCP `seed_database` work unmodified.
-- [ ] **Step 1: Extend the failing parity locks to all five services + require `templates/db/postgres/src/seeds/seed.ts` in required-files.**
-- [ ] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: Suite green + scratch `tsc --noEmit`.**
-- [ ] **Step 5: Commit** — `git commit -am "feat(templates): postgres audit/document/tinyUrl services, seeds, url cleanup"`
+- [x] **Step 1: Extend the failing parity locks to all five services + require `templates/db/postgres/src/seeds/seed.ts` in required-files.**
+- [x] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: Suite green + scratch `tsc --noEmit`.**
+- [x] **Step 5: Commit** — `git commit -am "feat(templates): postgres audit/document/tinyUrl services, seeds, url cleanup"`
 
 ---
 

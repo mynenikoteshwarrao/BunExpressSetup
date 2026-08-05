@@ -115,6 +115,7 @@ describe('Koti CLI', () => {
         'templates/db/mongodb/src/seeds/seed.ts',
         // PostgreSQL db layer
         'templates/db/postgres/src/config/database.ts',
+        'templates/db/postgres/src/seeds/seed.ts',
         'templates/db/postgres/drizzle.config.ts',
       ];
 
@@ -236,14 +237,17 @@ describe('Koti CLI', () => {
   // routes are framework-axis files and are never regenerated on db:switch,
   // so any name that exists on one side and not the other breaks a switch.
   describe('db layer parity', () => {
+    // `class` and `interface` are in the pattern because auditService and
+    // documentService expose their whole surface that way — a function-only
+    // regex would compare two empty sets and pass vacuously.
     const exportedNames = (src: string): Set<string> => {
       const names = new Set<string>();
       for (const m of src.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)) names.add(m[1]);
-      for (const m of src.matchAll(/export\s+const\s+(\w+)/g)) names.add(m[1]);
+      for (const m of src.matchAll(/export\s+(?:const|class|interface)\s+(\w+)/g)) names.add(m[1]);
       return names;
     };
 
-    for (const service of ['userService', 'authService']) {
+    for (const service of ['userService', 'authService', 'auditService', 'documentService', 'tinyUrlService']) {
       it(`postgres ${service} exports every function the mongodb one does`, async () => {
         const mongo = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/mongodb/src/services/${service}.ts`), 'utf8'));
         const pg = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/postgres/src/services/${service}.ts`), 'utf8'));
@@ -266,6 +270,24 @@ describe('Koti CLI', () => {
       for (const secret of ['password', 'refreshTokens', 'passwordResetToken', 'passwordResetExpires', 'emailVerificationToken']) {
         expect(c, `serialize.ts does not strip ${secret}`).toContain(`'${secret}'`);
       }
+    });
+
+    it('both service barrels re-export the same five modules', async () => {
+      const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
+      const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));
+      const pg = modules(await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/index.ts'), 'utf8'));
+      expect([...pg].sort()).toEqual([...mongo].sort());
+    });
+
+    // Postgres has no TTL index, so the mongo 7-day expiry has to be enforced
+    // at read time and reclaimed by a script (spec §5).
+    it('postgres tinyUrl expiry is enforced in the query and reclaimed by a script', async () => {
+      const svc = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/tinyUrlService.ts'), 'utf8');
+      expect(svc).toContain("interval '7 days'");
+      const cleanup = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/scripts/cleanupUrls.ts'), 'utf8');
+      expect(cleanup).toContain('delete(tinyUrls)');
+      const deps = JSON.parse(await fs.readFile(path.join(ROOT, 'templates/db/postgres/package.deps.json'), 'utf8'));
+      expect(Object.keys(deps.scripts)).toContain('cleanup:urls');
     });
   });
 
