@@ -581,11 +581,15 @@ MAX_PAGE_LIMIT=100`;
   log('✅ Created file: .env (with auto-generated JWT secrets)');
 
   // --- koti.config.json ---
+  // `models` is written empty rather than omitted: db:switch treats a missing
+  // manifest on a postgres project as corruption, and that signal only works
+  // if every 3.2 project starts with the key present.
   const kotiConfig = {
     framework,
     database,
     kotiVersion: getVersion(),
     createdAt: new Date().toISOString(),
+    models: {},
   };
   const configPath = path.join(projectPath, 'koti.config.json');
   await fs.writeFile(configPath, JSON.stringify(kotiConfig, null, 2));

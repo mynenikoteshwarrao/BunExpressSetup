@@ -683,7 +683,7 @@ Algorithm = spec §7.2 steps 1-9 verbatim — implement in that order; key mecha
 - .env/.env.example: comment out the old DB line (`# MONGODB_URI=...` / `# DATABASE_URL=...`), insert the target fragment (PROJECT_NAME from package.json `name`).
 - Update `koti.config.json.database`; return warnings + a `nextSteps` string list (install; postgres: `db:generate` then `db:migrate`; start DB; re-seed; migration-history caveat).
 
-- [ ] **Step 1: Write the failing suite:**
+- [x] **Step 1: Write the failing suite:**
 
 ```ts
 describe('switchDatabase', () => {
@@ -743,8 +743,8 @@ describe('switchDatabase', () => {
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL (module doesn't exist).  Step 3: Implement `switchDb.ts` per the mechanics above.  Step 4: Full suite green.**
-- [ ] **Step 5: Commit** — `git commit -am "feat(generators): switchDatabase — code-only db conversion with backups + manifest regeneration"`
+- [x] **Step 2: Run — expect FAIL (module doesn't exist).  Step 3: Implement `switchDb.ts` per the mechanics above.  Step 4: Full suite green.**
+- [x] **Step 5: Commit** — `git commit -am "feat(generators): switchDatabase — code-only db conversion with backups + manifest regeneration"`
 
 ---
 

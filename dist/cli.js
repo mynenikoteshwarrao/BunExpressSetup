@@ -7204,7 +7204,8 @@ MAX_PAGE_LIMIT=100`;
     framework,
     database,
     kotiVersion: getVersion(),
-    createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    models: {}
   };
   const configPath = import_path8.default.join(projectPath, "koti.config.json");
   await import_fs_extra8.default.writeFile(configPath, JSON.stringify(kotiConfig, null, 2));
