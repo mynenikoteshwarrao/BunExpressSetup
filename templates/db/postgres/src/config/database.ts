@@ -1,5 +1,12 @@
+import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+
+// The pool is built at import time, and `import` is hoisted above the
+// `dotenv.config()` call in server.ts and the seed scripts — so this module
+// has to load .env itself or DATABASE_URL is never seen. dotenv never
+// overwrites variables that are already set, so a real environment wins.
+dotenv.config();
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set. Add it to .env (see .env.example).');

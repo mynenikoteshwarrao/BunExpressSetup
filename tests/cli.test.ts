@@ -150,6 +150,17 @@ describe('Koti CLI', () => {
       }
     });
 
+    // Found by the phase-2 live smoke: the pool is constructed at import time,
+    // which is hoisted above every caller's own dotenv.config(), so this module
+    // must load .env before it reads DATABASE_URL or seeds and boot both die.
+    it('postgres db config loads dotenv before reading DATABASE_URL', async () => {
+      const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/config/database.ts'), 'utf8');
+      const dotenvCall = src.indexOf('dotenv.config()');
+      const firstEnvRead = src.indexOf('process.env.DATABASE_URL');
+      expect(dotenvCall, 'database.ts never calls dotenv.config()').toBeGreaterThan(-1);
+      expect(dotenvCall).toBeLessThan(firstEnvRead);
+    });
+
     it('postgres schema uses uuid PKs, a partial unique googleId, and ORM-level updatedAt', async () => {
       const user = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/User.ts'), 'utf8');
       expect(user).toContain('gen_random_uuid');
