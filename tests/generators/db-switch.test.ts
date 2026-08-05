@@ -67,6 +67,30 @@ describe('switchDatabase', () => {
     expect(await read(root, 'src/models/Item.ts')).toContain('new Schema<');
     expect(await readJson(root, 'koti.config.json')).toMatchObject({ database: 'mongodb' });
 
+    // The mongodb layer is a filename-subset of the postgres one, so the
+    // overlay alone cannot displace postgres-only files. Left live they still
+    // import drizzle-orm, whose dependency has just been removed — the project
+    // stops typechecking.
+    const pkgAfterMongo = await readJson(root, 'package.json');
+    for (const dep of ['drizzle-orm', 'pg']) expect(pkgAfterMongo.dependencies[dep], dep).toBeUndefined();
+    for (const dep of ['drizzle-kit', '@types/pg']) expect(pkgAfterMongo.devDependencies?.[dep], dep).toBeUndefined();
+    for (const s of ['db:generate', 'db:migrate']) expect(pkgAfterMongo.scripts[s], s).toBeUndefined();
+    expect(pkgAfterMongo.dependencies.mongoose).toBeDefined();
+
+    for (const gone of ['drizzle.config.ts', 'drizzle', 'src/models/UserRole.ts', 'src/services/serialize.ts', 'src/scripts/cleanupUrls.ts']) {
+      expect(await fs.pathExists(path.join(root, gone)), `${gone} is still live`).toBe(false);
+      expect(await fs.pathExists(path.join(root, `${gone}.bak`)), `${gone} was not backed up`).toBe(true);
+    }
+
+    const envAfterMongo = await read(root, '.env');
+    expect(envAfterMongo).toMatch(/MONGODB_URI=mongodb:/);
+    expect(envAfterMongo).toMatch(/# DATABASE_URL=/);
+
+    for (const f of await globTsFiles(path.join(root, 'src'))) {
+      if (f.endsWith('.bak')) continue;
+      expect(await fs.readFile(f, 'utf8'), f).not.toMatch(/from 'drizzle-orm/);
+    }
+
     await switchDatabase(root, 'postgres');
     const barrel = await read(root, 'src/models/index.ts');
     for (const b of ['User', 'Role', 'AuditLog', 'Document', 'TinyUrl', 'Item']) {

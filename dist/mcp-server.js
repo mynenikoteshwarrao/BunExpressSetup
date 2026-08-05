@@ -19152,7 +19152,28 @@ var createMiddleware = async (opts) => {
 // src/generators/switchDb.ts
 var import_fs_extra9 = __toESM(require_lib());
 var import_path9 = __toESM(require("path"));
-var PG_ROOT_ENTRIES = ["drizzle.config.ts", "drizzle"];
+var FRAGMENT_ENTRIES = /* @__PURE__ */ new Set(["src", "package.deps.json", "env.fragment", "readme.fragment.md"]);
+var rootEntriesOf = async (database) => {
+  const entries = await import_fs_extra9.default.readdir(import_path9.default.join(templatesDir(), "db", database)).catch(() => []);
+  return entries.filter((e) => !FRAGMENT_ENTRIES.has(e));
+};
+var srcFilesOf = async (database) => {
+  const base = import_path9.default.join(templatesDir(), "db", database, "src");
+  const found = /* @__PURE__ */ new Set();
+  const walk = async (dir) => {
+    for (const entry of await import_fs_extra9.default.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      const full = import_path9.default.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else found.add(import_path9.default.relative(base, full));
+    }
+  };
+  await walk(base);
+  return found;
+};
+var orphansOf = async (source, target) => {
+  const [from, to] = await Promise.all([srcFilesOf(source), srcFilesOf(target)]);
+  return [...from].filter((f) => !to.has(f)).sort();
+};
 var backup = async (target) => {
   if (!await import_fs_extra9.default.pathExists(target)) return false;
   await import_fs_extra9.default.copy(target, `${target}.bak`, { overwrite: true });
@@ -19217,13 +19238,20 @@ var switchDatabase = async (projectRoot, target) => {
   const manifest = await readModelManifest(root);
   const modelNames = Object.keys(manifest);
   const srcDir = import_path9.default.join(root, "src");
+  const [sourceRootEntries, targetRootEntries, orphans] = await Promise.all([
+    rootEntriesOf(source),
+    rootEntriesOf(target),
+    orphansOf(source, target)
+  ]);
+  const retiredRootEntries = sourceRootEntries.filter((e) => !targetRootEntries.includes(e));
   const backupTargets = [
     import_path9.default.join(srcDir, "config", "database.ts"),
     ...await listFiles(import_path9.default.join(srcDir, "models")),
     ...await listFiles(import_path9.default.join(srcDir, "services")),
     ...await listFiles(import_path9.default.join(srcDir, "seeds")),
     ...modelNames.map((n) => import_path9.default.join(srcDir, "validators", `${toCamelCase(n)}.ts`)),
-    ...source === "postgres" ? PG_ROOT_ENTRIES.map((e) => import_path9.default.join(root, e)) : []
+    ...orphans.map((rel) => import_path9.default.join(srcDir, rel)),
+    ...retiredRootEntries.map((e) => import_path9.default.join(root, e))
   ];
   for (const t of new Set(backupTargets)) {
     if (await backup(t)) files.push(`${t}.bak`);
@@ -19233,22 +19261,18 @@ var switchDatabase = async (projectRoot, target) => {
   if (await import_fs_extra9.default.pathExists(dbTemplateSrc)) {
     await import_fs_extra9.default.copy(dbTemplateSrc, srcDir, { overwrite: true });
   }
-  if (target === "postgres") {
-    for (const entry of PG_ROOT_ENTRIES) {
-      const dest = import_path9.default.join(root, entry);
-      const restored = `${dest}.bak`;
-      if (await import_fs_extra9.default.pathExists(restored)) {
-        await import_fs_extra9.default.copy(restored, dest, { overwrite: true });
-      } else if (await import_fs_extra9.default.pathExists(import_path9.default.join(dbTemplateDir, entry))) {
-        await import_fs_extra9.default.copy(import_path9.default.join(dbTemplateDir, entry), dest, { overwrite: true });
-      }
-      files.push(dest);
+  for (const entry of targetRootEntries) {
+    const dest = import_path9.default.join(root, entry);
+    const restored = `${dest}.bak`;
+    if (await import_fs_extra9.default.pathExists(restored)) {
+      await import_fs_extra9.default.copy(restored, dest, { overwrite: true });
+    } else if (await import_fs_extra9.default.pathExists(import_path9.default.join(dbTemplateDir, entry))) {
+      await import_fs_extra9.default.copy(import_path9.default.join(dbTemplateDir, entry), dest, { overwrite: true });
     }
-  } else {
-    for (const entry of PG_ROOT_ENTRIES) {
-      await import_fs_extra9.default.remove(import_path9.default.join(root, entry));
-    }
+    files.push(dest);
   }
+  for (const rel of orphans) await import_fs_extra9.default.remove(import_path9.default.join(srcDir, rel));
+  for (const entry of retiredRootEntries) await import_fs_extra9.default.remove(import_path9.default.join(root, entry));
   const isPg = target === "postgres";
   const isElysia = ctx.framework === "elysia";
   for (const [name, entry] of Object.entries(manifest)) {

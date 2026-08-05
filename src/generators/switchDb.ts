@@ -14,8 +14,42 @@ import { generateDrizzleCRUDService } from './crud/drizzle/service';
 import { generateJoiValidation } from './crud/express';
 import { generateTypeBoxValidator } from './crud/elysia';
 
-/** Root-level files the postgres layer owns; backed up when leaving PG. */
-const PG_ROOT_ENTRIES = ['drizzle.config.ts', 'drizzle'];
+/** Entries under templates/db/<name>/ that are composed rather than copied whole. */
+const FRAGMENT_ENTRIES = new Set(['src', 'package.deps.json', 'env.fragment', 'readme.fragment.md']);
+
+/**
+ * Root-level files/directories a db layer owns, derived the same way the
+ * scaffold copies them (project.ts) so the two can never drift apart.
+ */
+const rootEntriesOf = async (database: Database): Promise<string[]> => {
+  const entries = await fs.readdir(path.join(templatesDir(), 'db', database)).catch(() => [] as string[]);
+  return entries.filter(e => !FRAGMENT_ENTRIES.has(e));
+};
+
+/** Every file a db layer ships under src/, as paths relative to src/. */
+const srcFilesOf = async (database: Database): Promise<Set<string>> => {
+  const base = path.join(templatesDir(), 'db', database, 'src');
+  const found = new Set<string>();
+  const walk = async (dir: string): Promise<void> => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else found.add(path.relative(base, full));
+    }
+  };
+  await walk(base);
+  return found;
+};
+
+/**
+ * Files the outgoing layer owns that the incoming one does not provide. The
+ * overlay copy cannot displace these — left live they still import the ORM
+ * whose dependency the switch just removed, and the project stops compiling.
+ */
+const orphansOf = async (source: Database, target: Database): Promise<string[]> => {
+  const [from, to] = await Promise.all([srcFilesOf(source), srcFilesOf(target)]);
+  return [...from].filter(f => !to.has(f)).sort();
+};
 
 /** Same convention as editModel: the previous content lives on at <file>.bak. */
 const backup = async (target: string): Promise<boolean> => {
@@ -111,45 +145,47 @@ export const switchDatabase = async (
   const manifest = await readModelManifest(root);
   const modelNames = Object.keys(manifest);
 
-  // 3. Back up everything steps 4-5 overwrite.
+  // 3. Back up everything steps 4-5 overwrite or retire.
   const srcDir = path.join(root, 'src');
+  const [sourceRootEntries, targetRootEntries, orphans] = await Promise.all([
+    rootEntriesOf(source), rootEntriesOf(target), orphansOf(source, target),
+  ]);
+  const retiredRootEntries = sourceRootEntries.filter(e => !targetRootEntries.includes(e));
   const backupTargets = [
     path.join(srcDir, 'config', 'database.ts'),
     ...(await listFiles(path.join(srcDir, 'models'))),
     ...(await listFiles(path.join(srcDir, 'services'))),
     ...(await listFiles(path.join(srcDir, 'seeds'))),
     ...modelNames.map(n => path.join(srcDir, 'validators', `${toCamelCase(n)}.ts`)),
-    ...(source === 'postgres' ? PG_ROOT_ENTRIES.map(e => path.join(root, e)) : []),
+    ...orphans.map(rel => path.join(srcDir, rel)),
+    ...retiredRootEntries.map(e => path.join(root, e)),
   ];
   for (const t of new Set(backupTargets)) {
     if (await backup(t)) files.push(`${t}.bak`);
   }
 
-  // 4. Overlay the target db layer.
+  // 4. Overlay the target db layer, then retire what it does not replace.
   const dbTemplateDir = path.join(templatesDir(), 'db', target);
   const dbTemplateSrc = path.join(dbTemplateDir, 'src');
   if (await fs.pathExists(dbTemplateSrc)) {
     await fs.copy(dbTemplateSrc, srcDir, { overwrite: true });
   }
-  if (target === 'postgres') {
-    for (const entry of PG_ROOT_ENTRIES) {
-      const dest = path.join(root, entry);
-      const restored = `${dest}.bak`;
-      // A round-trip keeps its own migration history; a first switch gets the
-      // shipped initial migration.
-      if (await fs.pathExists(restored)) {
-        await fs.copy(restored, dest, { overwrite: true });
-      } else if (await fs.pathExists(path.join(dbTemplateDir, entry))) {
-        await fs.copy(path.join(dbTemplateDir, entry), dest, { overwrite: true });
-      }
-      files.push(dest);
+  for (const entry of targetRootEntries) {
+    const dest = path.join(root, entry);
+    const restored = `${dest}.bak`;
+    // A round-trip keeps its own migration history; a first switch gets the
+    // shipped initial migration.
+    if (await fs.pathExists(restored)) {
+      await fs.copy(restored, dest, { overwrite: true });
+    } else if (await fs.pathExists(path.join(dbTemplateDir, entry))) {
+      await fs.copy(path.join(dbTemplateDir, entry), dest, { overwrite: true });
     }
-  } else {
-    // Leaving postgres: the drizzle artifacts stay only as .bak copies.
-    for (const entry of PG_ROOT_ENTRIES) {
-      await fs.remove(path.join(root, entry));
-    }
+    files.push(dest);
   }
+  // The overlay only replaces files the target layer also ships; anything the
+  // outgoing layer alone owned lives on as a .bak and nothing else.
+  for (const rel of orphans) await fs.remove(path.join(srcDir, rel));
+  for (const entry of retiredRootEntries) await fs.remove(path.join(root, entry));
 
   // 5. Regenerate every manifest model in the target idiom. The overlay just
   //    reset the barrels to the built-ins, so each model re-appends its line.
