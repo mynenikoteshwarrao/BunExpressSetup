@@ -766,7 +766,7 @@ server.registerTool('switch_database', {
 }, async ({ projectPath, database }) => { /* requireAbsolute → switchDatabase → ok(files, warnings) / fail(err) */ });
 ```
 
-- [ ] **Step 1: Failing tests** — update both tool-count assertions to 10 + sorted-name arrays gain `'switch_database'`; add:
+- [x] **Step 1: Failing tests** — update both tool-count assertions to 10 + sorted-name arrays gain `'switch_database'`; add:
 
 ```ts
 it('switch_database converts a scaffolded project', async () => {
@@ -778,8 +778,8 @@ it('switch_database converts a scaffolded project', async () => {
 });
 ```
 And in `commands.test.ts`: run `node dist/cli.js db:switch postgres` inside a scaffolded fixture project, assert exit 0 + `koti.config.json.database === 'postgres'`.
-- [ ] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: Full suite green.**
-- [ ] **Step 5: Commit** — `git commit -am "feat: koti db:switch command + switch_database MCP tool (10 tools)"`
+- [x] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: Full suite green.**
+- [x] **Step 5: Commit** — `git commit -am "feat: koti db:switch command + switch_database MCP tool (10 tools)"`
 
 ---
 

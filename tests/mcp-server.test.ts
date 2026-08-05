@@ -25,12 +25,12 @@ afterAll(async () => {
 });
 
 describe('koti-mcp end to end', () => {
-  it('lists all 9 tools', async () => {
+  it('lists all 10 tools', async () => {
     const res = await client.request('tools/list');
     const names = res.result.tools.map((t: any) => t.name).sort();
     expect(names).toEqual([
       'create_controller', 'create_enum', 'create_middleware', 'create_model', 'create_project',
-      'create_service', 'create_task', 'edit_model', 'seed_database',
+      'create_service', 'create_task', 'edit_model', 'seed_database', 'switch_database',
     ]);
   });
 
@@ -106,8 +106,16 @@ describe('koti-mcp end to end', () => {
     expect(res.result.isError).toBe(true);
     // server must still be alive:
     const alive = await client.request('tools/list');
-    expect(alive.result.tools.length).toBe(9);
+    expect(alive.result.tools.length).toBe(10);
   });
+
+  it('switch_database converts a scaffolded project', async () => {
+    const projDir = path.join(workDir, 'pg-api');   // scaffolded mongodb-free above
+    const res = await client.callTool('switch_database', { projectPath: projDir, database: 'mongodb' });
+    expect(res.result.isError).toBeFalsy();
+    const cfg = await fs.readJson(path.join(projDir, 'koti.config.json'));
+    expect(cfg.database).toBe('mongodb');
+  }, 60_000);
 
   it('resources resolve against KOTI_PROJECT_ROOT', async () => {
     const res = await client.request('resources/read', { uri: 'koti://project/models' });

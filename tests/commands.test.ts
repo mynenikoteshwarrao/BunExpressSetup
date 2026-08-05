@@ -690,6 +690,37 @@ describe('Koti CLI Commands Integration', () => {
     });
   });
 
+  describe('koti db:switch', () => {
+    const projectDir = path.join(TEST_DIR, 'switch-test');
+
+    beforeAll(async () => {
+      runCLI(`new switch-test --framework express --database mongodb`, TEST_DIR, 180000);
+    }, 200000);
+
+    afterAll(async () => {
+      try { await fs.remove(projectDir); } catch {}
+    });
+
+    it('converts a scaffolded mongodb project to postgres', () => {
+      const output = runCLI('db:switch postgres', projectDir);
+      expect(output).toContain('postgres');
+      const cfg = fs.readJsonSync(path.join(projectDir, 'koti.config.json'));
+      expect(cfg.database).toBe('postgres');
+      const pkg = fs.readJsonSync(path.join(projectDir, 'package.json'));
+      expect(pkg.dependencies['drizzle-orm']).toBeDefined();
+      expect(pkg.dependencies.mongoose).toBeUndefined();
+    }, 120000);
+
+    it('rejects an unknown database', () => {
+      try {
+        runCLI('db:switch mysql', projectDir);
+        expect.unreachable('Should have exited non-zero');
+      } catch (error: any) {
+        expect(error.status).not.toBe(0);
+      }
+    });
+  });
+
   // ─── Edge cases ───────────────────────────────────────────────────
   describe('Edge cases', () => {
     it('should show error for unknown command', () => {

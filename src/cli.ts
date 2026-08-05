@@ -15,6 +15,7 @@ import { createService } from './generators/service';
 import { createMiddleware } from './generators/middleware';
 import { createModel, editModel, parseExistingModel } from './generators/model';
 import { createProject } from './generators/project';
+import { switchDatabase } from './generators/switchDb';
 
 interface Colors {
   green: (text: string) => string;
@@ -473,6 +474,38 @@ program
         console.error(colors.red(`❌ ${error.message}`));
       } else {
         console.error(colors.red('❌ Error creating project:'), (error as Error).message);
+      }
+      process.exit(1);
+    }
+  });
+
+// Database Switch Command
+program
+  .command('db:switch')
+  .argument('<database>', 'Target database: mongodb or postgres')
+  .description('Convert this project between MongoDB and PostgreSQL (code only — data does not move)')
+  .action(async (database: string) => {
+    try {
+      const target = database.toLowerCase();
+      if (!DATABASES.includes(target as Database)) {
+        console.error(colors.red('Error: Database must be either mongodb or postgres'));
+        process.exit(1);
+      }
+
+      console.log(colors.blue(`🔄 Switching database to: ${target}`));
+      const result = await switchDatabase(process.cwd(), target as Database);
+
+      console.log(colors.green(`✅ Switched to ${target} — ${result.files.length} file(s) written`));
+      result.files.forEach((f) => console.log(colors.dim(`   ${f}`)));
+      result.warnings.forEach((w) => console.log(colors.yellow(`⚠️  ${w}`)));
+
+      console.log(colors.cyan('\n📋 Next steps:'));
+      result.nextSteps.forEach((s, i) => console.log(`   ${i + 1}. ${s}`));
+    } catch (error) {
+      if (error instanceof GeneratorError) {
+        console.error(colors.red(`❌ ${error.message}`));
+      } else {
+        console.error(colors.red('❌ Unexpected error:'), (error as Error).message);
       }
       process.exit(1);
     }

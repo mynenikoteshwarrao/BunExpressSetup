@@ -2,7 +2,7 @@
 
 /**
  * Koti CLI — MCP Server. Exposes Koti scaffolding as MCP tools (stdio transport)
- * so AI assistants can create/edit Bun + MongoDB API projects (Express or Elysia).
+ * so AI assistants can create/edit Bun API projects (Express or Elysia, MongoDB or PostgreSQL).
  * All tools call the shared generator modules in-process.
  */
 
@@ -21,6 +21,7 @@ import { createTask } from './generators/task';
 import { createController } from './generators/controller';
 import { createService } from './generators/service';
 import { createMiddleware } from './generators/middleware';
+import { switchDatabase } from './generators/switchDb';
 
 // Project root for RESOURCES (client-spawned stdio servers have a meaningless cwd)
 const rootArgIdx = process.argv.indexOf('--project-root');
@@ -151,8 +152,8 @@ server.registerTool(
 server.registerTool(
   'create_model',
   {
-    title: 'Create Mongoose Model',
-    description: 'Creates a TypeScript Mongoose model with interface definition, optional CRUD endpoints (controller, service, routes, validation), and optional RBAC task generation.',
+    title: 'Create Data Model',
+    description: 'Creates a TypeScript data model (Mongoose or Drizzle, matching the project database) with optional CRUD endpoints (controller, service, routes, validation), and optional RBAC task generation.',
     inputSchema: {
       modelName: z.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Product", "UserProfile")').describe('Model name in PascalCase'),
       fields: z.array(fieldSchema).min(1).describe('Array of field definitions for the schema'),
@@ -312,7 +313,7 @@ server.registerTool(
   'seed_database',
   {
     title: 'Seed Database',
-    description: 'Runs the seed script to populate MongoDB with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running.',
+    description: 'Runs the seed script to populate the project database with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running.',
     inputSchema: {
       projectPath: z.string().describe('Absolute path to the Koti project root directory'),
       seedType: z.enum(['all', 'roles']).optional().default('all').describe('"all" seeds roles + users, "roles" seeds only roles'),
@@ -327,6 +328,30 @@ server.registerTool(
         return fail(new GeneratorError('IO_ERROR', `Seeding failed (exit ${code}):\n${output}`));
       }
       return ok(`Database seeded (${seedType}).\n${output}`);
+    } catch (error) { return fail(error); }
+  }
+);
+
+server.registerTool(
+  'switch_database',
+  {
+    title: 'Switch Database',
+    description: 'Convert an existing Koti project between MongoDB and PostgreSQL (code-only; data does not move; originals kept as .bak).',
+    inputSchema: {
+      projectPath: z.string().describe('Absolute path to the Koti project root directory'),
+      database: z.enum(['mongodb', 'postgres']).describe('Target database to convert the project to'),
+    },
+    annotations: { title: 'Switch Database', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  },
+  async ({ projectPath, database }) => {
+    try {
+      requireAbsolute(projectPath, 'projectPath');
+      const result = await switchDatabase(projectPath, database);
+      return ok(
+        `Project at ${projectPath} switched to ${database}.\n\nNext steps:\n${result.nextSteps.map(s => `  - ${s}`).join('\n')}`,
+        result.files,
+        result.warnings,
+      );
     } catch (error) { return fail(error); }
   }
 );
@@ -369,7 +394,7 @@ server.registerResource(
   'koti://project/models',
   {
     title: 'Project Models',
-    description: 'Lists all Mongoose models defined in the project',
+    description: 'Lists all data models defined in the project',
     mimeType: 'text/plain',
   },
   async (uri) => {
@@ -438,6 +463,7 @@ ${description}
 Please:
 1. Use the create_project tool to scaffold the project
 1.5. Ask which framework I want (or default to Express) and pass it as the "framework" parameter to create_project
+1.6. Ask which database I want (or default to MongoDB) and pass it as the "database" parameter to create_project
 2. Create the data models I described using create_model (with CRUD and RBAC tasks)
 3. Add any additional RBAC tasks using create_task
 4. Seed the database using seed_database
