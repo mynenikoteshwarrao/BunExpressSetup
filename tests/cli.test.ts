@@ -345,6 +345,19 @@ describe('Koti CLI', () => {
       expect(helper).toContain('export const definedOnly');
     });
 
+    // Mongo populates userId into {username, email, firstName, lastName};
+    // postgres returned a bare uuid, so the same endpoint answered a different
+    // shape on each database.
+    it('postgres audit history joins the actor instead of returning a bare id', async () => {
+      const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/auditService.ts'), 'utf8');
+      expect(src).toContain('leftJoin(users');
+      for (const field of ['username', 'email', 'firstName', 'lastName']) {
+        expect(src, `audit history omits ${field}`).toContain(`${field}: users.${field}`);
+      }
+      // one join per history method
+      expect(src.match(/leftJoin\(users/g)).toHaveLength(2);
+    });
+
     it('both service barrels re-export the same five modules', async () => {
       const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
       const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));

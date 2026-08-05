@@ -333,6 +333,10 @@ outputs are feature-identical: same routes, same auth and RBAC, same audit log, 
 Swagger docs, same JSON on the wire — every response carries a string `id`, never a raw
 `_id`, so a client cannot tell which database is underneath.
 
+One documented asymmetry: where MongoDB embeds a related record (the actor on an audit
+log entry, for example), the embedded object is keyed `_id` on MongoDB and `id` on
+PostgreSQL — the same `_id`-to-`id` rule the rest of the wire contract already follows.
+
 ### Choosing at create time
 
 ```bash

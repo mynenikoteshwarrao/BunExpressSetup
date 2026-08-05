@@ -1,6 +1,24 @@
 import { and, count, desc, eq, gte, lte, SQL } from 'drizzle-orm';
 import { db } from '../config/database';
 import { auditLogs, AuditLog } from '../models/AuditLog';
+import { users } from '../models/User';
+
+/**
+ * The actor mongo attaches with `.populate('userId', 'username email firstName
+ * lastName')`. Parity note: mongo's populated subdocument carries `_id` where
+ * this carries `id` — the same `_id`-to-`id` rule the rest of the wire contract
+ * follows, so clients see a string identifier on both databases either way.
+ */
+export interface AuditActor {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+/** An audit row with its actor joined in, matching mongo's populated shape. */
+export type AuditLogWithActor = Omit<AuditLog, 'userId'> & { userId: AuditActor | null };
 
 export interface AuditLogEntry {
   entityType: string;
@@ -18,6 +36,20 @@ export interface AuditLogEntry {
     sessionId?: string;
   };
 }
+
+const ACTOR_COLUMNS = {
+  id: users.id,
+  username: users.username,
+  email: users.email,
+  firstName: users.firstName,
+  lastName: users.lastName,
+};
+
+/** A left join yields a row of nulls for a deleted actor; mongo yields null. */
+const withActor = (row: { log: AuditLog; actor: AuditActor | null }): AuditLogWithActor => ({
+  ...row.log,
+  userId: row.actor?.id ? row.actor : null,
+});
 
 export class AuditService {
   /**
@@ -45,12 +77,14 @@ export class AuditService {
     entityId: string,
     limit: number = 50,
     skip: number = 0
-  ): Promise<AuditLog[]> {
-    return db.select().from(auditLogs)
+  ): Promise<AuditLogWithActor[]> {
+    const rows = await db.select({ log: auditLogs, actor: ACTOR_COLUMNS }).from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
       .where(and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)))
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(skip);
+    return rows.map(withActor);
   }
 
   /**
@@ -60,12 +94,14 @@ export class AuditService {
     userId: string,
     limit: number = 50,
     skip: number = 0
-  ): Promise<AuditLog[]> {
-    return db.select().from(auditLogs)
+  ): Promise<AuditLogWithActor[]> {
+    const rows = await db.select({ log: auditLogs, actor: ACTOR_COLUMNS }).from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
       .where(eq(auditLogs.userId, userId))
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(skip);
+    return rows.map(withActor);
   }
 
   /**
