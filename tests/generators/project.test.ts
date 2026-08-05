@@ -51,6 +51,18 @@ describe('createProject', () => {
     }
     expect(await fs.pathExists(path.join(dir, 'src/middleware/auditMiddleware.ts'))).toBe(false);
   }, 60000);
+  it('scaffold merges db deps and env fragment (mongodb)', async () => {
+    const dir = await createTestProject('express');
+    const pkg = JSON.parse(await fs.readFile(path.join(dir, 'package.json'), 'utf8'));
+    expect(pkg.dependencies.mongoose).toBeDefined();
+    expect(pkg.devDependencies['@types/mongoose']).toBeUndefined();
+    const env = await fs.readFile(path.join(dir, '.env'), 'utf8');
+    expect(env).toMatch(/MONGODB_URI=mongodb:\/\/localhost:27017\//);
+    expect(env).not.toContain('REPLACE_WITH_AUTO_GENERATED_SECRET'); // secret contract intact
+    const readme = await fs.readFile(path.join(dir, 'README.md'), 'utf8');
+    expect(readme).not.toContain('<!-- DB_SETUP -->'); // marker swapped for the db's setup prose
+    expect(readme).toContain('Start MongoDB');
+  }, 60000);
   it('rejects bad names, bad frameworks, and existing targets', async () => {
     const parent = await tmp();
     await expect(createProject({ name: 'Bad Name', directory: parent, skipInstall: true }))

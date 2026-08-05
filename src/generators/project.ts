@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import {
   Framework,
   FRAMEWORKS,
+  Database,
   GeneratorError,
   GeneratorResult,
   templatesDir,
@@ -46,6 +47,96 @@ const replaceInDir = async (dirPath: string, projectName: string): Promise<void>
         content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
         await fs.writeFile(fullPath, content);
       }
+    }
+  }
+};
+
+/**
+ * Insert the db layer's connection line into an env file: replace whatever
+ * connection line is already there, else place it under the `# Database`
+ * header, else after PORT, else append. Everything else in the file — notably
+ * the two REPLACE_WITH_AUTO_GENERATED_SECRET tokens — is left untouched.
+ */
+const applyEnvFragment = (envContent: string, fragment: string): string => {
+  const line = fragment.trim();
+  const lines = envContent.split('\n');
+  const existing = lines.findIndex(l => /^\s*(MONGODB_URI|DATABASE_URL)\s*=/.test(l));
+  if (existing >= 0) {
+    lines[existing] = line;
+    return lines.join('\n');
+  }
+  const header = lines.findIndex(l => /^#\s*Database/i.test(l));
+  if (header >= 0) {
+    lines.splice(header + 1, 0, line);
+    return lines.join('\n');
+  }
+  const port = lines.findIndex(l => /^\s*PORT\s*=/.test(l));
+  if (port >= 0) {
+    lines.splice(port + 1, 0, '', '# Database', line);
+    return lines.join('\n');
+  }
+  return `${envContent.replace(/\n*$/, '')}\n\n# Database\n${line}\n`;
+};
+
+const loadEnvFragment = async (database: Database, projectName: string): Promise<string> => {
+  const fragmentPath = path.join(templatesDir(), 'db', database, 'env.fragment');
+  if (!(await fs.pathExists(fragmentPath))) return '';
+  return (await fs.readFile(fragmentPath, 'utf-8')).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+};
+
+/**
+ * Compose the database axis into an already-copied project: merge the db
+ * layer's package.deps.json into package.json (script values may be
+ * framework-conditional objects), insert its env.fragment into .env and
+ * .env.example, and swap the README's <!-- DB_SETUP --> marker for the db's
+ * setup prose.
+ */
+export const applyDbFragments = async (
+  projectPath: string, database: Database, framework: Framework, projectName: string
+): Promise<void> => {
+  const dbDir = path.join(templatesDir(), 'db', database);
+
+  const depsPath = path.join(dbDir, 'package.deps.json');
+  if (await fs.pathExists(depsPath)) {
+    const fragment = await fs.readJson(depsPath);
+    const pkgPath = path.join(projectPath, 'package.json');
+    if (await fs.pathExists(pkgPath)) {
+      const pkg = await fs.readJson(pkgPath);
+      for (const section of ['dependencies', 'devDependencies'] as const) {
+        if (!fragment[section]) continue;
+        pkg[section] = { ...(pkg[section] ?? {}), ...fragment[section] };
+      }
+      if (fragment.scripts) {
+        pkg.scripts = pkg.scripts ?? {};
+        for (const [name, value] of Object.entries(fragment.scripts as Record<string, unknown>)) {
+          // A script value may be framework-conditional: { express: "...", elysia: "..." }
+          pkg.scripts[name] = typeof value === 'object' && value !== null
+            ? (value as Record<string, string>)[framework]
+            : value;
+          if (pkg.scripts[name] === undefined) delete pkg.scripts[name];
+        }
+      }
+      await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    }
+  }
+
+  const fragment = await loadEnvFragment(database, projectName);
+  if (fragment) {
+    for (const fileName of ['.env', '.env.example']) {
+      const envPath = path.join(projectPath, fileName);
+      if (!(await fs.pathExists(envPath))) continue;
+      const content = await fs.readFile(envPath, 'utf-8');
+      await fs.writeFile(envPath, applyEnvFragment(content, fragment));
+    }
+  }
+
+  const readmeFragmentPath = path.join(dbDir, 'readme.fragment.md');
+  const readmePath = path.join(projectPath, 'README.md');
+  if ((await fs.pathExists(readmeFragmentPath)) && (await fs.pathExists(readmePath))) {
+    const prose = (await fs.readFile(readmeFragmentPath, 'utf-8')).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+    const readme = await fs.readFile(readmePath, 'utf-8');
+    if (readme.includes('<!-- DB_SETUP -->')) {
+      await fs.writeFile(readmePath, readme.replace('<!-- DB_SETUP -->', prose.trimEnd()));
     }
   }
 };
@@ -412,6 +503,9 @@ export const createProject = async (
     }
   }
 
+  // --- Compose the database axis (deps, env connection line, README setup prose) ---
+  await applyDbFragments(projectPath, database, framework, opts.name);
+
   // --- Express-only dynamic route files (overwrite the copied static ones) ---
   if (framework === 'express') {
     const indexPath = path.join(srcPath, 'routes', 'index.ts');
@@ -434,13 +528,13 @@ export const createProject = async (
     envContent = await fs.readFile(envFilePath, 'utf-8');
     envContent = envContent.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
   } else {
-    // Fallback if template .env was not copied
+    // Fallback if template .env was not copied. The DB connection line comes
+    // from the db layer's env.fragment (applied just below), not hardcoded.
     envContent = `# Environment Configuration
 NODE_ENV=development
 PORT=8000
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/${opts.name}
 
 # JWT Configuration (auto-generated secure secrets)
 JWT_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
@@ -457,6 +551,8 @@ API_URL=http://localhost:8000
 # Pagination Configuration
 DEFAULT_PAGE_LIMIT=10
 MAX_PAGE_LIMIT=100`;
+    const fallbackFragment = await loadEnvFragment(database, opts.name);
+    if (fallbackFragment) envContent = applyEnvFragment(envContent, fallbackFragment);
   }
 
   envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtSecret);

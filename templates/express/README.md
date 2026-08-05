@@ -63,17 +63,7 @@ Generated code is provided "as-is" without warranty of any kind.
    JWT_SECRET=your-super-secret-jwt-key
    ```
 
-4. **Start MongoDB**
-   ```bash
-   # On macOS with Homebrew
-   brew services start mongodb-community
-   
-   # On Linux
-   sudo systemctl start mongod
-   
-   # On Windows
-   net start MongoDB
-   ```
+<!-- DB_SETUP -->
 
 5. **Start the development server**
    ```bash

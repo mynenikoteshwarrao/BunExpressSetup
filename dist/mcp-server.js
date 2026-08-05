@@ -16982,6 +16982,76 @@ var replaceInDir = async (dirPath, projectName) => {
     }
   }
 };
+var applyEnvFragment = (envContent, fragment) => {
+  const line = fragment.trim();
+  const lines = envContent.split("\n");
+  const existing = lines.findIndex((l) => /^\s*(MONGODB_URI|DATABASE_URL)\s*=/.test(l));
+  if (existing >= 0) {
+    lines[existing] = line;
+    return lines.join("\n");
+  }
+  const header = lines.findIndex((l) => /^#\s*Database/i.test(l));
+  if (header >= 0) {
+    lines.splice(header + 1, 0, line);
+    return lines.join("\n");
+  }
+  const port = lines.findIndex((l) => /^\s*PORT\s*=/.test(l));
+  if (port >= 0) {
+    lines.splice(port + 1, 0, "", "# Database", line);
+    return lines.join("\n");
+  }
+  return `${envContent.replace(/\n*$/, "")}
+
+# Database
+${line}
+`;
+};
+var loadEnvFragment = async (database, projectName) => {
+  const fragmentPath = import_path2.default.join(templatesDir(), "db", database, "env.fragment");
+  if (!await import_fs_extra2.default.pathExists(fragmentPath)) return "";
+  return (await import_fs_extra2.default.readFile(fragmentPath, "utf-8")).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+};
+var applyDbFragments = async (projectPath, database, framework, projectName) => {
+  const dbDir = import_path2.default.join(templatesDir(), "db", database);
+  const depsPath = import_path2.default.join(dbDir, "package.deps.json");
+  if (await import_fs_extra2.default.pathExists(depsPath)) {
+    const fragment2 = await import_fs_extra2.default.readJson(depsPath);
+    const pkgPath = import_path2.default.join(projectPath, "package.json");
+    if (await import_fs_extra2.default.pathExists(pkgPath)) {
+      const pkg = await import_fs_extra2.default.readJson(pkgPath);
+      for (const section of ["dependencies", "devDependencies"]) {
+        if (!fragment2[section]) continue;
+        pkg[section] = { ...pkg[section] ?? {}, ...fragment2[section] };
+      }
+      if (fragment2.scripts) {
+        pkg.scripts = pkg.scripts ?? {};
+        for (const [name, value] of Object.entries(fragment2.scripts)) {
+          pkg.scripts[name] = typeof value === "object" && value !== null ? value[framework] : value;
+          if (pkg.scripts[name] === void 0) delete pkg.scripts[name];
+        }
+      }
+      await import_fs_extra2.default.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+    }
+  }
+  const fragment = await loadEnvFragment(database, projectName);
+  if (fragment) {
+    for (const fileName of [".env", ".env.example"]) {
+      const envPath = import_path2.default.join(projectPath, fileName);
+      if (!await import_fs_extra2.default.pathExists(envPath)) continue;
+      const content = await import_fs_extra2.default.readFile(envPath, "utf-8");
+      await import_fs_extra2.default.writeFile(envPath, applyEnvFragment(content, fragment));
+    }
+  }
+  const readmeFragmentPath = import_path2.default.join(dbDir, "readme.fragment.md");
+  const readmePath = import_path2.default.join(projectPath, "README.md");
+  if (await import_fs_extra2.default.pathExists(readmeFragmentPath) && await import_fs_extra2.default.pathExists(readmePath)) {
+    const prose = (await import_fs_extra2.default.readFile(readmeFragmentPath, "utf-8")).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+    const readme = await import_fs_extra2.default.readFile(readmePath, "utf-8");
+    if (readme.includes("<!-- DB_SETUP -->")) {
+      await import_fs_extra2.default.writeFile(readmePath, readme.replace("<!-- DB_SETUP -->", prose.trimEnd()));
+    }
+  }
+};
 var indexRouteContent = (projectName) => `import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
@@ -17319,6 +17389,7 @@ var createProject = async (opts) => {
       log(`\u2705 Created file: ${fileName}`);
     }
   }
+  await applyDbFragments(projectPath, database, framework, opts.name);
   if (framework === "express") {
     const indexPath = import_path2.default.join(srcPath, "routes", "index.ts");
     const authPath = import_path2.default.join(srcPath, "routes", "auth.ts");
@@ -17341,7 +17412,6 @@ NODE_ENV=development
 PORT=8000
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/${opts.name}
 
 # JWT Configuration (auto-generated secure secrets)
 JWT_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
@@ -17358,6 +17428,8 @@ API_URL=http://localhost:8000
 # Pagination Configuration
 DEFAULT_PAGE_LIMIT=10
 MAX_PAGE_LIMIT=100`;
+    const fallbackFragment = await loadEnvFragment(database, opts.name);
+    if (fallbackFragment) envContent = applyEnvFragment(envContent, fallbackFragment);
   }
   envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtSecret);
   envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtRefreshSecret);

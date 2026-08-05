@@ -380,7 +380,7 @@ MONGODB_URI=mongodb://localhost:27017/{{PROJECT_NAME}}
 ```
 - Produces in `project.ts`: `applyDbFragments(projectPath: string, database: Database, framework: Framework): Promise<void>` — merges deps/devDeps/scripts into the project package.json (framework-conditional script values: a script value may be an object `{ "express": "npx ts-node …", "elysia": "bun run …" }`, resolved by framework at merge time), inserts the env fragment (with `{{PROJECT_NAME}}` replaced) under the `# Database` section of both `.env` and `.env.example`, and — express only, since elysia ships no README — replaces a `<!-- DB_SETUP -->` marker in the copied project README with `readme.fragment.md` (add the marker to `templates/express/README.md` in place of the MongoDB setup prose at lines 62-75). Spec §4.2 last seam row.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 it('scaffold merges db deps and env fragment (mongodb)', async () => {
@@ -394,10 +394,10 @@ it('scaffold merges db deps and env fragment (mongodb)', async () => {
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (mongoose still in framework package.json is fine, but env fragment insertion doesn't exist; the assertion on `@types/mongoose` fails).
-- [ ] **Step 3: Implement** `applyDbFragments` in `project.ts`, called after the db overlay copy and before secret injection (secret replacement at 454-455 must run on the *final* .env). JSON merge: read project package.json, `Object.assign` each of dependencies/devDependencies; scripts resolve framework-conditional object values. Env insert: if the template `.env` still contains a `MONGODB_URI` line (it shouldn't after this task), replace it; else append the fragment after the `PORT` line. Also branch the code-resident fallback `.env` block (project.ts:430-451): keep its two secret tokens, make the DB line come from the fragment file.
-- [ ] **Step 4: Full suite green** — pay attention to `project.test.ts:20-21` (zero leftover secret tokens + 128-hex JWT_SECRET).
-- [ ] **Step 5: Commit** — `git commit -am "feat(scaffold): per-db package.deps.json + env.fragment composition"`
+- [x] **Step 2: Run — expect FAIL** (mongoose still in framework package.json is fine, but env fragment insertion doesn't exist; the assertion on `@types/mongoose` fails).
+- [x] **Step 3: Implement** `applyDbFragments` in `project.ts`, called after the db overlay copy and before secret injection (secret replacement at 454-455 must run on the *final* .env). JSON merge: read project package.json, `Object.assign` each of dependencies/devDependencies; scripts resolve framework-conditional object values. Env insert: if the template `.env` still contains a `MONGODB_URI` line (it shouldn't after this task), replace it; else append the fragment after the `PORT` line. Also branch the code-resident fallback `.env` block (project.ts:430-451): keep its two secret tokens, make the DB line come from the fragment file.
+- [x] **Step 4: Full suite green** — pay attention to `project.test.ts:20-21` (zero leftover secret tokens + 128-hex JWT_SECRET).
+- [x] **Step 5: Commit** — `git commit -am "feat(scaffold): per-db package.deps.json + env.fragment composition"`
 
 **Phase-1 exit criterion:** `npx vitest run` fully green; a scaffolded express and elysia project each boot exactly as before (manual smoke optional); zero behavior change visible to users.
 
