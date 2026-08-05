@@ -575,7 +575,7 @@ Implementation notes that MUST be honored (each maps to a spec §5 bullet):
 **Interfaces:**
 - Produces: `createProject({ name, framework, database, targetDir?, skipInstall? })` — `database: Database` defaulting to `'mongodb'`; throws `GeneratorError('UNSUPPORTED_DATABASE')` on invalid values (mirror of the UNSUPPORTED_FRAMEWORK check at project.ts:313-316).
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 // project.test.ts — the 2×2 matrix + release gate
@@ -617,10 +617,10 @@ it('create_project accepts database: postgres', async () => {
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL.**
-- [ ] **Step 3: Implement** per Files. CLI prompt block (clone of 374-391): flag wins → `process.stdin.isTTY` gate → menu `1) MongoDB (default)  2) PostgreSQL` → non-TTY silent `'mongodb'`; validate against `DATABASES`, `process.exit(1)` on bad flag value. Next-steps: mongodb keeps today's lines; postgres prints `createdb <name>` / `npm run db:migrate` / `npm run seed`. The express inline index-route description string (project.ts:81) becomes `` `TypeScript API built with Bun, Express, and ${database === 'postgres' ? 'PostgreSQL' : 'MongoDB'}` ``. For postgres, `createProject` additionally copies the root-level db files from the template — `templates/db/postgres/drizzle.config.ts` → `<project>/drizzle.config.ts` and `templates/db/postgres/drizzle/` → `<project>/drizzle/` (the `src/` overlay copy from Task 2 only covers `src`).
-- [ ] **Step 4: Full suite green.**
-- [ ] **Step 5: Commit** — `git commit -am "feat: --database flag end-to-end (CLI prompt, generator, MCP create_project)"`
+- [x] **Step 2: Run — expect FAIL.**
+- [x] **Step 3: Implement** per Files. CLI prompt block (clone of 374-391): flag wins → `process.stdin.isTTY` gate → menu `1) MongoDB (default)  2) PostgreSQL` → non-TTY silent `'mongodb'`; validate against `DATABASES`, `process.exit(1)` on bad flag value. Next-steps: mongodb keeps today's lines; postgres prints `createdb <name>` / `npm run db:migrate` / `npm run seed`. The express inline index-route description string (project.ts:81) becomes `` `TypeScript API built with Bun, Express, and ${database === 'postgres' ? 'PostgreSQL' : 'MongoDB'}` ``. For postgres, `createProject` additionally copies the root-level db files from the template — `templates/db/postgres/drizzle.config.ts` → `<project>/drizzle.config.ts` and `templates/db/postgres/drizzle/` → `<project>/drizzle/` (the `src/` overlay copy from Task 2 only covers `src`).
+- [x] **Step 4: Full suite green.**
+- [x] **Step 5: Commit** — `git commit -am "feat: --database flag end-to-end (CLI prompt, generator, MCP create_project)"`
 
 ---
 

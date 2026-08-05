@@ -43,6 +43,15 @@ describe('koti-mcp end to end', () => {
     expect(await fs.pathExists(path.join(projectPath, 'node_modules'))).toBe(false);
   }, 120_000);
 
+  it('create_project accepts database: postgres', async () => {
+    const res = await client.callTool('create_project', {
+      projectName: 'pg-api', framework: 'express', database: 'postgres', directory: workDir, skipInstall: true,
+    });
+    expect(res.result.isError).toBeFalsy();
+    const cfg = await fs.readJson(path.join(workDir, 'pg-api', 'koti.config.json'));
+    expect(cfg.database).toBe('postgres');
+  }, 120_000);
+
   it('create_model generates a real elysia CRUD chain — files exist on disk', async () => {
     const res = await client.callTool('create_model', {
       modelName: 'Product',

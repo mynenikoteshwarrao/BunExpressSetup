@@ -5,6 +5,7 @@ import {
   Framework,
   FRAMEWORKS,
   Database,
+  DATABASES,
   GeneratorError,
   GeneratorResult,
   templatesDir,
@@ -16,6 +17,7 @@ import {
 export interface CreateProjectOptions {
   name: string;
   framework?: Framework;
+  database?: Database;
   directory?: string;
   skipInstall?: boolean;
   log?: (msg: string) => void;
@@ -144,7 +146,7 @@ export const applyDbFragments = async (
 // Express-specific inline route templates (import { Router } from 'express').
 // For non-Express frameworks the routes ship as static files under templates/<framework>/src,
 // so these are only written for Express — deliberately overwriting the copied framework routes.
-const indexRouteContent = (projectName: string): string => `import { Router, Request, Response } from 'express';
+const indexRouteContent = (projectName: string, database: Database): string => `import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
 const router = Router();
@@ -169,7 +171,7 @@ router.get('/', (req: Request, res: Response) => {
     message: 'Welcome to ${projectName} API',
     data: {
       version: '${getVersion()}',
-      description: 'TypeScript API built with Bun, Express, and MongoDB',
+      description: 'TypeScript API built with Bun, Express, and ${database === 'postgres' ? 'PostgreSQL' : 'MongoDB'}',
       documentation: '/api-docs'
     }
   };
@@ -406,6 +408,11 @@ export const createProject = async (
     throw new GeneratorError('UNSUPPORTED_FRAMEWORK', `Unsupported framework: "${framework}" (must be one of ${FRAMEWORKS.join(', ')})`);
   }
 
+  const database: Database = opts.database ?? 'mongodb';
+  if (!DATABASES.includes(database)) {
+    throw new GeneratorError('UNSUPPORTED_DATABASE', `Unsupported database: "${database}" (must be one of ${DATABASES.join(', ')})`);
+  }
+
   const directory = opts.directory ?? process.cwd();
   const dirStat = await fs.stat(directory).catch(() => null);
   if (!dirStat || !dirStat.isDirectory()) {
@@ -421,12 +428,11 @@ export const createProject = async (
     }
   }
 
-  const database = 'mongodb' as const; // widened to a parameter in the --database task
-
   log(`🚀 Creating TypeScript Bun API project: ${opts.name}`);
   log(`📁 Project directory: ${projectPath}`);
   await fs.ensureDir(projectPath);
   log(`🧩 Framework: ${framework}`);
+  log(`🗄️  Database: ${database}`);
 
   const templatePath = path.join(templatesDir(), framework);
   const sharedTemplatePath = path.join(templatesDir(), 'shared');
@@ -479,10 +485,23 @@ export const createProject = async (
     log('✅ Copied shared source files');
   }
 
-  const dbTemplateSrc = path.join(templatesDir(), 'db', database, 'src');
+  const dbTemplateDir = path.join(templatesDir(), 'db', database);
+  const dbTemplateSrc = path.join(dbTemplateDir, 'src');
   if (await fs.pathExists(dbTemplateSrc)) {
     await fs.copy(dbTemplateSrc, projectSrcPath);
     log(`✅ Copied ${database} source files`);
+  }
+
+  // Root-level files the db layer owns (postgres: drizzle.config.ts, drizzle/).
+  // Everything the layer declares that is not src/ or a composition fragment
+  // lands at the project root, so a new db axis needs no change here.
+  const FRAGMENTS = new Set(['src', 'package.deps.json', 'env.fragment', 'readme.fragment.md']);
+  for (const entry of await fs.readdir(dbTemplateDir).catch(() => [] as string[])) {
+    if (FRAGMENTS.has(entry)) continue;
+    const dest = path.join(projectPath, entry);
+    await fs.copy(path.join(dbTemplateDir, entry), dest);
+    files.push(dest);
+    log(`✅ Created ${database} file: ${entry}`);
   }
 
   if (await fs.pathExists(projectSrcPath)) {
@@ -510,7 +529,7 @@ export const createProject = async (
   if (framework === 'express') {
     const indexPath = path.join(srcPath, 'routes', 'index.ts');
     const authPath = path.join(srcPath, 'routes', 'auth.ts');
-    await fs.writeFile(indexPath, indexRouteContent(opts.name));
+    await fs.writeFile(indexPath, indexRouteContent(opts.name, database));
     await fs.writeFile(authPath, authRouteContent);
     files.push(indexPath, authPath);
     log('✅ Created file: src/routes/index.ts');
@@ -564,6 +583,7 @@ MAX_PAGE_LIMIT=100`;
   // --- koti.config.json ---
   const kotiConfig = {
     framework,
+    database,
     kotiVersion: getVersion(),
     createdAt: new Date().toISOString(),
   };

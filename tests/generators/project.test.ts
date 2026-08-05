@@ -3,14 +3,18 @@ import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
 import { createProject } from '../../src/generators/project';
+import { globTsFiles } from '../helpers/glob';
 
 const dirs: string[] = [];
 const tmp = async () => { const d = await fs.mkdtemp(path.join(os.tmpdir(), 'koti-proj-')); dirs.push(d); return d; };
 afterEach(async () => { while (dirs.length) await fs.remove(dirs.pop()!); });
 
-const createTestProject = async (framework: 'express' | 'elysia' = 'express'): Promise<string> => {
+const createTestProject = async (
+  framework: 'express' | 'elysia' = 'express',
+  database: 'mongodb' | 'postgres' = 'mongodb',
+): Promise<string> => {
   const parent = await tmp();
-  const { projectPath } = await createProject({ name: `${framework}-app`, framework, directory: parent, skipInstall: true });
+  const { projectPath } = await createProject({ name: `${framework}-app`, framework, database, directory: parent, skipInstall: true });
   return projectPath;
 };
 
@@ -63,6 +67,38 @@ describe('createProject', () => {
     expect(readme).not.toContain('<!-- DB_SETUP -->'); // marker swapped for the db's setup prose
     expect(readme).toContain('Start MongoDB');
   }, 60000);
+  // The 2x2 matrix is the release gate: every framework must scaffold against
+  // every database, and a postgres project must contain no mongoose at all.
+  for (const fw of ['express', 'elysia'] as const) {
+    for (const dbx of ['mongodb', 'postgres'] as const) {
+      it(`scaffolds ${fw} + ${dbx}`, async () => {
+        const dir = await createTestProject(fw, dbx);
+        const cfg = JSON.parse(await fs.readFile(path.join(dir, 'koti.config.json'), 'utf8'));
+        expect(cfg.database).toBe(dbx);
+        const pkg = JSON.parse(await fs.readFile(path.join(dir, 'package.json'), 'utf8'));
+        if (dbx === 'postgres') {
+          expect(pkg.dependencies['drizzle-orm']).toBeDefined();
+          expect(pkg.dependencies.mongoose).toBeUndefined();
+          for (const f of await globTsFiles(path.join(dir, 'src'))) {
+            expect(await fs.readFile(f, 'utf8'), f).not.toMatch(/from 'mongoose'/);
+          }
+          expect(await fs.pathExists(path.join(dir, 'drizzle.config.ts'))).toBe(true);
+          expect(await fs.pathExists(path.join(dir, 'drizzle', 'meta', '_journal.json'))).toBe(true);
+          expect(await fs.readFile(path.join(dir, '.env'), 'utf8')).toMatch(/DATABASE_URL=postgres:/);
+        } else {
+          expect(pkg.dependencies.mongoose).toBeDefined();
+          expect(pkg.dependencies['drizzle-orm']).toBeUndefined();
+        }
+      }, 60000);
+    }
+  }
+
+  it('rejects unknown database', async () => {
+    const parent = await tmp();
+    await expect(createProject({ name: 'x-app', framework: 'express', database: 'mysql' as never, directory: parent, skipInstall: true }))
+      .rejects.toMatchObject({ code: 'UNSUPPORTED_DATABASE' });
+  });
+
   it('rejects bad names, bad frameworks, and existing targets', async () => {
     const parent = await tmp();
     await expect(createProject({ name: 'Bad Name', directory: parent, skipInstall: true }))

@@ -129,20 +129,21 @@ server.registerTool(
   'create_project',
   {
     title: 'Create Project',
-    description: 'Scaffold a complete Bun + MongoDB API project with your choice of Express or Elysia framework (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email).',
+    description: 'Scaffold a complete Bun API project with your choice of Express or Elysia framework and MongoDB or PostgreSQL database (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email).',
     inputSchema: {
       projectName: z.string().regex(/^[a-z0-9-]+$/, 'Must be kebab-case (e.g. "my-api")').describe('Project name in kebab-case (used as directory name and DB name)'),
       framework: z.enum(['express', 'elysia']).optional().default('express').describe('Web framework for the generated project'),
+      database: z.enum(['mongodb', 'postgres']).optional().default('mongodb').describe('Database for the generated project: mongodb (Mongoose) or postgres (Drizzle ORM)'),
       directory: z.string().optional().describe('ABSOLUTE parent directory to create the project in. Defaults to the server process cwd.'),
       skipInstall: z.boolean().optional().default(false).describe('Skip running bun/npm install after scaffolding'),
     },
     annotations: { title: 'Create Project', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   },
-  async ({ projectName, framework, directory, skipInstall }) => {
+  async ({ projectName, framework, database, directory, skipInstall }) => {
     try {
       if (directory !== undefined) requireAbsolute(directory, 'directory');
-      const result = await createProject({ name: projectName, framework, directory, skipInstall });
-      return ok(`Project "${projectName}" created at ${result.projectPath} (framework: ${framework}).`, result.files, result.warnings);
+      const result = await createProject({ name: projectName, framework, database, directory, skipInstall });
+      return ok(`Project "${projectName}" created at ${result.projectPath} (framework: ${framework}, database: ${database}).`, result.files, result.warnings);
     } catch (error) { return fail(error); }
   }
 );

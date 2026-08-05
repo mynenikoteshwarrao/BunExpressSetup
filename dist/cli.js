@@ -6581,7 +6581,7 @@ var applyDbFragments = async (projectPath, database, framework, projectName) => 
     }
   }
 };
-var indexRouteContent = (projectName) => `import { Router, Request, Response } from 'express';
+var indexRouteContent = (projectName, database) => `import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
 const router = Router();
@@ -6606,7 +6606,7 @@ router.get('/', (req: Request, res: Response) => {
     message: 'Welcome to ${projectName} API',
     data: {
       version: '${getVersion()}',
-      description: 'TypeScript API built with Bun, Express, and MongoDB',
+      description: 'TypeScript API built with Bun, Express, and ${database === "postgres" ? "PostgreSQL" : "MongoDB"}',
       documentation: '/api-docs'
     }
   };
@@ -6830,6 +6830,10 @@ var createProject = async (opts) => {
   if (!FRAMEWORKS.includes(framework)) {
     throw new GeneratorError("UNSUPPORTED_FRAMEWORK", `Unsupported framework: "${framework}" (must be one of ${FRAMEWORKS.join(", ")})`);
   }
+  const database = opts.database ?? "mongodb";
+  if (!DATABASES.includes(database)) {
+    throw new GeneratorError("UNSUPPORTED_DATABASE", `Unsupported database: "${database}" (must be one of ${DATABASES.join(", ")})`);
+  }
   const directory = opts.directory ?? process.cwd();
   const dirStat = await import_fs_extra8.default.stat(directory).catch(() => null);
   if (!dirStat || !dirStat.isDirectory()) {
@@ -6843,11 +6847,11 @@ var createProject = async (opts) => {
       throw new GeneratorError("DUPLICATE", `Target already exists: "${projectPath}"`);
     }
   }
-  const database = "mongodb";
   log(`\u{1F680} Creating TypeScript Bun API project: ${opts.name}`);
   log(`\u{1F4C1} Project directory: ${projectPath}`);
   await import_fs_extra8.default.ensureDir(projectPath);
   log(`\u{1F9E9} Framework: ${framework}`);
+  log(`\u{1F5C4}\uFE0F  Database: ${database}`);
   const templatePath = import_path8.default.join(templatesDir(), framework);
   const sharedTemplatePath = import_path8.default.join(templatesDir(), "shared");
   const srcPath = import_path8.default.join(projectPath, "src");
@@ -6898,10 +6902,19 @@ var createProject = async (opts) => {
     await import_fs_extra8.default.copy(sharedSrcPath, projectSrcPath);
     log("\u2705 Copied shared source files");
   }
-  const dbTemplateSrc = import_path8.default.join(templatesDir(), "db", database, "src");
+  const dbTemplateDir = import_path8.default.join(templatesDir(), "db", database);
+  const dbTemplateSrc = import_path8.default.join(dbTemplateDir, "src");
   if (await import_fs_extra8.default.pathExists(dbTemplateSrc)) {
     await import_fs_extra8.default.copy(dbTemplateSrc, projectSrcPath);
     log(`\u2705 Copied ${database} source files`);
+  }
+  const FRAGMENTS = /* @__PURE__ */ new Set(["src", "package.deps.json", "env.fragment", "readme.fragment.md"]);
+  for (const entry of await import_fs_extra8.default.readdir(dbTemplateDir).catch(() => [])) {
+    if (FRAGMENTS.has(entry)) continue;
+    const dest = import_path8.default.join(projectPath, entry);
+    await import_fs_extra8.default.copy(import_path8.default.join(dbTemplateDir, entry), dest);
+    files.push(dest);
+    log(`\u2705 Created ${database} file: ${entry}`);
   }
   if (await import_fs_extra8.default.pathExists(projectSrcPath)) {
     await replaceInDir(projectSrcPath, opts.name);
@@ -6922,7 +6935,7 @@ var createProject = async (opts) => {
   if (framework === "express") {
     const indexPath = import_path8.default.join(srcPath, "routes", "index.ts");
     const authPath = import_path8.default.join(srcPath, "routes", "auth.ts");
-    await import_fs_extra8.default.writeFile(indexPath, indexRouteContent(opts.name));
+    await import_fs_extra8.default.writeFile(indexPath, indexRouteContent(opts.name, database));
     await import_fs_extra8.default.writeFile(authPath, authRouteContent);
     files.push(indexPath, authPath);
     log("\u2705 Created file: src/routes/index.ts");
@@ -6967,6 +6980,7 @@ MAX_PAGE_LIMIT=100`;
   log("\u2705 Created file: .env (with auto-generated JWT secrets)");
   const kotiConfig = {
     framework,
+    database,
     kotiVersion: getVersion(),
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
@@ -7231,8 +7245,8 @@ program2.command("middleware").argument("<middleware-name>", "Name of the middle
     process.exit(1);
   }
 });
-program2.command("new").alias("create").argument("<project-name>", "Name of the project to create").option("--framework <framework>", "Framework choice: express or elysia (default: express)").description("Create a new TypeScript Bun API project").action(async (projectName, options) => {
-  var _a;
+program2.command("new").alias("create").argument("<project-name>", "Name of the project to create").option("--framework <framework>", "Framework choice: express or elysia (default: express)").option("--database <database>", "Database choice: mongodb or postgres (default: mongodb)").description("Create a new TypeScript Bun API project").action(async (projectName, options) => {
+  var _a, _b;
   try {
     let framework = (_a = options == null ? void 0 : options.framework) == null ? void 0 : _a.toLowerCase();
     if (!framework) {
@@ -7252,17 +7266,45 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
       console.error(colors.red("Error: Framework must be either express or elysia"));
       process.exit(1);
     }
+    let database = (_b = options == null ? void 0 : options.database) == null ? void 0 : _b.toLowerCase();
+    if (!database) {
+      if (process.stdin.isTTY) {
+        const rl = createReadlineInterface();
+        const answer = (await askQuestion(
+          rl,
+          colors.cyan("\n\u{1F5C4}\uFE0F  Choose a database:\n  1) MongoDB (default)\n  2) PostgreSQL\nEnter choice [1-2 or name]: ")
+        )).trim().toLowerCase();
+        rl.close();
+        database = answer === "2" || answer === "postgres" || answer === "postgresql" ? "postgres" : "mongodb";
+      } else {
+        database = "mongodb";
+      }
+    }
+    if (!DATABASES.includes(database)) {
+      console.error(colors.red("Error: Database must be either mongodb or postgres"));
+      process.exit(1);
+    }
+    const isPostgres = database === "postgres";
     const result = await createProject({
       name: projectName,
       framework,
+      database,
       log: (m) => console.log(m)
     });
     result.warnings.forEach((w) => console.log(colors.yellow(`\u26A0\uFE0F  ${w}`)));
     console.log(colors.cyan("\n\u{1F4CB} Next steps:"));
     console.log(`   1. cd ${projectName}`);
-    console.log("   2. Update .env file with your MongoDB URI and JWT secret");
-    console.log("   3. Start MongoDB server");
-    console.log("   4. bun run dev");
+    if (isPostgres) {
+      console.log("   2. Update .env file with your DATABASE_URL and JWT secret");
+      console.log(`   3. createdb ${projectName}`);
+      console.log("   4. npm run db:migrate");
+      console.log("   5. npm run seed");
+      console.log("   6. bun run dev");
+    } else {
+      console.log("   2. Update .env file with your MongoDB URI and JWT secret");
+      console.log("   3. Start MongoDB server");
+      console.log("   4. bun run dev");
+    }
     console.log(colors.blue("\n\u{1F4DA} Useful commands:"));
     console.log("   \u2022 npm run build   - Build TypeScript to JavaScript");
     console.log("   \u2022 npm start       - Start production server");
@@ -7277,7 +7319,7 @@ program2.command("new").alias("create").argument("<project-name>", "Name of the 
     console.log("   \u2022 POST /api/auth/login    - Login user");
     console.log("   \u2022 GET  /api/auth/me       - Get current user");
     console.log(colors.yellow("\n\u{1F4A1} Don't forget to:"));
-    console.log("   \u2022 Set up your MongoDB database");
+    console.log(`   \u2022 Set up your ${isPostgres ? "PostgreSQL" : "MongoDB"} database`);
     console.log("   \u2022 Generate a secure JWT secret");
     console.log("   \u2022 Configure your environment variables");
     console.log("   \u2022 Review the generated TypeScript code");

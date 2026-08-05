@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as readline from 'readline';
 import {
-  GeneratorError, FieldSpec, resolveProject, getVersion, Framework, FRAMEWORKS,
+  GeneratorError, FieldSpec, resolveProject, getVersion, Framework, FRAMEWORKS, Database, DATABASES,
   capitalize, toCamelCase, toUpperSnakeCase, readModelManifest,
 } from './generators/context';
 import { createEnum } from './generators/enum';
@@ -365,8 +365,9 @@ program
   .alias('create')
   .argument('<project-name>', 'Name of the project to create')
   .option('--framework <framework>', 'Framework choice: express or elysia (default: express)')
+  .option('--database <database>', 'Database choice: mongodb or postgres (default: mongodb)')
   .description('Create a new TypeScript Bun API project')
-  .action(async (projectName: string, options: { framework?: string }) => {
+  .action(async (projectName: string, options: { framework?: string; database?: string }) => {
     try {
       // Resolve framework: the --framework flag wins (CI-friendly). Otherwise
       // prompt interactively — but only when attached to a TTY. In non-interactive
@@ -390,9 +391,32 @@ program
         process.exit(1);
       }
 
+      // Same resolution order for the database axis: flag wins, then TTY prompt,
+      // then the mongodb default so non-interactive runs stay silent.
+      let database = options?.database?.toLowerCase();
+      if (!database) {
+        if (process.stdin.isTTY) {
+          const rl = createReadlineInterface();
+          const answer = (await askQuestion(
+            rl,
+            colors.cyan('\n🗄️  Choose a database:\n  1) MongoDB (default)\n  2) PostgreSQL\nEnter choice [1-2 or name]: ')
+          )).trim().toLowerCase();
+          rl.close();
+          database = (answer === '2' || answer === 'postgres' || answer === 'postgresql') ? 'postgres' : 'mongodb';
+        } else {
+          database = 'mongodb';
+        }
+      }
+      if (!DATABASES.includes(database as Database)) {
+        console.error(colors.red('Error: Database must be either mongodb or postgres'));
+        process.exit(1);
+      }
+      const isPostgres = database === 'postgres';
+
       const result = await createProject({
         name: projectName,
         framework: framework as Framework,
+        database: database as Database,
         log: (m: string) => console.log(m),
       });
 
@@ -400,9 +424,17 @@ program
 
       console.log(colors.cyan('\n📋 Next steps:'));
       console.log(`   1. cd ${projectName}`);
-      console.log('   2. Update .env file with your MongoDB URI and JWT secret');
-      console.log('   3. Start MongoDB server');
-      console.log('   4. bun run dev');
+      if (isPostgres) {
+        console.log('   2. Update .env file with your DATABASE_URL and JWT secret');
+        console.log(`   3. createdb ${projectName}`);
+        console.log('   4. npm run db:migrate');
+        console.log('   5. npm run seed');
+        console.log('   6. bun run dev');
+      } else {
+        console.log('   2. Update .env file with your MongoDB URI and JWT secret');
+        console.log('   3. Start MongoDB server');
+        console.log('   4. bun run dev');
+      }
 
       console.log(colors.blue('\n📚 Useful commands:'));
       console.log('   • npm run build   - Build TypeScript to JavaScript');
@@ -421,7 +453,7 @@ program
       console.log('   • GET  /api/auth/me       - Get current user');
 
       console.log(colors.yellow('\n💡 Don\'t forget to:'));
-      console.log('   • Set up your MongoDB database');
+      console.log(`   • Set up your ${isPostgres ? 'PostgreSQL' : 'MongoDB'} database`);
       console.log('   • Generate a secure JWT secret');
       console.log('   • Configure your environment variables');
       console.log('   • Review the generated TypeScript code');

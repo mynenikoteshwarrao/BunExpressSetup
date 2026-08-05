@@ -17052,7 +17052,7 @@ var applyDbFragments = async (projectPath, database, framework, projectName) => 
     }
   }
 };
-var indexRouteContent = (projectName) => `import { Router, Request, Response } from 'express';
+var indexRouteContent = (projectName, database) => `import { Router, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
 const router = Router();
@@ -17077,7 +17077,7 @@ router.get('/', (req: Request, res: Response) => {
     message: 'Welcome to ${projectName} API',
     data: {
       version: '${getVersion()}',
-      description: 'TypeScript API built with Bun, Express, and MongoDB',
+      description: 'TypeScript API built with Bun, Express, and ${database === "postgres" ? "PostgreSQL" : "MongoDB"}',
       documentation: '/api-docs'
     }
   };
@@ -17301,6 +17301,10 @@ var createProject = async (opts) => {
   if (!FRAMEWORKS.includes(framework)) {
     throw new GeneratorError("UNSUPPORTED_FRAMEWORK", `Unsupported framework: "${framework}" (must be one of ${FRAMEWORKS.join(", ")})`);
   }
+  const database = opts.database ?? "mongodb";
+  if (!DATABASES.includes(database)) {
+    throw new GeneratorError("UNSUPPORTED_DATABASE", `Unsupported database: "${database}" (must be one of ${DATABASES.join(", ")})`);
+  }
   const directory = opts.directory ?? process.cwd();
   const dirStat = await import_fs_extra2.default.stat(directory).catch(() => null);
   if (!dirStat || !dirStat.isDirectory()) {
@@ -17314,11 +17318,11 @@ var createProject = async (opts) => {
       throw new GeneratorError("DUPLICATE", `Target already exists: "${projectPath}"`);
     }
   }
-  const database = "mongodb";
   log(`\u{1F680} Creating TypeScript Bun API project: ${opts.name}`);
   log(`\u{1F4C1} Project directory: ${projectPath}`);
   await import_fs_extra2.default.ensureDir(projectPath);
   log(`\u{1F9E9} Framework: ${framework}`);
+  log(`\u{1F5C4}\uFE0F  Database: ${database}`);
   const templatePath = import_path2.default.join(templatesDir(), framework);
   const sharedTemplatePath = import_path2.default.join(templatesDir(), "shared");
   const srcPath = import_path2.default.join(projectPath, "src");
@@ -17369,10 +17373,19 @@ var createProject = async (opts) => {
     await import_fs_extra2.default.copy(sharedSrcPath, projectSrcPath);
     log("\u2705 Copied shared source files");
   }
-  const dbTemplateSrc = import_path2.default.join(templatesDir(), "db", database, "src");
+  const dbTemplateDir = import_path2.default.join(templatesDir(), "db", database);
+  const dbTemplateSrc = import_path2.default.join(dbTemplateDir, "src");
   if (await import_fs_extra2.default.pathExists(dbTemplateSrc)) {
     await import_fs_extra2.default.copy(dbTemplateSrc, projectSrcPath);
     log(`\u2705 Copied ${database} source files`);
+  }
+  const FRAGMENTS = /* @__PURE__ */ new Set(["src", "package.deps.json", "env.fragment", "readme.fragment.md"]);
+  for (const entry of await import_fs_extra2.default.readdir(dbTemplateDir).catch(() => [])) {
+    if (FRAGMENTS.has(entry)) continue;
+    const dest = import_path2.default.join(projectPath, entry);
+    await import_fs_extra2.default.copy(import_path2.default.join(dbTemplateDir, entry), dest);
+    files.push(dest);
+    log(`\u2705 Created ${database} file: ${entry}`);
   }
   if (await import_fs_extra2.default.pathExists(projectSrcPath)) {
     await replaceInDir(projectSrcPath, opts.name);
@@ -17393,7 +17406,7 @@ var createProject = async (opts) => {
   if (framework === "express") {
     const indexPath = import_path2.default.join(srcPath, "routes", "index.ts");
     const authPath = import_path2.default.join(srcPath, "routes", "auth.ts");
-    await import_fs_extra2.default.writeFile(indexPath, indexRouteContent(opts.name));
+    await import_fs_extra2.default.writeFile(indexPath, indexRouteContent(opts.name, database));
     await import_fs_extra2.default.writeFile(authPath, authRouteContent);
     files.push(indexPath, authPath);
     log("\u2705 Created file: src/routes/index.ts");
@@ -17438,6 +17451,7 @@ MAX_PAGE_LIMIT=100`;
   log("\u2705 Created file: .env (with auto-generated JWT secrets)");
   const kotiConfig = {
     framework,
+    database,
     kotiVersion: getVersion(),
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
@@ -18981,20 +18995,21 @@ server.registerTool(
   "create_project",
   {
     title: "Create Project",
-    description: "Scaffold a complete Bun + MongoDB API project with your choice of Express or Elysia framework (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email).",
+    description: "Scaffold a complete Bun API project with your choice of Express or Elysia framework and MongoDB or PostgreSQL database (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email).",
     inputSchema: {
       projectName: external_exports.string().regex(/^[a-z0-9-]+$/, 'Must be kebab-case (e.g. "my-api")').describe("Project name in kebab-case (used as directory name and DB name)"),
       framework: external_exports.enum(["express", "elysia"]).optional().default("express").describe("Web framework for the generated project"),
+      database: external_exports.enum(["mongodb", "postgres"]).optional().default("mongodb").describe("Database for the generated project: mongodb (Mongoose) or postgres (Drizzle ORM)"),
       directory: external_exports.string().optional().describe("ABSOLUTE parent directory to create the project in. Defaults to the server process cwd."),
       skipInstall: external_exports.boolean().optional().default(false).describe("Skip running bun/npm install after scaffolding")
     },
     annotations: { title: "Create Project", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
   },
-  async ({ projectName, framework, directory, skipInstall }) => {
+  async ({ projectName, framework, database, directory, skipInstall }) => {
     try {
       if (directory !== void 0) requireAbsolute(directory, "directory");
-      const result = await createProject({ name: projectName, framework, directory, skipInstall });
-      return ok(`Project "${projectName}" created at ${result.projectPath} (framework: ${framework}).`, result.files, result.warnings);
+      const result = await createProject({ name: projectName, framework, database, directory, skipInstall });
+      return ok(`Project "${projectName}" created at ${result.projectPath} (framework: ${framework}, database: ${database}).`, result.files, result.warnings);
     } catch (error) {
       return fail(error);
     }
