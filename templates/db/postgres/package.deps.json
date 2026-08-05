@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "drizzle-orm": "^0.44.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.0",
+    "@types/pg": "^8.15.0"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "cleanup:urls": {
+      "express": "npx ts-node src/scripts/cleanupUrls.ts",
+      "elysia": "bun run src/scripts/cleanupUrls.ts"
+    }
+  }
+}

@@ -113,6 +113,9 @@ describe('Koti CLI', () => {
         'templates/db/mongodb/src/models/User.ts',
         'templates/db/mongodb/src/services/authService.ts',
         'templates/db/mongodb/src/seeds/seed.ts',
+        // PostgreSQL db layer
+        'templates/db/postgres/src/config/database.ts',
+        'templates/db/postgres/drizzle.config.ts',
       ];
 
       for (const file of requiredFiles) {
@@ -138,8 +141,12 @@ describe('Koti CLI', () => {
     });
 
     it('db config exports the lifecycle contract', async () => {
-      const src = await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/config/database.ts'), 'utf8');
-      for (const name of ['connectDB', 'closeDB', 'isValidId']) expect(src).toContain(`export const ${name}`);
+      for (const db of ['mongodb', 'postgres']) {
+        const src = await fs.readFile(path.join(ROOT, `templates/db/${db}/src/config/database.ts`), 'utf8');
+        for (const name of ['connectDB', 'closeDB', 'isValidId']) {
+          expect(src, `${db} database.ts missing ${name}`).toContain(`export const ${name}`);
+        }
+      }
     });
 
     it('template server.ts should not have hardcoded version', () => {

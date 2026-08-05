@@ -456,11 +456,11 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 1: Failing locks** — extend cli.test.ts: required-files gains `templates/db/postgres/src/config/database.ts`, `templates/db/postgres/drizzle.config.ts`, `templates/db/postgres/drizzle/meta/_journal.json`; the lifecycle-contract test loops over both `templates/db/{mongodb,postgres}/src/config/database.ts`.
-- [ ] **Step 2: Run — expect FAIL.**
-- [ ] **Step 3: Implement** the files above. Note: the initial migration + meta snapshot are produced by running `npx drizzle-kit generate` against the Task-9 schema — so **write this task's files now, generate the migration at the end of Task 9**, and only then flip the required-files lock for `drizzle/meta/_journal.json` (keep that single assertion commented with a `// enabled after models task` note until then if ordering demands).
-- [ ] **Step 4: Suite green** (postgres template files exist; nothing consumes them yet).
-- [ ] **Step 5: Commit** — `git commit -am "feat(templates): postgres db layer skeleton — config, drizzle.config, fragments"`
+- [x] **Step 1: Failing locks** — extend cli.test.ts: required-files gains `templates/db/postgres/src/config/database.ts`, `templates/db/postgres/drizzle.config.ts`, `templates/db/postgres/drizzle/meta/_journal.json`; the lifecycle-contract test loops over both `templates/db/{mongodb,postgres}/src/config/database.ts`.
+- [x] **Step 2: Run — expect FAIL.**
+- [x] **Step 3: Implement** the files above. Note: the initial migration + meta snapshot are produced by running `npx drizzle-kit generate` against the Task-9 schema — so **write this task's files now, generate the migration at the end of Task 9**, and only then flip the required-files lock for `drizzle/meta/_journal.json` (keep that single assertion commented with a `// enabled after models task` note until then if ordering demands).
+- [x] **Step 4: Suite green** (postgres template files exist; nothing consumes them yet).
+- [x] **Step 5: Commit** — `git commit -am "feat(templates): postgres db layer skeleton — config, drizzle.config, fragments"`
 
 ---
 
