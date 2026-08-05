@@ -4,6 +4,7 @@ import { users } from '../models/User';
 import { roles } from '../models/Role';
 import { userRoles } from '../models/UserRole';
 import { AppError } from '../utils/AppError';
+import { hashPassword } from './authService';
 import { PublicUser, toPublic } from './serialize';
 
 export interface ICreateUserInput {
@@ -160,11 +161,15 @@ export const createUser = async (data: ICreateUserInput) => {
     }
   }
 
+  // There is no pre('save') hook here — every write that touches a password
+  // hashes explicitly, exactly as authService.register does.
+  const password = await hashPassword(data.password);
+
   const created = await db.transaction(async (tx) => {
     const [row] = await tx.insert(users).values({
       username: data.username,
       email: data.email,
-      password: data.password,
+      password,
       firstName: data.firstName,
       lastName: data.lastName,
       authProvider: 'local',

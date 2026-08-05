@@ -283,6 +283,27 @@ describe('Koti CLI', () => {
       }
     });
 
+    // Mongoose hashes in a pre('save') hook. Postgres has none, so every write
+    // that touches a password has to hash explicitly — a miss here stores the
+    // credential in plaintext and locks the user out (compare vs plaintext fails).
+    it('postgres never writes a password without hashing it first', async () => {
+      const users = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/userService.ts'), 'utf8');
+      expect(users).toContain('hashPassword');
+      expect(users).not.toMatch(/password:\s*data\.password/);
+
+      // Only what actually reaches the database: the password key inside a
+      // drizzle .values({...}) / .set({...}) literal.
+      for (const file of ['services/authService.ts', 'services/userService.ts', 'seeds/seed.ts']) {
+        const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src', file), 'utf8');
+        for (const m of src.matchAll(/\.(?:values|set)\(\{([\s\S]{0,600}?)\}\)/g)) {
+          const assigned = m[1].match(/(?:^|[\s,{])password:\s*([^,\n]+)/);
+          if (!assigned) continue;
+          expect(assigned[1], `${file} writes an unhashed password: ${assigned[0].trim()}`)
+            .toMatch(/hash|Hash|null/);
+        }
+      }
+    });
+
     it('both service barrels re-export the same five modules', async () => {
       const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
       const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));
