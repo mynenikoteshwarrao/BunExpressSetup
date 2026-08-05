@@ -232,6 +232,43 @@ describe('Koti CLI', () => {
     });
   });
 
+  // Both db layers must expose the same service functions: controllers and
+  // routes are framework-axis files and are never regenerated on db:switch,
+  // so any name that exists on one side and not the other breaks a switch.
+  describe('db layer parity', () => {
+    const exportedNames = (src: string): Set<string> => {
+      const names = new Set<string>();
+      for (const m of src.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)) names.add(m[1]);
+      for (const m of src.matchAll(/export\s+const\s+(\w+)/g)) names.add(m[1]);
+      return names;
+    };
+
+    for (const service of ['userService', 'authService']) {
+      it(`postgres ${service} exports every function the mongodb one does`, async () => {
+        const mongo = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/mongodb/src/services/${service}.ts`), 'utf8'));
+        const pg = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/postgres/src/services/${service}.ts`), 'utf8'));
+        const missing = [...mongo].filter(n => !pg.has(n));
+        expect(missing, `postgres ${service} is missing: ${missing.join(', ')}`).toEqual([]);
+      });
+    }
+
+    it('postgres authService keeps the v3.0.1 token guards', async () => {
+      const c = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/authService.ts'), 'utf8');
+      expect(c).toContain('await verifyRefreshToken');       // awaited verification
+      expect(c).not.toContain('your-super-secret-jwt-key');  // no fallback secrets
+      expect(c).not.toContain('your-refresh-secret');
+      expect(c).not.toMatch(/JWT_SECRET\s*\|\|/);
+      // HS256 pinning itself lives in the shared tokenUtils, locked by test #4 above.
+    });
+
+    it('postgres serializer strips every secret field from wire responses', async () => {
+      const c = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/serialize.ts'), 'utf8');
+      for (const secret of ['password', 'refreshTokens', 'passwordResetToken', 'passwordResetExpires', 'emailVerificationToken']) {
+        expect(c, `serialize.ts does not strip ${secret}`).toContain(`'${secret}'`);
+      }
+    });
+  });
+
   describe('README validation', () => {
     it('should not have duplicated version in install command', () => {
       const content = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');

@@ -540,11 +540,11 @@ Implementation notes that MUST be honored (each maps to a spec §5 bullet):
 - `googleAuth(profile)`: find by googleId → link by email → create, inside one transaction — single home for the upsert (passport + elysia oauth both delegate).
 - Search/pagination in `getUsers`: `ilike` + `or` over the string columns, `count(*)` for totals — same response envelope (`PaginationResult`) as mongo.
 
-- [ ] **Step 1: Failing locks** — cli.test.ts: PG authService must contain `await ` on token verification calls, `HS256`, and must NOT contain fallback-secret patterns (mirror the assertions of the existing security block at 141-150, pointed at the postgres file); parity lock: every `export async function` name present in `templates/db/mongodb/src/services/userService.ts` also appears in the postgres one (cheap regex extraction of `export (async )?function (\w+)` / `export const (\w+)` from both files, compared as sets).
-- [ ] **Step 2: Run — expect FAIL.**
-- [ ] **Step 3: Port the two services** per the notes above. Keep each file under 500 lines (move shared helpers into `serialize.ts` or a `queries.ts` sibling if needed).
-- [ ] **Step 4: Suite green.** Also run the scratch-project `tsc --noEmit` from Task 9 with services included.
-- [ ] **Step 5: Commit** — `git commit -am "feat(templates): postgres auth + user services with wire-contract serializer"`
+- [x] **Step 1: Failing locks** — cli.test.ts: PG authService must contain `await ` on token verification calls, `HS256`, and must NOT contain fallback-secret patterns (mirror the assertions of the existing security block at 141-150, pointed at the postgres file); parity lock: every `export async function` name present in `templates/db/mongodb/src/services/userService.ts` also appears in the postgres one (cheap regex extraction of `export (async )?function (\w+)` / `export const (\w+)` from both files, compared as sets).
+- [x] **Step 2: Run — expect FAIL.**
+- [x] **Step 3: Port the two services** per the notes above. Keep each file under 500 lines (move shared helpers into `serialize.ts` or a `queries.ts` sibling if needed).
+- [x] **Step 4: Suite green.** Also run the scratch-project `tsc --noEmit` from Task 9 with services included.
+- [x] **Step 5: Commit** — `git commit -am "feat(templates): postgres auth + user services with wire-contract serializer"`
 
 ---
 
