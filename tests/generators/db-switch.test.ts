@@ -63,6 +63,11 @@ describe('switchDatabase', () => {
       fields: [{ name: 'label', type: 'String' }], crud: true, tasks: false,
     });
 
+    // A fresh drizzle/ is byte-identical to the template, so "the directory is
+    // back" proves nothing about which branch restored it. The sentinel exists
+    // only in this project's history — it can only survive via the .bak.
+    await fs.writeFile(path.join(root, 'drizzle/0001_sentinel.sql'), '-- project-specific migration\n');
+
     await switchDatabase(root, 'mongodb');
     expect(await read(root, 'src/models/Item.ts')).toContain('new Schema<');
     expect(await readJson(root, 'koti.config.json')).toMatchObject({ database: 'mongodb' });
@@ -98,6 +103,13 @@ describe('switchDatabase', () => {
     }
     expect(await read(root, 'src/models/Item.ts')).toContain("pgTable('items'");
     expect(await fs.pathExists(path.join(root, 'drizzle/meta/_journal.json'))).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, 'drizzle/0001_sentinel.sql')),
+      'migration history came from the template, not the .bak',
+    ).toBe(true);
+    for (const gone of ['src/models/UserRole.ts', 'src/services/serialize.ts', 'src/scripts/cleanupUrls.ts']) {
+      expect(await fs.pathExists(path.join(root, gone)), `${gone} was not restored`).toBe(true);
+    }
   }, 60000);
 
   it('pre-3.2 mongo project (no manifest): imports user models, skips built-ins, survives junk', async () => {
