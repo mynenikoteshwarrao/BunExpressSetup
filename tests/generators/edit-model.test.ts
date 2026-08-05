@@ -89,6 +89,16 @@ describe('editModel', () => {
     const model = await fs.readFile(path.join(root, 'src', 'models', 'Product.ts'), 'utf-8');
     expect(model).not.toContain('obsolete');
   });
+  it('reads fields from the manifest, not the source file', async () => {
+    const root = await makeFakeProject('express', 'mongodb'); roots.push(root);
+    await createModel({ projectRoot: root, name: 'Widget', fields: [{ name: 'title', type: 'String' }], crud: false, tasks: false });
+    const modelPath = path.join(root, 'src/models/Widget.ts');
+    await fs.writeFile(modelPath, '// user mangled this file beyond parsing\n');
+    await editModel({ projectRoot: root, name: 'Widget', addFields: [{ name: 'count', type: 'Number' }], removeFields: [], updateCrud: false });
+    const cfg = JSON.parse(await fs.readFile(path.join(root, 'koti.config.json'), 'utf8'));
+    expect(cfg.models.Widget.fields.map((f: FieldSpec) => f.name)).toEqual(['title', 'count']);
+    expect(await fs.readFile(modelPath, 'utf8')).toContain('count'); // regenerated from manifest
+  });
   it('throws INVALID_INPUT when removing a nonexistent field', async () => {
     const root = await makeFakeProject('express'); roots.push(root);
     await createModel({ projectRoot: root, name: 'Product', fields });

@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { makeFakeProject } from '../helpers/fakeProject';
-import { createModel } from '../../src/generators/model';
+import { createModel, importManifestFromSource } from '../../src/generators/model';
 import { FieldSpec } from '../../src/generators/context';
 
 const fields: FieldSpec[] = [
@@ -56,6 +56,37 @@ describe('createModel (express)', () => {
     const root = await makeFakeProject('express'); roots.push(root);
     await expect(createModel({ projectRoot: root, name: 'Product', fields: [{ name: 'a\nb', type: 'String' }] }))
       .rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+});
+
+describe('models manifest', () => {
+  it('createModel records the model in the koti.config.json manifest', async () => {
+    const root = await makeFakeProject('express', 'mongodb'); roots.push(root);
+    await createModel({
+      projectRoot: root, name: 'Product',
+      fields: [{ name: 'title', type: 'String', required: true }], crud: true, tasks: false,
+    });
+    const cfg = JSON.parse(await fs.readFile(path.join(root, 'koti.config.json'), 'utf8'));
+    expect(cfg.models.Product).toEqual({
+      fields: [{ name: 'title', type: 'String', required: true }], crud: true, rbacTasks: false,
+    });
+  });
+
+  it('importManifestFromSource skips built-ins and index.ts, tolerates parse failures', async () => {
+    const root = await makeFakeProject('express', 'mongodb'); roots.push(root);
+    // simulate a pre-3.2 project: user model on disk, no manifest
+    await createModel({ projectRoot: root, name: 'Legacy', fields: [{ name: 'note', type: 'String' }], crud: false, tasks: false });
+    const cfg = JSON.parse(await fs.readFile(path.join(root, 'koti.config.json'), 'utf8'));
+    delete cfg.models;
+    await fs.writeFile(path.join(root, 'koti.config.json'), JSON.stringify(cfg));
+    await fs.copy(
+      path.join(__dirname, '..', '..', 'templates', 'db', 'mongodb', 'src', 'models', 'User.ts'),
+      path.join(root, 'src/models/User.ts'),
+    ); // built-in present
+    await fs.writeFile(path.join(root, 'src/models/Broken.ts'), 'not a schema at all');
+    const { imported, warnings } = await importManifestFromSource(root);
+    expect(imported).toEqual(['Legacy']);
+    expect(warnings.some(w => w.includes('Broken'))).toBe(true);
   });
 });
 

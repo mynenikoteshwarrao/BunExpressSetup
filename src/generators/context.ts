@@ -135,6 +135,45 @@ export const resolveProject = async (root: string): Promise<ProjectContext> => {
   throw new GeneratorError('NOT_KOTI_PROJECT', `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose/drizzle-orm/pg dependency)`);
 };
 
+// --- Models manifest (koti.config.json "models" key) ---
+// Regeneration (koti model:edit, koti db:switch) reads this instead of
+// regex-parsing generated source, which cannot work across DB idioms.
+
+export interface ModelManifestEntry {
+  fields: FieldSpec[];
+  crud: boolean;
+  rbacTasks: boolean;
+}
+
+/** Built-in models shipped by the db layers — never imported into the manifest. */
+export const BUILTIN_MODELS = ['User', 'Role', 'AuditLog', 'Document', 'TinyUrl'] as const;
+
+export const readModelManifest = async (root: string): Promise<Record<string, ModelManifestEntry>> => {
+  try {
+    const config = await fs.readJson(path.join(root, 'koti.config.json'));
+    const models = config?.models;
+    return models && typeof models === 'object' ? models as Record<string, ModelManifestEntry> : {};
+  } catch {
+    return {};
+  }
+};
+
+export const upsertModelManifest = async (
+  root: string, name: string, entry: ModelManifestEntry
+): Promise<void> => {
+  const configPath = path.join(root, 'koti.config.json');
+  let config: Record<string, unknown> = {};
+  try {
+    config = await fs.readJson(configPath);
+  } catch {
+    throw new GeneratorError('IO_ERROR', `Could not read ${configPath} to record the models manifest`);
+  }
+  const models = (config.models && typeof config.models === 'object' ? config.models : {}) as Record<string, ModelManifestEntry>;
+  models[name] = entry;
+  config.models = models;
+  await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+};
+
 // --- moved verbatim from cli.ts:1404-1422 ---
 export const updateIndexExport = async (dirPath: string, exportLine: string): Promise<void> => {
   const indexPath = path.join(dirPath, 'index.ts');

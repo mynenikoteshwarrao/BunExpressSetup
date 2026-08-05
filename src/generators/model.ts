@@ -3,6 +3,7 @@ import path from 'path';
 import {
   GeneratorResult, GeneratorError, resolveProject, capitalize, toCamelCase, toUpperSnakeCase,
   updateIndexExport, assertValidName, FieldSpec, Framework, FIELD_TYPES,
+  BUILTIN_MODELS, ModelManifestEntry, readModelManifest, upsertModelManifest,
 } from './context';
 import { addTaskToEnum } from './task';
 import { generateTypeScriptModel } from './crud/modelFile';
@@ -107,7 +108,10 @@ export const createModel = async (opts: CreateModelOptions): Promise<GeneratorRe
     `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
   );
 
-  if (!opts.crud) return { files, warnings };
+  if (!opts.crud) {
+    await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: false, rbacTasks: false });
+    return { files, warnings };
+  }
 
   // RBAC tasks first, so routes stay consistent with the enum (legacy cli.ts:2312-2331 behavior)
   let withTasks = !!opts.tasks;
@@ -168,7 +172,57 @@ export const createModel = async (opts: CreateModelOptions): Promise<GeneratorRe
         : `Could not update src/routes/index.ts — add manually: .use(${camelName}Routes)`
     );
   }
+  await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: true, rbacTasks: withTasks });
   return { files, warnings };
+};
+
+/**
+ * Sniff a model's crud/rbacTasks flags from disk — used when backfilling the
+ * manifest for a pre-3.2 project that has generated files but no manifest.
+ */
+const sniffModelFlags = async (
+  projectRoot: string, camelName: string
+): Promise<{ crud: boolean; rbacTasks: boolean }> => {
+  const routePath = path.join(projectRoot, 'src', 'routes', `${camelName}.ts`);
+  if (!(await fs.pathExists(routePath))) return { crud: false, rbacTasks: false };
+  const routes = await fs.readFile(routePath, 'utf-8');
+  return { crud: true, rbacTasks: routes.includes('checkPermission(') || routes.includes('auth: [Task.') };
+};
+
+/**
+ * One-time importer for pre-3.2 mongodb projects: parse each user-authored
+ * model file into the manifest. Built-ins and index.ts are skipped (ingesting
+ * them would regenerate the auth models as generic CRUD), and a file that
+ * cannot be parsed produces a warning rather than aborting the import.
+ * Drizzle sources are never parsed — see spec §6.4.
+ */
+export const importManifestFromSource = async (
+  root: string
+): Promise<{ imported: string[]; warnings: string[] }> => {
+  const imported: string[] = [];
+  const warnings: string[] = [];
+  const modelsDir = path.join(root, 'src', 'models');
+  if (!(await fs.pathExists(modelsDir))) return { imported, warnings };
+
+  const entries = (await fs.readdir(modelsDir)).filter(f => f.endsWith('.ts')).sort();
+  for (const file of entries) {
+    const name = path.basename(file, '.ts');
+    if (name === 'index') continue;
+    if ((BUILTIN_MODELS as readonly string[]).includes(name)) continue;
+    try {
+      const fields = await parseExistingModel(root, name);
+      if (fields.length === 0) {
+        warnings.push(`Could not import ${file} into the models manifest — no fields parsed; declare it manually in koti.config.json if it is a Koti model`);
+        continue;
+      }
+      const flags = await sniffModelFlags(root, toCamelCase(name));
+      await upsertModelManifest(root, name, { fields, ...flags });
+      imported.push(name);
+    } catch (error) {
+      warnings.push(`Could not import ${file} into the models manifest (${(error as Error).message}) — declare it manually in koti.config.json if it is a Koti model`);
+    }
+  }
+  return { imported, warnings };
 };
 
 // Moved verbatim from cli.ts:127-167 (parseExistingModel): cwd → projectRoot param;
@@ -231,7 +285,17 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
   const files: string[] = [];
   const warnings: string[] = [...ctx.warnings];
 
-  let updatedFields = await parseExistingModel(ctx.root, opts.name);
+  // Manifest is authoritative for regeneration; the parser is only the
+  // pre-3.2 fallback (and immediately backfills the manifest).
+  const manifest = await readModelManifest(ctx.root);
+  let entry: ModelManifestEntry | undefined = manifest[capitalizedName];
+  if (!entry) {
+    const parsed = await parseExistingModel(ctx.root, opts.name);
+    entry = { fields: parsed, ...(await sniffModelFlags(ctx.root, camelName)) };
+    await upsertModelManifest(ctx.root, capitalizedName, entry);
+  }
+
+  let updatedFields = entry.fields;
   for (const removeName of opts.removeFields ?? []) {
     if (!updatedFields.some(f => f.name === removeName)) {
       throw new GeneratorError('INVALID_INPUT', `Field "${removeName}" does not exist on ${capitalizedName}`);
@@ -289,5 +353,6 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
       files.push(r.file);
     }
   }
+  await upsertModelManifest(ctx.root, capitalizedName, { ...entry, fields: updatedFields });
   return { files, warnings };
 };

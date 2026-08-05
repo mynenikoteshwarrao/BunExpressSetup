@@ -285,7 +285,7 @@ export async function importManifestFromSource(root: string): Promise<{ imported
 
 > Signature note: the option shapes in these tests (`createModel({ projectRoot, name, fields, crud, rbacTasks })`, `editModel({ projectRoot, name, addFields, removeFields, updateCrud })`) must match the *actual* exported signatures — check `src/generators/model.ts` and the canonical calls in `src/mcp-server.ts` (create_model ~line 160, edit_model ~line 185) before writing the tests, and adjust parameter names to what exists.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 // model.test.ts
@@ -323,12 +323,12 @@ it('importManifestFromSource skips built-ins and index.ts, tolerates parse failu
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (no manifest written; editModel still parses source; importer doesn't exist).
+- [x] **Step 2: Run — expect FAIL** (no manifest written; editModel still parses source; importer doesn't exist).
 
-- [ ] **Step 3: Implement.** `readModelManifest`/`upsertModelManifest` read-modify-write `koti.config.json` (preserve unknown keys). `createModel` calls `upsertModelManifest` after writing files. `editModel`: fields come from `readModelManifest(...)[name]` when present, else falls back to `parseExistingModel` **and** immediately backfills the manifest; the resulting field list is upserted after the edit. `importManifestFromSource`: glob `src/models/*.ts`, skip `index.ts` + `BUILTIN_MODELS`, run `parseExistingModel` per file inside try/catch collecting warnings, upsert each success with `{ fields, crud: <sniff route file exists>, rbacTasks: <existing 'auth: [Task.'|'checkPermission(' sniff from model.ts:269> }`. `cli.ts:459`: current-fields display reads the manifest first, falling back to the parser only when the manifest lacks the model.
+- [x] **Step 3: Implement.** `readModelManifest`/`upsertModelManifest` read-modify-write `koti.config.json` (preserve unknown keys). `createModel` calls `upsertModelManifest` after writing files. `editModel`: fields come from `readModelManifest(...)[name]` when present, else falls back to `parseExistingModel` **and** immediately backfills the manifest; the resulting field list is upserted after the edit. `importManifestFromSource`: glob `src/models/*.ts`, skip `index.ts` + `BUILTIN_MODELS`, run `parseExistingModel` per file inside try/catch collecting warnings, upsert each success with `{ fields, crud: <sniff route file exists>, rbacTasks: <existing 'auth: [Task.'|'checkPermission(' sniff from model.ts:269> }`. `cli.ts:459`: current-fields display reads the manifest first, falling back to the parser only when the manifest lacks the model.
 
-- [ ] **Step 4: Full suite green.** The exact-string edit-model regression at `edit-model.test.ts:81` must still pass (regeneration output is unchanged — only the *source of fields* moved).
-- [ ] **Step 5: Commit** — `git commit -am "feat(generators): models manifest in koti.config.json; manifest-first edits"`
+- [x] **Step 4: Full suite green.** The exact-string edit-model regression at `edit-model.test.ts:81` must still pass (regeneration output is unchanged — only the *source of fields* moved).
+- [x] **Step 5: Commit** — `git commit -am "feat(generators): models manifest in koti.config.json; manifest-first edits"`
 
 ---
 

@@ -16909,6 +16909,28 @@ var resolveProject = async (root) => {
   }
   throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose/drizzle-orm/pg dependency)`);
 };
+var readModelManifest = async (root) => {
+  try {
+    const config = await import_fs_extra.default.readJson(import_path.default.join(root, "koti.config.json"));
+    const models = config == null ? void 0 : config.models;
+    return models && typeof models === "object" ? models : {};
+  } catch {
+    return {};
+  }
+};
+var upsertModelManifest = async (root, name, entry) => {
+  const configPath = import_path.default.join(root, "koti.config.json");
+  let config = {};
+  try {
+    config = await import_fs_extra.default.readJson(configPath);
+  } catch {
+    throw new GeneratorError("IO_ERROR", `Could not read ${configPath} to record the models manifest`);
+  }
+  const models = config.models && typeof config.models === "object" ? config.models : {};
+  models[name] = entry;
+  config.models = models;
+  await import_fs_extra.default.writeFile(configPath, JSON.stringify(config, null, 2));
+};
 var updateIndexExport = async (dirPath, exportLine) => {
   const indexPath = import_path.default.join(dirPath, "index.ts");
   try {
@@ -18213,7 +18235,10 @@ var createModel = async (opts) => {
     import_path4.default.join(ctx.root, "src", "models"),
     `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
   );
-  if (!opts.crud) return { files, warnings };
+  if (!opts.crud) {
+    await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: false, rbacTasks: false });
+    return { files, warnings };
+  }
   let withTasks = !!opts.tasks;
   if (withTasks) {
     const taskEntries = [
@@ -18268,7 +18293,14 @@ var createModel = async (opts) => {
       ctx.framework === "express" ? `Could not update src/routes/index.ts \u2014 add manually: router.use('/${camelName}', ${camelName}Routes);` : `Could not update src/routes/index.ts \u2014 add manually: .use(${camelName}Routes)`
     );
   }
+  await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: true, rbacTasks: withTasks });
   return { files, warnings };
+};
+var sniffModelFlags = async (projectRoot, camelName) => {
+  const routePath = import_path4.default.join(projectRoot, "src", "routes", `${camelName}.ts`);
+  if (!await import_fs_extra4.default.pathExists(routePath)) return { crud: false, rbacTasks: false };
+  const routes = await import_fs_extra4.default.readFile(routePath, "utf-8");
+  return { crud: true, rbacTasks: routes.includes("checkPermission(") || routes.includes("auth: [Task.") };
 };
 var parseExistingModel = async (projectRoot, name) => {
   const modelPath = import_path4.default.join(projectRoot, "src", "models", `${capitalize(name)}.ts`);
@@ -18314,7 +18346,14 @@ var editModel = async (opts) => {
   const camelName = toCamelCase(opts.name);
   const files = [];
   const warnings = [...ctx.warnings];
-  let updatedFields = await parseExistingModel(ctx.root, opts.name);
+  const manifest = await readModelManifest(ctx.root);
+  let entry = manifest[capitalizedName];
+  if (!entry) {
+    const parsed = await parseExistingModel(ctx.root, opts.name);
+    entry = { fields: parsed, ...await sniffModelFlags(ctx.root, camelName) };
+    await upsertModelManifest(ctx.root, capitalizedName, entry);
+  }
+  let updatedFields = entry.fields;
   for (const removeName of opts.removeFields ?? []) {
     if (!updatedFields.some((f) => f.name === removeName)) {
       throw new GeneratorError("INVALID_INPUT", `Field "${removeName}" does not exist on ${capitalizedName}`);
@@ -18377,6 +18416,7 @@ var editModel = async (opts) => {
       files.push(r.file);
     }
   }
+  await upsertModelManifest(ctx.root, capitalizedName, { ...entry, fields: updatedFields });
   return { files, warnings };
 };
 

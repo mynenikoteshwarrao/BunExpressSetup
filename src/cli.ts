@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as readline from 'readline';
 import {
   GeneratorError, FieldSpec, resolveProject, getVersion, Framework, FRAMEWORKS,
-  capitalize, toCamelCase, toUpperSnakeCase,
+  capitalize, toCamelCase, toUpperSnakeCase, readModelManifest,
 } from './generators/context';
 import { createEnum } from './generators/enum';
 import { createTask } from './generators/task';
@@ -453,17 +453,24 @@ program
     try {
       console.log(colors.blue(`✏️ Editing TypeScript model: ${capitalize(modelName)}`));
 
-      // Check if model exists
+      // Current fields come from the manifest when it knows this model — the
+      // source parser only understands Mongoose files, so it cannot serve a
+      // Postgres project. Fall back to it for pre-3.2 projects.
       let existingFields: FieldSpec[];
-      try {
-        existingFields = await parseExistingModel(process.cwd(), modelName);
-      } catch (error) {
-        if (error instanceof GeneratorError) {
-          console.log(colors.red(`❌ Model ${capitalize(modelName)} not found!`));
-          console.log(colors.yellow('💡 Use "koti model <name>" to create a new model'));
-          process.exit(1);
+      const manifestEntry = (await readModelManifest(process.cwd()))[capitalize(modelName)];
+      if (manifestEntry) {
+        existingFields = manifestEntry.fields;
+      } else {
+        try {
+          existingFields = await parseExistingModel(process.cwd(), modelName);
+        } catch (error) {
+          if (error instanceof GeneratorError) {
+            console.log(colors.red(`❌ Model ${capitalize(modelName)} not found!`));
+            console.log(colors.yellow('💡 Use "koti model <name>" to create a new model'));
+            process.exit(1);
+          }
+          throw error;
         }
-        throw error;
       }
 
       // Check if CRUD operations exist
