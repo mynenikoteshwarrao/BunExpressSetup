@@ -149,6 +149,24 @@ describe('Koti CLI', () => {
       }
     });
 
+    it('postgres schema uses uuid PKs, a partial unique googleId, and ORM-level updatedAt', async () => {
+      const user = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/User.ts'), 'utf8');
+      expect(user).toContain('gen_random_uuid');
+      expect(user).toContain('IS NOT NULL');   // partial unique index on googleId
+      expect(user).toContain('$onUpdate');
+      const barrel = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/index.ts'), 'utf8');
+      expect(barrel.match(/^export \* from '\.\/\w+';$/gm)).toHaveLength(6);
+    });
+
+    it('postgres template ships the initial migration and its drizzle-kit meta artifacts', async () => {
+      for (const f of ['templates/db/postgres/drizzle/meta/_journal.json',
+                       'templates/db/postgres/drizzle/meta/0000_snapshot.json']) {
+        expect(fs.existsSync(path.join(ROOT, f)), f).toBe(true);
+      }
+      const sql = (await fs.readdir(path.join(ROOT, 'templates/db/postgres/drizzle'))).filter(f => f.endsWith('.sql'));
+      expect(sql.length).toBeGreaterThan(0);
+    });
+
     it('template server.ts should not have hardcoded version', () => {
       const content = fs.readFileSync(
         path.join(ROOT, 'templates', 'express', 'src', 'server.ts'),

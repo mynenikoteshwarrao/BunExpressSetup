@@ -504,11 +504,11 @@ export type NewUser = typeof users.$inferInsert;
 Field inventory for the rest (translate from the mongo models — read each one first): `roles` (name unique, description, tasks `text('tasks').array()`, isActive); `user_roles` (userId uuid FK→users.id, roleId uuid FK→roles.id, composite PK); `audit_logs` (userId uuid, action text, entityType text, entityId uuid, oldValue/newValue `jsonb`, three composite indexes mirroring the mongo ones); `documents` (fileName unique, originalName, mimeType, size, path, s3Key/s3Bucket nullable, metadata `jsonb`, uploadedBy uuid, isDeleted boolean, six indexes per the mongo model); `tiny_urls` (shortCode unique, originalUrl, createdAt — **no TTL: expiry is query-time `WHERE created_at > now() - interval '7 days'` in the service**).
 - Barrel: `export * from './User';` … one line per model (drizzle named exports — spec §6.3).
 
-- [ ] **Step 1: Failing content lock** — cli.test.ts: postgres User.ts must contain `gen_random_uuid`, `IS NOT NULL` (partial unique), `$onUpdate`; barrel must have six `export * from` lines.
-- [ ] **Step 2: Run — expect FAIL.**
-- [ ] **Step 3: Write the six models + barrel.** Then generate the initial migration: in a scratch dir, copy the postgres template, `npm i` the pinned deps, run `npx drizzle-kit generate`; copy the produced `drizzle/` (sql + meta) back into `templates/db/postgres/drizzle/`. Verify `tsc --noEmit` passes in the scratch project (drizzle subpath imports resolve under the express template's node10 resolution — already validated during the sweep).
-- [ ] **Step 4: Suite green; enable the meta-artifacts lock from Task 8 if deferred.**
-- [ ] **Step 5: Commit** — `git commit -am "feat(templates): postgres schema — six tables, partial unique googleId, initial migration + meta"`
+- [x] **Step 1: Failing content lock** — cli.test.ts: postgres User.ts must contain `gen_random_uuid`, `IS NOT NULL` (partial unique), `$onUpdate`; barrel must have six `export * from` lines.
+- [x] **Step 2: Run — expect FAIL.**
+- [x] **Step 3: Write the six models + barrel.** Then generate the initial migration: in a scratch dir, copy the postgres template, `npm i` the pinned deps, run `npx drizzle-kit generate`; copy the produced `drizzle/` (sql + meta) back into `templates/db/postgres/drizzle/`. Verify `tsc --noEmit` passes in the scratch project (drizzle subpath imports resolve under the express template's node10 resolution — already validated during the sweep).
+- [x] **Step 4: Suite green; enable the meta-artifacts lock from Task 8 if deferred.**
+- [x] **Step 5: Commit** — `git commit -am "feat(templates): postgres schema — six tables, partial unique googleId, initial migration + meta"`
 
 ---
 
