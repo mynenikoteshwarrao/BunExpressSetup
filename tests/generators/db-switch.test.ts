@@ -92,6 +92,14 @@ describe('switchDatabase', () => {
     // built-ins come from the overlay, never regenerated as generic CRUD
     expect(await read(root, 'src/services/userService.ts')).toContain('drizzle-orm');
     expect(warnings.some(w => w.includes('Junk'))).toBe(true);
+
+    // The import persists the manifest mid-switch; step 8 must not write a
+    // pre-import snapshot back over it, or the project can never switch again.
+    const after = await readJson(root, 'koti.config.json');
+    expect(after.database).toBe('postgres');
+    expect(after.models?.Legacy?.fields).toBeDefined();
+
+    await expect(switchDatabase(root, 'mongodb')).resolves.toBeTruthy();
   }, 60000);
 
   it('rejects no-op and manifest-less postgres sources', async () => {

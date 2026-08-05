@@ -7300,13 +7300,13 @@ var switchDatabase = async (projectRoot, target) => {
   const files = [];
   const warnings = [...ctx.warnings];
   const configPath = import_path9.default.join(root, "koti.config.json");
-  let config;
+  let initialConfig;
   try {
-    config = await import_fs_extra9.default.readJson(configPath);
+    initialConfig = await import_fs_extra9.default.readJson(configPath);
   } catch {
     throw new GeneratorError("IO_ERROR", `Cannot read ${configPath}`);
   }
-  if (!config.models) {
+  if (!initialConfig.models) {
     if (source === "postgres") {
       throw new GeneratorError(
         "IO_ERROR",
@@ -7378,6 +7378,9 @@ var switchDatabase = async (projectRoot, target) => {
   }
   const projectName = await import_fs_extra9.default.readJson(import_path9.default.join(root, "package.json")).then((p) => p.name ?? import_path9.default.basename(root)).catch(() => import_path9.default.basename(root));
   await applyDbFragments(root, target, ctx.framework, projectName);
+  const config = await import_fs_extra9.default.readJson(configPath).catch(() => {
+    throw new GeneratorError("IO_ERROR", `Cannot read ${configPath}`);
+  });
   config.database = target;
   await import_fs_extra9.default.writeJson(configPath, config, { spaces: 2 });
   files.push(configPath);

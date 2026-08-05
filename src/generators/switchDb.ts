@@ -86,13 +86,15 @@ export const switchDatabase = async (
 
   // 2. Manifest. Mongo sources may predate 3.2 and get a one-time import;
   //    drizzle sources are never parsed, so a lost manifest is fatal.
-  let config: Record<string, any>;
+  //    Nothing read here may be held for the step-8 write: the import below
+  //    persists the manifest, so a snapshot taken now is already stale.
+  let initialConfig: Record<string, any>;
   try {
-    config = await fs.readJson(configPath);
+    initialConfig = await fs.readJson(configPath);
   } catch {
     throw new GeneratorError('IO_ERROR', `Cannot read ${configPath}`);
   }
-  if (!config.models) {
+  if (!initialConfig.models) {
     if (source === 'postgres') {
       throw new GeneratorError(
         'IO_ERROR',
@@ -191,7 +193,11 @@ export const switchDatabase = async (
     .catch(() => path.basename(root));
   await applyDbFragments(root, target, ctx.framework as Framework, projectName);
 
-  // 8. Record the new axis.
+  // 8. Record the new axis — fresh read-modify-write of the `database` key only,
+  //    so the manifest written by the step-2 import survives.
+  const config = await fs.readJson(configPath).catch(() => {
+    throw new GeneratorError('IO_ERROR', `Cannot read ${configPath}`);
+  });
   config.database = target;
   await fs.writeJson(configPath, config, { spaces: 2 });
   files.push(configPath);
