@@ -1,4 +1,4 @@
-import { FieldSpec, capitalize, toCamelCase, toUpperSnakeCase } from '../context';
+import { FieldSpec, Database, capitalize, toCamelCase, toUpperSnakeCase } from '../context';
 
 // Generate CRUD Controller
 // moved verbatim from cli.ts:594-734 (generateCRUDController), typed signature (FieldSpec[] instead of any[])
@@ -146,8 +146,12 @@ export default new ${capitalizedName}Controller();`;
 
 // Generate Joi validation schema for a model
 // moved verbatim from cli.ts:1051-1095 (generateJoiValidation), typed signature (FieldSpec[] instead of any[])
-export const generateJoiValidation = (modelName: string, fields: FieldSpec[]): string => {
+// `database` only tightens ObjectId fields, and only on postgres, where ids
+// really are uuids. Mongodb keeps plain-string validation — 24-hex tightening
+// would change what existing projects accept.
+export const generateJoiValidation = (modelName: string, fields: FieldSpec[], database: Database = 'mongodb'): string => {
   const capitalizedName = capitalize(modelName);
+  const objectIdType = database === 'postgres' ? 'Joi.string().uuid()' : 'Joi.string()';
 
   const joiFields = fields.map(field => {
     let joiType = 'Joi.string()';
@@ -157,7 +161,7 @@ export const generateJoiValidation = (modelName: string, fields: FieldSpec[]): s
       case 'Boolean': joiType = 'Joi.boolean()'; break;
       case 'Date': joiType = 'Joi.date()'; break;
       case 'Array': joiType = 'Joi.array()'; break;
-      case 'ObjectId': joiType = 'Joi.string()'; break;
+      case 'ObjectId': joiType = objectIdType; break;
       default: joiType = 'Joi.any()'; break;
     }
 
@@ -183,7 +187,7 @@ ${fields.map(field => {
       case 'Boolean': joiType = 'Joi.boolean()'; break;
       case 'Date': joiType = 'Joi.date()'; break;
       case 'Array': joiType = 'Joi.array()'; break;
-      case 'ObjectId': joiType = 'Joi.string()'; break;
+      case 'ObjectId': joiType = objectIdType; break;
       default: joiType = 'Joi.any()'; break;
     }
     return `  ${field.name}: ${joiType}.optional()`;

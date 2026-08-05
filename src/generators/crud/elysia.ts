@@ -1,4 +1,4 @@
-import { FieldSpec, capitalize, toCamelCase, toUpperSnakeCase } from '../context';
+import { FieldSpec, Database, capitalize, toCamelCase, toUpperSnakeCase } from '../context';
 
 export const generateElysiaCrudController = (modelName: string, fields: FieldSpec[]): string => {
   const capitalizedName = capitalize(modelName);
@@ -52,22 +52,24 @@ export default ${camelCaseName}Controller;
 `;
 };
 
-const typeBoxFor = (field: FieldSpec): string => {
+// Only ObjectId is database-sensitive, and only on postgres — see the matching
+// note on generateJoiValidation. The route-level idParam stays t.String().
+const typeBoxFor = (field: FieldSpec, database: Database): string => {
   switch (field.type) {
     case 'String': return 't.String()';
     case 'Number': return 't.Number()';
     case 'Boolean': return 't.Boolean()';
     case 'Date': return `t.String({ format: 'date-time' })`;
-    case 'ObjectId': return 't.String()';
+    case 'ObjectId': return database === 'postgres' ? `t.String({ format: 'uuid' })` : 't.String()';
     case 'Array': return 't.Array(t.Any())';
     default: return 't.Any()'; // Mixed, JSON
   }
 };
 
-export const generateTypeBoxValidator = (modelName: string, fields: FieldSpec[]): string => {
+export const generateTypeBoxValidator = (modelName: string, fields: FieldSpec[], database: Database = 'mongodb'): string => {
   const capitalizedName = capitalize(modelName);
   const props = fields.map((field) => {
-    const base = typeBoxFor(field);
+    const base = typeBoxFor(field, database);
     const value = field.required ? base : `t.Optional(${base})`;
     return `  ${field.name}: ${value}`;
   }).join(',\n');

@@ -114,7 +114,7 @@ const runSeed = (cwd: string, script: string): Promise<{ code: number | null; ou
 /** Field definition shared by create_model.fields and edit_model.addFields. */
 const fieldSchema = z.object({
   name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Must be a valid identifier (e.g. "name", "createdBy")').describe('Field name (camelCase)'),
-  type: z.enum(['String', 'Number', 'Date', 'Boolean', 'ObjectId', 'Array', 'Mixed', 'JSON']).describe('Mongoose data type'),
+  type: z.enum(['String', 'Number', 'Date', 'Boolean', 'ObjectId', 'Array', 'Mixed', 'JSON']).describe('Field data type'),
   required: z.boolean().optional().default(false),
   unique: z.boolean().optional().default(false),
   index: z.boolean().optional().default(false).describe('Add a schema-level index on this field'),

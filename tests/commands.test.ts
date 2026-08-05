@@ -441,7 +441,7 @@ describe('Koti CLI Commands Integration', () => {
       ];
 
       const output = await runInteractiveCLI('model Product', input, projectDir);
-      expect(output).toContain('Created TypeScript model');
+      expect(output).toContain('Created Mongoose model');   // 'Drizzle model' on a postgres project
       expect(output).toContain('Created TypeScript controller');
       expect(output).toContain('Created TypeScript service');
       expect(output).toContain('Created TypeScript routes');

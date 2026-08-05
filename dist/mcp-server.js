@@ -17697,6 +17697,225 @@ export class ${capitalizedName}Service {
 export default new ${capitalizedName}Service();`;
 };
 
+// src/generators/crud/drizzle/modelFile.ts
+var toSnakeCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+var pluralize = (word) => {
+  if (/[^aeiou]y$/.test(word)) return `${word.slice(0, -1)}ies`;
+  if (/(s|x|z|ch|sh)$/.test(word)) return `${word}es`;
+  return `${word}s`;
+};
+var tableNameFor = (modelName) => pluralize(toSnakeCase(modelName));
+var tableConstFor = (modelName) => pluralize(toCamelCase(modelName));
+var COLUMN_BUILDER = {
+  String: "text",
+  Number: "doublePrecision",
+  Date: "timestamp",
+  Boolean: "boolean",
+  ObjectId: "uuid",
+  Array: "jsonb",
+  Mixed: "jsonb",
+  JSON: "jsonb"
+};
+var columnFor = (field) => {
+  const col = toSnakeCase(field.name);
+  switch (field.type) {
+    case "Date":
+      return `timestamp('${col}', { withTimezone: true })`;
+    case "Array":
+      return `jsonb('${col}').$type<any[]>()`;
+    default:
+      return `${COLUMN_BUILDER[field.type]}('${col}')`;
+  }
+};
+var defaultFor = (field, warnings) => {
+  const raw = field.default;
+  if (raw === void 0 || raw === "") return "";
+  const skip = (why) => {
+    warnings.push(`Field "${field.name}": default ${JSON.stringify(raw)} ${why} \u2014 emitted without a default`);
+    return "";
+  };
+  switch (field.type) {
+    case "String":
+      return `.default('${raw.replace(/'/g, "''")}')`;
+    case "Number": {
+      const n = Number(raw);
+      return Number.isFinite(n) ? `.default(${n})` : skip("is not a number");
+    }
+    case "Boolean":
+      if (raw === "true" || raw === "false") return `.default(${raw})`;
+      return skip("is not a boolean");
+    case "Date":
+      if (/^(Date\.now\(?\)?|now)$/.test(raw)) return ".defaultNow()";
+      return skip("is not Date.now");
+    case "Array":
+    case "Mixed":
+    case "JSON":
+      try {
+        JSON.parse(raw);
+      } catch {
+        return skip("is not valid JSON");
+      }
+      return `.default(sql\`'${raw.replace(/'/g, "''")}'::jsonb\`)`;
+    default:
+      return skip("has no postgres equivalent");
+  }
+};
+var generateDrizzleModel = (modelName, fields, warnings = []) => {
+  const capitalizedName = capitalize(modelName);
+  const table = tableNameFor(modelName);
+  const tableConst = tableConstFor(modelName);
+  const columns = fields.map((field) => {
+    const chain = [columnFor(field)];
+    if (field.required) chain.push(".notNull()");
+    if (field.unique) chain.push(".unique()");
+    chain.push(defaultFor(field, warnings));
+    return `  ${field.name}: ${chain.join("")},`;
+  });
+  const indexed = fields.filter((f) => f.index);
+  const tableExtras = indexed.length > 0 ? `, (t) => [
+${indexed.map((f) => `  index('${table}_${toSnakeCase(f.name)}_idx').on(t.${f.name}),`).join("\n")}
+]` : "";
+  const builders = /* @__PURE__ */ new Set(["pgTable", "uuid", "timestamp"]);
+  for (const f of fields) builders.add(COLUMN_BUILDER[f.type]);
+  if (indexed.length > 0) builders.add("index");
+  const IMPORT_ORDER = ["pgTable", "uuid", "text", "doublePrecision", "boolean", "timestamp", "jsonb", "index"];
+  const imports = IMPORT_ORDER.filter((b) => builders.has(b)).join(", ");
+  return `import { ${imports} } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+export const ${tableConst} = pgTable('${table}', {
+  id: uuid('id').primaryKey().default(sql\`gen_random_uuid()\`),
+${columns.join("\n")}
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+}${tableExtras});
+
+export type ${capitalizedName} = typeof ${tableConst}.$inferSelect;
+export type New${capitalizedName} = typeof ${tableConst}.$inferInsert;
+`;
+};
+
+// src/generators/crud/drizzle/service.ts
+var generateDrizzleCRUDService = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  const table = tableConstFor(modelName);
+  const stringFields = fields.filter((f) => f.type === "String");
+  const searchBlock = stringFields.length > 0 ? `
+      // Build search query (ILIKE is the postgres equivalent of mongo's $regex)
+      let where;
+      if (search) {
+        const like = \`%\${search}%\`;
+        where = or(${stringFields.map((f) => `ilike(${table}.${f.name}, like)`).join(", ")});
+      }
+` : `
+      const where = undefined;   // no String fields to search
+`;
+  const sortable = ["createdAt", "updatedAt", ...fields.map((f) => f.name)].map((name) => `  ${name}: ${table}.${name},`).join("\n");
+  return `import { count, asc, desc, eq, ilike, or } from 'drizzle-orm';
+import { AppError } from '../utils/AppError';
+import { db } from '../config/database';
+import { ${table} } from '../models/${capitalizedName}';
+import { PaginationResult, QueryOptions } from '../types/api';
+
+const SORTABLE = {
+${sortable}
+} as const;
+
+export class ${capitalizedName}Service {
+  /**
+   * Get all ${capitalizedName}s with pagination and search
+   */
+  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
+    try {
+      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+      const offset = (page - 1) * limit;
+${searchBlock}
+      const sortColumn = SORTABLE[sortBy as keyof typeof SORTABLE] ?? ${table}.createdAt;
+
+      // Execute queries
+      const [data, totals] = await Promise.all([
+        db.select().from(${table}).where(where)
+          .orderBy(sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn))
+          .limit(limit)
+          .offset(offset),
+        db.select({ value: count() }).from(${table}).where(where)
+      ]);
+
+      const total = totals[0]?.value ?? 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Get ${capitalizedName} by ID
+   */
+  public async getById(id: string): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.select().from(${table}).where(eq(${table}.id, id)).limit(1);
+      return ${camelCaseName} ?? null;
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Create new ${capitalizedName}
+   */
+  public async create(data: any): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.insert(${table}).values(data).returning();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Update ${capitalizedName} by ID
+   */
+  public async update(id: string, data: any): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.update(${table})
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(${table}.id, id))
+        .returning();
+      return ${camelCaseName} ?? null;
+    } catch (error) {
+      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Delete ${capitalizedName} by ID
+   */
+  public async delete(id: string): Promise<boolean> {
+    try {
+      const deleted = await db.delete(${table}).where(eq(${table}.id, id)).returning({ id: ${table}.id });
+      return deleted.length > 0;
+    } catch (error) {
+      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+}
+
+export default new ${capitalizedName}Service();`;
+};
+
 // src/generators/crud/express.ts
 var generateCRUDController = (modelName, fields) => {
   const capitalizedName = capitalize(modelName);
@@ -17838,8 +18057,9 @@ export class ${capitalizedName}Controller {
 
 export default new ${capitalizedName}Controller();`;
 };
-var generateJoiValidation = (modelName, fields) => {
+var generateJoiValidation = (modelName, fields, database = "mongodb") => {
   const capitalizedName = capitalize(modelName);
+  const objectIdType = database === "postgres" ? "Joi.string().uuid()" : "Joi.string()";
   const joiFields = fields.map((field) => {
     let joiType = "Joi.string()";
     switch (field.type) {
@@ -17859,7 +18079,7 @@ var generateJoiValidation = (modelName, fields) => {
         joiType = "Joi.array()";
         break;
       case "ObjectId":
-        joiType = "Joi.string()";
+        joiType = objectIdType;
         break;
       default:
         joiType = "Joi.any()";
@@ -17896,7 +18116,7 @@ ${fields.map((field) => {
         joiType = "Joi.array()";
         break;
       case "ObjectId":
-        joiType = "Joi.string()";
+        joiType = objectIdType;
         break;
       default:
         joiType = "Joi.any()";
@@ -18153,7 +18373,7 @@ export const ${camelCaseName}Controller = {
 export default ${camelCaseName}Controller;
 `;
 };
-var typeBoxFor = (field) => {
+var typeBoxFor = (field, database) => {
   switch (field.type) {
     case "String":
       return "t.String()";
@@ -18164,17 +18384,17 @@ var typeBoxFor = (field) => {
     case "Date":
       return `t.String({ format: 'date-time' })`;
     case "ObjectId":
-      return "t.String()";
+      return database === "postgres" ? `t.String({ format: 'uuid' })` : "t.String()";
     case "Array":
       return "t.Array(t.Any())";
     default:
       return "t.Any()";
   }
 };
-var generateTypeBoxValidator = (modelName, fields) => {
+var generateTypeBoxValidator = (modelName, fields, database = "mongodb") => {
   const capitalizedName = capitalize(modelName);
   const props = fields.map((field) => {
-    const base = typeBoxFor(field);
+    const base = typeBoxFor(field, database);
     const value = field.required ? base : `t.Optional(${base})`;
     return `  ${field.name}: ${value}`;
   }).join(",\n");
@@ -18314,12 +18534,13 @@ var createModel = async (opts) => {
   if (await import_fs_extra4.default.pathExists(modelPath)) {
     throw new GeneratorError("DUPLICATE", `Model already exists: ${modelPath}`);
   }
+  const isPg = ctx.database === "postgres";
   await import_fs_extra4.default.ensureDir(import_path4.default.dirname(modelPath));
-  await import_fs_extra4.default.writeFile(modelPath, generateTypeScriptModel(opts.name, opts.fields));
+  await import_fs_extra4.default.writeFile(modelPath, isPg ? generateDrizzleModel(opts.name, opts.fields, warnings) : generateTypeScriptModel(opts.name, opts.fields));
   files.push(modelPath);
   await updateIndexExport(
     import_path4.default.join(ctx.root, "src", "models"),
-    `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
+    isPg ? `export * from './${capitalizedName}';` : `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
   );
   if (!opts.crud) {
     await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: false, rbacTasks: false });
@@ -18354,13 +18575,13 @@ var createModel = async (opts) => {
     },
     {
       file: import_path4.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
-      content: generateCRUDService(opts.name, opts.fields),
+      content: isPg ? generateDrizzleCRUDService(opts.name, opts.fields) : generateCRUDService(opts.name, opts.fields),
       barrelDir: import_path4.default.join(ctx.root, "src", "services"),
       barrelLine: `export * from './${camelName}Service';`
     },
     {
       file: import_path4.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
-      content: isElysia ? generateTypeBoxValidator(opts.name, opts.fields) : generateJoiValidation(opts.name, opts.fields)
+      content: isElysia ? generateTypeBoxValidator(opts.name, opts.fields, ctx.database) : generateJoiValidation(opts.name, opts.fields, ctx.database)
     },
     {
       file: import_path4.default.join(ctx.root, "src", "routes", `${camelName}.ts`),
@@ -18463,7 +18684,8 @@ var editModel = async (opts) => {
     const previousModel = await import_fs_extra4.default.readFile(modelPath, "utf-8");
     await import_fs_extra4.default.writeFile(modelPath + ".bak", previousModel);
   }
-  await import_fs_extra4.default.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
+  const isPg = ctx.database === "postgres";
+  await import_fs_extra4.default.writeFile(modelPath, isPg ? generateDrizzleModel(opts.name, updatedFields, warnings) : generateTypeScriptModel(opts.name, updatedFields));
   files.push(modelPath);
   if (opts.updateCrud) {
     const isElysia = ctx.framework === "elysia";
@@ -18480,11 +18702,11 @@ var editModel = async (opts) => {
       },
       {
         file: import_path4.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
-        content: generateCRUDService(opts.name, updatedFields)
+        content: isPg ? generateDrizzleCRUDService(opts.name, updatedFields) : generateCRUDService(opts.name, updatedFields)
       },
       {
         file: import_path4.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
-        content: isElysia ? generateTypeBoxValidator(opts.name, updatedFields) : generateJoiValidation(opts.name, updatedFields)
+        content: isElysia ? generateTypeBoxValidator(opts.name, updatedFields, ctx.database) : generateJoiValidation(opts.name, updatedFields, ctx.database)
       },
       {
         file: routePath,
@@ -18984,7 +19206,7 @@ ${output}`));
 });
 var fieldSchema = external_exports.object({
   name: external_exports.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Must be a valid identifier (e.g. "name", "createdBy")').describe("Field name (camelCase)"),
-  type: external_exports.enum(["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"]).describe("Mongoose data type"),
+  type: external_exports.enum(["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"]).describe("Field data type"),
   required: external_exports.boolean().optional().default(false),
   unique: external_exports.boolean().optional().default(false),
   index: external_exports.boolean().optional().default(false).describe("Add a schema-level index on this field"),

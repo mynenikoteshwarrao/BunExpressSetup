@@ -8,6 +8,8 @@ import {
 import { addTaskToEnum } from './task';
 import { generateTypeScriptModel } from './crud/mongoose/modelFile';
 import { generateCRUDService } from './crud/mongoose/service';
+import { generateDrizzleModel } from './crud/drizzle/modelFile';
+import { generateDrizzleCRUDService } from './crud/drizzle/service';
 import { generateCRUDController, generateJoiValidation, generateCRUDRoutes } from './crud/express';
 import { generateElysiaCrudController, generateTypeBoxValidator, generateElysiaCrudRoutes } from './crud/elysia';
 
@@ -100,12 +102,19 @@ export const createModel = async (opts: CreateModelOptions): Promise<GeneratorRe
   if (await fs.pathExists(modelPath)) {
     throw new GeneratorError('DUPLICATE', `Model already exists: ${modelPath}`);
   }
+  const isPg = ctx.database === 'postgres';
   await fs.ensureDir(path.dirname(modelPath));
-  await fs.writeFile(modelPath, generateTypeScriptModel(opts.name, opts.fields));
+  await fs.writeFile(modelPath, isPg
+    ? generateDrizzleModel(opts.name, opts.fields, warnings)
+    : generateTypeScriptModel(opts.name, opts.fields));
   files.push(modelPath);
+  // Drizzle models have no default export — the table const and the inferred
+  // types are all named, so the barrel re-exports the whole module.
   await updateIndexExport(
     path.join(ctx.root, 'src', 'models'),
-    `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
+    isPg
+      ? `export * from './${capitalizedName}';`
+      : `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
   );
 
   if (!opts.crud) {
@@ -144,13 +153,15 @@ export const createModel = async (opts: CreateModelOptions): Promise<GeneratorRe
     },
     {
       file: path.join(ctx.root, 'src', 'services', `${camelName}Service.ts`),
-      content: generateCRUDService(opts.name, opts.fields),
+      content: isPg ? generateDrizzleCRUDService(opts.name, opts.fields) : generateCRUDService(opts.name, opts.fields),
       barrelDir: path.join(ctx.root, 'src', 'services'),
       barrelLine: `export * from './${camelName}Service';`,
     },
     {
       file: path.join(ctx.root, 'src', 'validators', `${camelName}.ts`),
-      content: isElysia ? generateTypeBoxValidator(opts.name, opts.fields) : generateJoiValidation(opts.name, opts.fields),
+      content: isElysia
+        ? generateTypeBoxValidator(opts.name, opts.fields, ctx.database)
+        : generateJoiValidation(opts.name, opts.fields, ctx.database),
     },
     {
       file: path.join(ctx.root, 'src', 'routes', `${camelName}.ts`),
@@ -320,7 +331,10 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
     const previousModel = await fs.readFile(modelPath, 'utf-8');
     await fs.writeFile(modelPath + '.bak', previousModel);
   }
-  await fs.writeFile(modelPath, generateTypeScriptModel(opts.name, updatedFields));
+  const isPg = ctx.database === 'postgres';
+  await fs.writeFile(modelPath, isPg
+    ? generateDrizzleModel(opts.name, updatedFields, warnings)
+    : generateTypeScriptModel(opts.name, updatedFields));
   files.push(modelPath);
 
   if (opts.updateCrud) {
@@ -336,9 +350,11 @@ export const editModel = async (opts: EditModelOptions): Promise<GeneratorResult
       { file: path.join(ctx.root, 'src', 'controllers', `${camelName}Controller.ts`),
         content: isElysia ? generateElysiaCrudController(opts.name, updatedFields) : generateCRUDController(opts.name, updatedFields) },
       { file: path.join(ctx.root, 'src', 'services', `${camelName}Service.ts`),
-        content: generateCRUDService(opts.name, updatedFields) },
+        content: isPg ? generateDrizzleCRUDService(opts.name, updatedFields) : generateCRUDService(opts.name, updatedFields) },
       { file: path.join(ctx.root, 'src', 'validators', `${camelName}.ts`),
-        content: isElysia ? generateTypeBoxValidator(opts.name, updatedFields) : generateJoiValidation(opts.name, updatedFields) },
+        content: isElysia
+          ? generateTypeBoxValidator(opts.name, updatedFields, ctx.database)
+          : generateJoiValidation(opts.name, updatedFields, ctx.database) },
       { file: routePath,
         content: isElysia ? generateElysiaCrudRoutes(opts.name, updatedFields, withTasks) : generateCRUDRoutes(opts.name, updatedFields, withTasks) },
     ];

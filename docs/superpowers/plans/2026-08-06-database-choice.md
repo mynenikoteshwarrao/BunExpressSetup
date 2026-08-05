@@ -652,9 +652,9 @@ export function generateDrizzleCRUDService(modelName: string, fields: FieldSpec[
 ```
 - Produces in `model.ts`: `const isPg = ctx.database === 'postgres';` selecting modelFile/service emitters; barrel line `export * from './X'` (pg) vs existing `export { default as X, IX } from './X'` (mongo); validators called with `ctx.database`.
 
-- [ ] **Step 1: Write `crud-drizzle.test.ts`** — exact-string tests in the style of `crud-express.test.ts`: table name pluralization, every FieldType mapping from the table above, `.notNull()`/`.unique()`/index emission, `Date.now` default → `defaultNow()`, warning on unmappable default, service `ilike` emission, uuid-format validator emission for both frameworks when database is postgres, plain `Joi.string()`/`t.String()` when mongodb.
-- [ ] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: green** — plus `model.test.ts` case: `createModel` on a `makeFakeProject('express','postgres')` writes a Drizzle model + service, appends `export * from` to the barrel, and records the manifest.
-- [ ] **Step 5: Commit** — `git commit -am "feat(generators): drizzle model + CRUD service emitters; per-db validator tightening"`
+- [x] **Step 1: Write `crud-drizzle.test.ts`** — exact-string tests in the style of `crud-express.test.ts`: table name pluralization, every FieldType mapping from the table above, `.notNull()`/`.unique()`/index emission, `Date.now` default → `defaultNow()`, warning on unmappable default, service `ilike` emission, uuid-format validator emission for both frameworks when database is postgres, plain `Joi.string()`/`t.String()` when mongodb.
+- [x] **Step 2: Run — expect FAIL.  Step 3: Implement.  Step 4: green** — plus `model.test.ts` case: `createModel` on a `makeFakeProject('express','postgres')` writes a Drizzle model + service, appends `export * from` to the barrel, and records the manifest.
+- [x] **Step 5: Commit** — `git commit -am "feat(generators): drizzle model + CRUD service emitters; per-db validator tightening"`
 
 **Phase-2 exit criterion:** `koti new x --framework <fw> --database postgres` produces a project that installs, typechecks, migrates, seeds, and boots against a local Postgres (manual smoke on one framework minimum; record results in the PR description).
 

@@ -90,6 +90,31 @@ describe('models manifest', () => {
   });
 });
 
+describe('createModel (postgres)', () => {
+  it('emits a drizzle model + service, a star barrel line, and records the manifest', async () => {
+    const root = await makeFakeProject('express', 'postgres'); roots.push(root);
+    await createModel({ projectRoot: root, name: 'Product', fields, crud: true, tasks: false });
+
+    const model = await fs.readFile(path.join(root, 'src', 'models', 'Product.ts'), 'utf-8');
+    expect(model).toContain(`pgTable('products'`);
+    expect(model).not.toContain(`from 'mongoose'`);
+
+    const service = await fs.readFile(path.join(root, 'src', 'services', 'productService.ts'), 'utf-8');
+    expect(service).toContain('ilike(products.title, like)');
+    expect(service).not.toContain('countDocuments');
+
+    const barrel = await fs.readFile(path.join(root, 'src', 'models', 'index.ts'), 'utf-8');
+    expect(barrel).toContain(`export * from './Product';`);
+    expect(barrel).not.toContain('IProduct');
+
+    const validator = await fs.readFile(path.join(root, 'src', 'validators', 'product.ts'), 'utf-8');
+    expect(validator).toContain('Joi.string()');   // route/validator export names stay frozen
+
+    const cfg = JSON.parse(await fs.readFile(path.join(root, 'koti.config.json'), 'utf8'));
+    expect(cfg.models.Product).toEqual({ fields, crud: true, rbacTasks: false });
+  });
+});
+
 describe('createModel (elysia)', () => {
   it('creates the elysia CRUD chain and registers the route in the chain', async () => {
     const root = await makeFakeProject('elysia'); roots.push(root);

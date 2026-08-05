@@ -147,7 +147,9 @@ program
       const isElysia = ctx.framework === 'elysia';
       const crudCamelName = toCamelCase(modelName);
 
-      console.log(colors.green(`✅ Created TypeScript model: src/models/${capitalize(modelName)}.ts`));
+      console.log(colors.green(
+        `✅ Created ${ctx.database === 'postgres' ? 'Drizzle' : 'Mongoose'} model: src/models/${capitalize(modelName)}.ts`
+      ));
       console.log(colors.green(`✅ Updated export in src/models/index.ts`));
 
       const indexedFieldNames = fields.filter(f => f.index).map(f => f.name);
