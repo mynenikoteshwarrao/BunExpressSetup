@@ -470,9 +470,9 @@ var require_codegen = __commonJS({
       }
     };
     var Throw = class extends Node {
-      constructor(error2) {
+      constructor(error) {
         super();
-        this.error = error2;
+        this.error = error;
       }
       render({ _n }) {
         return `throw ${this.error};` + _n;
@@ -709,9 +709,9 @@ var require_codegen = __commonJS({
       }
     };
     var Catch = class extends BlockNode {
-      constructor(error2) {
+      constructor(error) {
         super();
-        this.error = error2;
+        this.error = error;
       }
       render(opts) {
         return `catch(${this.error})` + super.render(opts);
@@ -902,9 +902,9 @@ var require_codegen = __commonJS({
         this._blockNode(node);
         this.code(tryBody);
         if (catchCode) {
-          const error2 = this.name("e");
-          this._currNode = node.catch = new Catch(error2);
-          catchCode(error2);
+          const error = this.name("e");
+          this._currNode = node.catch = new Catch(error);
+          catchCode(error);
         }
         if (finallyCode) {
           this._currNode = node.finally = new Finally();
@@ -913,8 +913,8 @@ var require_codegen = __commonJS({
         return this._endBlockNode(Catch, Finally);
       }
       // `throw` statement
-      throw(error2) {
-        return this._leafNode(new Throw(error2));
+      throw(error) {
+        return this._leafNode(new Throw(error));
       }
       // start self-balancing block
       block(body, nodeCount) {
@@ -1141,9 +1141,9 @@ var require_util = __commonJS({
       }
     }
     exports2.eachItem = eachItem;
-    function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues3, resultToName }) {
+    function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues2, resultToName }) {
       return (gen, from, to, toName) => {
-        const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues3(from, to);
+        const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues2(from, to);
         return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
       };
     }
@@ -1270,10 +1270,10 @@ var require_errors = __commonJS({
     exports2.keyword$DataError = {
       message: ({ keyword, schemaType }) => schemaType ? (0, codegen_1.str)`"${keyword}" keyword must be ${schemaType} ($data)` : (0, codegen_1.str)`"${keyword}" keyword is invalid ($data)`
     };
-    function reportError(cxt, error2 = exports2.keywordError, errorPaths, overrideAllErrors) {
+    function reportError(cxt, error = exports2.keywordError, errorPaths, overrideAllErrors) {
       const { it } = cxt;
       const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error2, errorPaths);
+      const errObj = errorObjectCode(cxt, error, errorPaths);
       if (overrideAllErrors !== null && overrideAllErrors !== void 0 ? overrideAllErrors : compositeRule || allErrors) {
         addError(gen, errObj);
       } else {
@@ -1281,10 +1281,10 @@ var require_errors = __commonJS({
       }
     }
     exports2.reportError = reportError;
-    function reportExtraError(cxt, error2 = exports2.keywordError, errorPaths) {
+    function reportExtraError(cxt, error = exports2.keywordError, errorPaths) {
       const { it } = cxt;
       const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error2, errorPaths);
+      const errObj = errorObjectCode(cxt, error, errorPaths);
       addError(gen, errObj);
       if (!(compositeRule || allErrors)) {
         returnErrors(it, names_1.default.vErrors);
@@ -1335,19 +1335,19 @@ var require_errors = __commonJS({
       schema: new codegen_1.Name("schema"),
       parentSchema: new codegen_1.Name("parentSchema")
     };
-    function errorObjectCode(cxt, error2, errorPaths) {
+    function errorObjectCode(cxt, error, errorPaths) {
       const { createErrors } = cxt.it;
       if (createErrors === false)
         return (0, codegen_1._)`{}`;
-      return errorObject(cxt, error2, errorPaths);
+      return errorObject(cxt, error, errorPaths);
     }
-    function errorObject(cxt, error2, errorPaths = {}) {
+    function errorObject(cxt, error, errorPaths = {}) {
       const { gen, it } = cxt;
       const keyValues = [
         errorInstancePath(it, errorPaths),
         errorSchemaPath(cxt, errorPaths)
       ];
-      extraErrorProps(cxt, error2, keyValues);
+      extraErrorProps(cxt, error, keyValues);
       return gen.object(...keyValues);
     }
     function errorInstancePath({ errorPath }, { instancePath }) {
@@ -3203,13 +3203,13 @@ var require_utils = __commonJS({
       if (findToken(host, ":") < 2) {
         return { host, isIPV6: false };
       }
-      const ipv62 = getIPV6(host);
-      if (!ipv62.error) {
-        let newHost = ipv62.address;
-        let escapedHost = ipv62.address;
-        if (ipv62.zone) {
-          newHost += "%" + ipv62.zone;
-          escapedHost += "%25" + ipv62.zone;
+      const ipv6 = getIPV6(host);
+      if (!ipv6.error) {
+        let newHost = ipv6.address;
+        let escapedHost = ipv6.address;
+        if (ipv6.zone) {
+          newHost += "%" + ipv6.zone;
+          escapedHost += "%25" + ipv6.zone;
         }
         return { host: newHost, isIPV6: true, escapedHost };
       } else {
@@ -3223,8 +3223,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path2) {
-      let input = path2;
+    function removeDotSegments(path11) {
+      let input = path11;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3298,8 +3298,8 @@ var require_utils = __commonJS({
       }
       return output.join("");
     }
-    function normalizeComponentEncoding(component, esc2) {
-      const func = esc2 !== true ? escape : unescape;
+    function normalizeComponentEncoding(component, esc) {
+      const func = esc !== true ? escape : unescape;
       if (component.scheme !== void 0) {
         component.scheme = func(component.scheme);
       }
@@ -3423,8 +3423,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path2, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path2 && path2 !== "/" ? path2 : void 0;
+        const [path11, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path11 && path11 !== "/" ? path11 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -3576,24 +3576,24 @@ var require_fast_uri = __commonJS({
     function normalize(uri, options) {
       if (typeof uri === "string") {
         uri = /** @type {T} */
-        serialize(parse3(uri, options), options);
+        serialize(parse(uri, options), options);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse3(serialize(uri, options), options);
+        parse(serialize(uri, options), options);
       }
       return uri;
     }
     function resolve(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
-      const resolved = resolveComponent(parse3(baseURI, schemelessOptions), parse3(relativeURI, schemelessOptions), schemelessOptions, true);
+      const resolved = resolveComponent(parse(baseURI, schemelessOptions), parse(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
     function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse3(serialize(base, options), options);
-        relative2 = parse3(serialize(relative2, options), options);
+        base = parse(serialize(base, options), options);
+        relative2 = parse(serialize(relative2, options), options);
       }
       options = options || {};
       if (!options.tolerant && relative2.scheme) {
@@ -3645,13 +3645,13 @@ var require_fast_uri = __commonJS({
     function equal(uriA, uriB, options) {
       if (typeof uriA === "string") {
         uriA = unescape(uriA);
-        uriA = serialize(normalizeComponentEncoding(parse3(uriA, options), true), { ...options, skipEscape: true });
+        uriA = serialize(normalizeComponentEncoding(parse(uriA, options), true), { ...options, skipEscape: true });
       } else if (typeof uriA === "object") {
         uriA = serialize(normalizeComponentEncoding(uriA, true), { ...options, skipEscape: true });
       }
       if (typeof uriB === "string") {
         uriB = unescape(uriB);
-        uriB = serialize(normalizeComponentEncoding(parse3(uriB, options), true), { ...options, skipEscape: true });
+        uriB = serialize(normalizeComponentEncoding(parse(uriB, options), true), { ...options, skipEscape: true });
       } else if (typeof uriB === "object") {
         uriB = serialize(normalizeComponentEncoding(uriB, true), { ...options, skipEscape: true });
       }
@@ -3720,7 +3720,7 @@ var require_fast_uri = __commonJS({
       return uriTokens.join("");
     }
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
-    function parse3(uri, opts) {
+    function parse(uri, opts) {
       const options = Object.assign({}, opts);
       const parsed = {
         scheme: void 0,
@@ -3814,7 +3814,7 @@ var require_fast_uri = __commonJS({
       resolveComponent,
       equal,
       serialize,
-      parse: parse3
+      parse
     };
     module2.exports = fastUri;
     module2.exports.default = fastUri;
@@ -4615,7 +4615,7 @@ var require_limitNumber = __commonJS({
       exclusiveMaximum: { okStr: "<", ok: ops.LT, fail: ops.GTE },
       exclusiveMinimum: { okStr: ">", ok: ops.GT, fail: ops.LTE }
     };
-    var error2 = {
+    var error = {
       message: ({ keyword, schemaCode }) => (0, codegen_1.str)`must be ${KWDs[keyword].okStr} ${schemaCode}`,
       params: ({ keyword, schemaCode }) => (0, codegen_1._)`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
     };
@@ -4624,7 +4624,7 @@ var require_limitNumber = __commonJS({
       type: "number",
       schemaType: "number",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         cxt.fail$data((0, codegen_1._)`${data} ${KWDs[keyword].fail} ${schemaCode} || isNaN(${data})`);
@@ -4640,7 +4640,7 @@ var require_multipleOf = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error2 = {
+    var error = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must be multiple of ${schemaCode}`,
       params: ({ schemaCode }) => (0, codegen_1._)`{multipleOf: ${schemaCode}}`
     };
@@ -4649,7 +4649,7 @@ var require_multipleOf = __commonJS({
       type: "number",
       schemaType: "number",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, schemaCode, it } = cxt;
         const prec = it.opts.multipleOfPrecision;
@@ -4696,7 +4696,7 @@ var require_limitLength = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var ucs2length_1 = require_ucs2length();
-    var error2 = {
+    var error = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxLength" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} characters`;
@@ -4708,7 +4708,7 @@ var require_limitLength = __commonJS({
       type: "string",
       schemaType: "number",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { keyword, data, schemaCode, it } = cxt;
         const op = keyword === "maxLength" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -4728,7 +4728,7 @@ var require_pattern = __commonJS({
     var code_1 = require_code2();
     var util_1 = require_util();
     var codegen_1 = require_codegen();
-    var error2 = {
+    var error = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must match pattern "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{pattern: ${schemaCode}}`
     };
@@ -4737,7 +4737,7 @@ var require_pattern = __commonJS({
       type: "string",
       schemaType: "string",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         const u = it.opts.unicodeRegExp ? "u" : "";
@@ -4763,7 +4763,7 @@ var require_limitProperties = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error2 = {
+    var error = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxProperties" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} properties`;
@@ -4775,7 +4775,7 @@ var require_limitProperties = __commonJS({
       type: "object",
       schemaType: "number",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         const op = keyword === "maxProperties" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -4794,7 +4794,7 @@ var require_required = __commonJS({
     var code_1 = require_code2();
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: ({ params: { missingProperty } }) => (0, codegen_1.str)`must have required property '${missingProperty}'`,
       params: ({ params: { missingProperty } }) => (0, codegen_1._)`{missingProperty: ${missingProperty}}`
     };
@@ -4803,7 +4803,7 @@ var require_required = __commonJS({
       type: "object",
       schemaType: "array",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, schema, schemaCode, data, $data, it } = cxt;
         const { opts } = it;
@@ -4874,7 +4874,7 @@ var require_limitItems = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error2 = {
+    var error = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxItems" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} items`;
@@ -4886,7 +4886,7 @@ var require_limitItems = __commonJS({
       type: "array",
       schemaType: "number",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         const op = keyword === "maxItems" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -4917,7 +4917,7 @@ var require_uniqueItems = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var equal_1 = require_equal();
-    var error2 = {
+    var error = {
       message: ({ params: { i, j } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j} and ${i} are identical)`,
       params: ({ params: { i, j } }) => (0, codegen_1._)`{i: ${i}, j: ${j}}`
     };
@@ -4926,7 +4926,7 @@ var require_uniqueItems = __commonJS({
       type: "array",
       schemaType: "boolean",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, $data, schema, parentSchema, schemaCode, it } = cxt;
         if (!$data && !schema)
@@ -4983,14 +4983,14 @@ var require_const = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var equal_1 = require_equal();
-    var error2 = {
+    var error = {
       message: "must be equal to constant",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValue: ${schemaCode}}`
     };
     var def = {
       keyword: "const",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, $data, schemaCode, schema } = cxt;
         if ($data || schema && typeof schema == "object") {
@@ -5012,7 +5012,7 @@ var require_enum = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var equal_1 = require_equal();
-    var error2 = {
+    var error = {
       message: "must be equal to one of the allowed values",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValues: ${schemaCode}}`
     };
@@ -5020,7 +5020,7 @@ var require_enum = __commonJS({
       keyword: "enum",
       schemaType: "array",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         if (!$data && schema.length === 0)
@@ -5099,7 +5099,7 @@ var require_additionalItems = __commonJS({
     exports2.validateAdditionalItems = void 0;
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
@@ -5108,7 +5108,7 @@ var require_additionalItems = __commonJS({
       type: "array",
       schemaType: ["boolean", "object"],
       before: "uniqueItems",
-      error: error2,
+      error,
       code(cxt) {
         const { parentSchema, it } = cxt;
         const { items } = parentSchema;
@@ -5227,7 +5227,7 @@ var require_items2020 = __commonJS({
     var util_1 = require_util();
     var code_1 = require_code2();
     var additionalItems_1 = require_additionalItems();
-    var error2 = {
+    var error = {
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
@@ -5236,7 +5236,7 @@ var require_items2020 = __commonJS({
       type: "array",
       schemaType: ["object", "boolean"],
       before: "uniqueItems",
-      error: error2,
+      error,
       code(cxt) {
         const { schema, parentSchema, it } = cxt;
         const { prefixItems } = parentSchema;
@@ -5260,7 +5260,7 @@ var require_contains = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max} valid item(s)`,
       params: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max}}`
     };
@@ -5270,7 +5270,7 @@ var require_contains = __commonJS({
       schemaType: ["object", "boolean"],
       before: "uniqueItems",
       trackErrors: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, schema, parentSchema, data, it } = cxt;
         let min;
@@ -5448,7 +5448,7 @@ var require_propertyNames = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: "property name must be valid",
       params: ({ params }) => (0, codegen_1._)`{propertyName: ${params.propertyName}}`
     };
@@ -5456,7 +5456,7 @@ var require_propertyNames = __commonJS({
       keyword: "propertyNames",
       type: "object",
       schemaType: ["object", "boolean"],
-      error: error2,
+      error,
       code(cxt) {
         const { gen, schema, data, it } = cxt;
         if ((0, util_1.alwaysValidSchema)(it, schema))
@@ -5493,7 +5493,7 @@ var require_additionalProperties = __commonJS({
     var codegen_1 = require_codegen();
     var names_1 = require_names();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: "must NOT have additional properties",
       params: ({ params }) => (0, codegen_1._)`{additionalProperty: ${params.additionalProperty}}`
     };
@@ -5503,7 +5503,7 @@ var require_additionalProperties = __commonJS({
       schemaType: ["boolean", "object"],
       allowUndefined: true,
       trackErrors: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, schema, parentSchema, data, errsCount, it } = cxt;
         if (!errsCount)
@@ -5777,7 +5777,7 @@ var require_oneOf = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: "must match exactly one schema in oneOf",
       params: ({ params }) => (0, codegen_1._)`{passingSchemas: ${params.passing}}`
     };
@@ -5785,7 +5785,7 @@ var require_oneOf = __commonJS({
       keyword: "oneOf",
       schemaType: "array",
       trackErrors: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, schema, parentSchema, it } = cxt;
         if (!Array.isArray(schema))
@@ -5862,7 +5862,7 @@ var require_if = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: ({ params }) => (0, codegen_1.str)`must match "${params.ifClause}" schema`,
       params: ({ params }) => (0, codegen_1._)`{failingKeyword: ${params.ifClause}}`
     };
@@ -5870,7 +5870,7 @@ var require_if = __commonJS({
       keyword: "if",
       schemaType: ["object", "boolean"],
       trackErrors: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, parentSchema, it } = cxt;
         if (parentSchema.then === void 0 && parentSchema.else === void 0) {
@@ -5996,7 +5996,7 @@ var require_format = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error2 = {
+    var error = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must match format "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{format: ${schemaCode}}`
     };
@@ -6005,7 +6005,7 @@ var require_format = __commonJS({
       type: ["number", "string"],
       schemaType: "string",
       $data: true,
-      error: error2,
+      error,
       code(cxt, ruleType) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         const { opts, errSchemaPath, schemaEnv, self } = it;
@@ -6160,7 +6160,7 @@ var require_discriminator = __commonJS({
     var compile_1 = require_compile();
     var ref_error_1 = require_ref_error();
     var util_1 = require_util();
-    var error2 = {
+    var error = {
       message: ({ params: { discrError, tagName } }) => discrError === types_1.DiscrError.Tag ? `tag "${tagName}" must be string` : `value of tag "${tagName}" must be in oneOf`,
       params: ({ params: { discrError, tag, tagName } }) => (0, codegen_1._)`{error: ${discrError}, tag: ${tagName}, tagValue: ${tag}}`
     };
@@ -6168,7 +6168,7 @@ var require_discriminator = __commonJS({
       keyword: "discriminator",
       type: "object",
       schemaType: "object",
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, schema, parentSchema, it } = cxt;
         const { oneOf } = parentSchema;
@@ -6228,8 +6228,8 @@ var require_discriminator = __commonJS({
           if (!tagRequired)
             throw new Error(`discriminator: "${tagName}" must be required`);
           return oneOfMapping;
-          function hasRequired({ required: required2 }) {
-            return Array.isArray(required2) && required2.includes(tagName);
+          function hasRequired({ required }) {
+            return Array.isArray(required) && required.includes(tagName);
           }
           function addMappings(sch, i) {
             if (sch.const) {
@@ -6493,7 +6493,7 @@ var require_formats = __commonJS({
     }
     exports2.fullFormats = {
       // date: http://tools.ietf.org/html/rfc3339#section-5.6
-      date: fmtDef(date3, compareDate),
+      date: fmtDef(date, compareDate),
       // date-time: http://tools.ietf.org/html/rfc3339#section-5.6
       time: fmtDef(getTime(true), compareTime),
       "date-time": fmtDef(getDateTime(true), compareDateTime),
@@ -6559,7 +6559,7 @@ var require_formats = __commonJS({
     }
     var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    function date3(str) {
+    function date(str) {
       const matches = DATE.exec(str);
       if (!matches)
         return false;
@@ -6579,7 +6579,7 @@ var require_formats = __commonJS({
     }
     var TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i;
     function getTime(strictTimeZone) {
-      return function time3(str) {
+      return function time(str) {
         const matches = TIME.exec(str);
         if (!matches)
           return false;
@@ -6625,10 +6625,10 @@ var require_formats = __commonJS({
     }
     var DATE_TIME_SEPARATOR = /t|\s/i;
     function getDateTime(strictTimeZone) {
-      const time3 = getTime(strictTimeZone);
+      const time = getTime(strictTimeZone);
       return function date_time(str) {
         const dateTime = str.split(DATE_TIME_SEPARATOR);
-        return dateTime.length === 2 && date3(dateTime[0]) && time3(dateTime[1]);
+        return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1]);
       };
     }
     function compareDateTime(dt1, dt2) {
@@ -6700,7 +6700,7 @@ var require_limit = __commonJS({
       formatExclusiveMaximum: { okStr: "<", ok: ops.LT, fail: ops.GTE },
       formatExclusiveMinimum: { okStr: ">", ok: ops.GT, fail: ops.LTE }
     };
-    var error2 = {
+    var error = {
       message: ({ keyword, schemaCode }) => (0, codegen_1.str)`should be ${KWDs[keyword].okStr} ${schemaCode}`,
       params: ({ keyword, schemaCode }) => (0, codegen_1._)`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
     };
@@ -6709,7 +6709,7 @@ var require_limit = __commonJS({
       type: "string",
       schemaType: "string",
       $data: true,
-      error: error2,
+      error,
       code(cxt) {
         const { gen, data, schemaCode, keyword, it } = cxt;
         const { opts, self } = it;
@@ -6786,12 +6786,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs2, exportName) {
+    function addFormats(ajv, list, fs11, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs2[f]);
+        ajv.addFormat(f, fs11[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -6853,54 +6853,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs2) {
+    function patch(fs11) {
       if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs2);
+        patchLchmod(fs11);
       }
-      if (!fs2.lutimes) {
-        patchLutimes(fs2);
+      if (!fs11.lutimes) {
+        patchLutimes(fs11);
       }
-      fs2.chown = chownFix(fs2.chown);
-      fs2.fchown = chownFix(fs2.fchown);
-      fs2.lchown = chownFix(fs2.lchown);
-      fs2.chmod = chmodFix(fs2.chmod);
-      fs2.fchmod = chmodFix(fs2.fchmod);
-      fs2.lchmod = chmodFix(fs2.lchmod);
-      fs2.chownSync = chownFixSync(fs2.chownSync);
-      fs2.fchownSync = chownFixSync(fs2.fchownSync);
-      fs2.lchownSync = chownFixSync(fs2.lchownSync);
-      fs2.chmodSync = chmodFixSync(fs2.chmodSync);
-      fs2.fchmodSync = chmodFixSync(fs2.fchmodSync);
-      fs2.lchmodSync = chmodFixSync(fs2.lchmodSync);
-      fs2.stat = statFix(fs2.stat);
-      fs2.fstat = statFix(fs2.fstat);
-      fs2.lstat = statFix(fs2.lstat);
-      fs2.statSync = statFixSync(fs2.statSync);
-      fs2.fstatSync = statFixSync(fs2.fstatSync);
-      fs2.lstatSync = statFixSync(fs2.lstatSync);
-      if (fs2.chmod && !fs2.lchmod) {
-        fs2.lchmod = function(path2, mode, cb) {
+      fs11.chown = chownFix(fs11.chown);
+      fs11.fchown = chownFix(fs11.fchown);
+      fs11.lchown = chownFix(fs11.lchown);
+      fs11.chmod = chmodFix(fs11.chmod);
+      fs11.fchmod = chmodFix(fs11.fchmod);
+      fs11.lchmod = chmodFix(fs11.lchmod);
+      fs11.chownSync = chownFixSync(fs11.chownSync);
+      fs11.fchownSync = chownFixSync(fs11.fchownSync);
+      fs11.lchownSync = chownFixSync(fs11.lchownSync);
+      fs11.chmodSync = chmodFixSync(fs11.chmodSync);
+      fs11.fchmodSync = chmodFixSync(fs11.fchmodSync);
+      fs11.lchmodSync = chmodFixSync(fs11.lchmodSync);
+      fs11.stat = statFix(fs11.stat);
+      fs11.fstat = statFix(fs11.fstat);
+      fs11.lstat = statFix(fs11.lstat);
+      fs11.statSync = statFixSync(fs11.statSync);
+      fs11.fstatSync = statFixSync(fs11.fstatSync);
+      fs11.lstatSync = statFixSync(fs11.lstatSync);
+      if (fs11.chmod && !fs11.lchmod) {
+        fs11.lchmod = function(path11, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs2.lchmodSync = function() {
+        fs11.lchmodSync = function() {
         };
       }
-      if (fs2.chown && !fs2.lchown) {
-        fs2.lchown = function(path2, uid, gid, cb) {
+      if (fs11.chown && !fs11.lchown) {
+        fs11.lchown = function(path11, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs2.lchownSync = function() {
+        fs11.lchownSync = function() {
         };
       }
       if (platform === "win32") {
-        fs2.rename = typeof fs2.rename !== "function" ? fs2.rename : (function(fs$rename) {
+        fs11.rename = typeof fs11.rename !== "function" ? fs11.rename : (function(fs$rename) {
           function rename(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs2.stat(to, function(stater, st) {
+                  fs11.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -6916,9 +6916,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
           return rename;
-        })(fs2.rename);
+        })(fs11.rename);
       }
-      fs2.read = typeof fs2.read !== "function" ? fs2.read : (function(fs$read) {
+      fs11.read = typeof fs11.read !== "function" ? fs11.read : (function(fs$read) {
         function read(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -6926,22 +6926,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs2, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs11, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs2, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs11, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
         return read;
-      })(fs2.read);
-      fs2.readSync = typeof fs2.readSync !== "function" ? fs2.readSync : /* @__PURE__ */ (function(fs$readSync) {
+      })(fs11.read);
+      fs11.readSync = typeof fs11.readSync !== "function" ? fs11.readSync : /* @__PURE__ */ (function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs2, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs11, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -6951,11 +6951,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      })(fs2.readSync);
-      function patchLchmod(fs3) {
-        fs3.lchmod = function(path2, mode, callback) {
-          fs3.open(
-            path2,
+      })(fs11.readSync);
+      function patchLchmod(fs12) {
+        fs12.lchmod = function(path11, mode, callback) {
+          fs12.open(
+            path11,
             constants.O_WRONLY | constants.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -6963,80 +6963,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs3.fchmod(fd, mode, function(err2) {
-                fs3.close(fd, function(err22) {
+              fs12.fchmod(fd, mode, function(err2) {
+                fs12.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs3.lchmodSync = function(path2, mode) {
-          var fd = fs3.openSync(path2, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        fs12.lchmodSync = function(path11, mode) {
+          var fd = fs12.openSync(path11, constants.O_WRONLY | constants.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs3.fchmodSync(fd, mode);
+            ret = fs12.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs3.closeSync(fd);
+                fs12.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs3.closeSync(fd);
+              fs12.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs3) {
-        if (constants.hasOwnProperty("O_SYMLINK") && fs3.futimes) {
-          fs3.lutimes = function(path2, at, mt, cb) {
-            fs3.open(path2, constants.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs12) {
+        if (constants.hasOwnProperty("O_SYMLINK") && fs12.futimes) {
+          fs12.lutimes = function(path11, at, mt, cb) {
+            fs12.open(path11, constants.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs3.futimes(fd, at, mt, function(er2) {
-                fs3.close(fd, function(er22) {
+              fs12.futimes(fd, at, mt, function(er2) {
+                fs12.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs3.lutimesSync = function(path2, at, mt) {
-            var fd = fs3.openSync(path2, constants.O_SYMLINK);
+          fs12.lutimesSync = function(path11, at, mt) {
+            var fd = fs12.openSync(path11, constants.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs3.futimesSync(fd, at, mt);
+              ret = fs12.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs3.closeSync(fd);
+                  fs12.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs3.closeSync(fd);
+                fs12.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs3.futimes) {
-          fs3.lutimes = function(_a, _b, _c, cb) {
+        } else if (fs12.futimes) {
+          fs12.lutimes = function(_a, _b, _c, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs3.lutimesSync = function() {
+          fs12.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs2, target, mode, function(er) {
+          return orig.call(fs11, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -7046,7 +7046,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs2, target, mode);
+            return orig.call(fs11, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -7055,7 +7055,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs2, target, uid, gid, function(er) {
+          return orig.call(fs11, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -7065,7 +7065,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs2, target, uid, gid);
+            return orig.call(fs11, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -7085,13 +7085,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options ? orig.call(fs2, target, options, callback) : orig.call(fs2, target, callback);
+          return options ? orig.call(fs11, target, options, callback) : orig.call(fs11, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options) {
-          var stats = options ? orig.call(fs2, target, options) : orig.call(fs2, target);
+          var stats = options ? orig.call(fs11, target, options) : orig.call(fs11, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -7120,16 +7120,16 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream = require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs2) {
+    function legacy(fs11) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path2, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path2, options);
+      function ReadStream(path11, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path11, options);
         Stream.call(this);
         var self = this;
-        this.path = path2;
+        this.path = path11;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -7163,7 +7163,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs2.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs11.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self.emit("error", err);
             self.readable = false;
@@ -7174,10 +7174,10 @@ var require_legacy_streams = __commonJS({
           self._read();
         });
       }
-      function WriteStream(path2, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path2, options);
+      function WriteStream(path11, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path11, options);
         Stream.call(this);
-        this.path = path2;
+        this.path = path11;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -7202,7 +7202,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs2.open;
+          this._open = fs11.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -7215,11 +7215,11 @@ var require_legacy_streams = __commonJS({
 var require_clone = __commonJS({
   "node_modules/graceful-fs/clone.js"(exports2, module2) {
     "use strict";
-    module2.exports = clone2;
+    module2.exports = clone;
     var getPrototypeOf = Object.getPrototypeOf || function(obj) {
       return obj.__proto__;
     };
-    function clone2(obj) {
+    function clone(obj) {
       if (obj === null || typeof obj !== "object")
         return obj;
       if (obj instanceof Object)
@@ -7237,10 +7237,10 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs2 = require("fs");
+    var fs11 = require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
-    var clone2 = require_clone();
+    var clone = require_clone();
     var util2 = require("util");
     var gracefulQueue;
     var previousSymbol;
@@ -7251,7 +7251,7 @@ var require_graceful_fs = __commonJS({
       gracefulQueue = "___graceful-fs.queue";
       previousSymbol = "___graceful-fs.previous";
     }
-    function noop() {
+    function noop2() {
     }
     function publishQueue(context, queue2) {
       Object.defineProperty(context, gracefulQueue, {
@@ -7260,7 +7260,7 @@ var require_graceful_fs = __commonJS({
         }
       });
     }
-    var debug = noop;
+    var debug = noop2;
     if (util2.debuglog)
       debug = util2.debuglog("gfs4");
     else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ""))
@@ -7269,12 +7269,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs2[gracefulQueue]) {
+    if (!fs11[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs2, queue);
-      fs2.close = (function(fs$close) {
+      publishQueue(fs11, queue);
+      fs11.close = (function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs2, fd, function(err) {
+          return fs$close.call(fs11, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -7286,48 +7286,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      })(fs2.close);
-      fs2.closeSync = (function(fs$closeSync) {
+      })(fs11.close);
+      fs11.closeSync = (function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs2, arguments);
+          fs$closeSync.apply(fs11, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      })(fs2.closeSync);
+      })(fs11.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug(fs2[gracefulQueue]);
-          require("assert").equal(fs2[gracefulQueue].length, 0);
+          debug(fs11[gracefulQueue]);
+          require("assert").equal(fs11[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs2[gracefulQueue]);
+      publishQueue(global, fs11[gracefulQueue]);
     }
-    module2.exports = patch(clone2(fs2));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs2.__patched) {
-      module2.exports = patch(fs2);
-      fs2.__patched = true;
+    module2.exports = patch(clone(fs11));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs11.__patched) {
+      module2.exports = patch(fs11);
+      fs11.__patched = true;
     }
-    function patch(fs3) {
-      polyfills(fs3);
-      fs3.gracefulify = patch;
-      fs3.createReadStream = createReadStream;
-      fs3.createWriteStream = createWriteStream;
-      var fs$readFile = fs3.readFile;
-      fs3.readFile = readFile2;
-      function readFile2(path2, options, cb) {
+    function patch(fs12) {
+      polyfills(fs12);
+      fs12.gracefulify = patch;
+      fs12.createReadStream = createReadStream;
+      fs12.createWriteStream = createWriteStream;
+      var fs$readFile = fs12.readFile;
+      fs12.readFile = readFile2;
+      function readFile2(path11, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$readFile(path2, options, cb);
-        function go$readFile(path3, options2, cb2, startTime) {
-          return fs$readFile(path3, options2, function(err) {
+        return go$readFile(path11, options, cb);
+        function go$readFile(path12, options2, cb2, startTime) {
+          return fs$readFile(path12, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path3, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path12, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -7335,16 +7335,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs3.writeFile;
-      fs3.writeFile = writeFile;
-      function writeFile(path2, data, options, cb) {
+      var fs$writeFile = fs12.writeFile;
+      fs12.writeFile = writeFile;
+      function writeFile(path11, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$writeFile(path2, data, options, cb);
-        function go$writeFile(path3, data2, options2, cb2, startTime) {
-          return fs$writeFile(path3, data2, options2, function(err) {
+        return go$writeFile(path11, data, options, cb);
+        function go$writeFile(path12, data2, options2, cb2, startTime) {
+          return fs$writeFile(path12, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path3, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path12, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -7352,17 +7352,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs3.appendFile;
+      var fs$appendFile = fs12.appendFile;
       if (fs$appendFile)
-        fs3.appendFile = appendFile;
-      function appendFile(path2, data, options, cb) {
+        fs12.appendFile = appendFile;
+      function appendFile(path11, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$appendFile(path2, data, options, cb);
-        function go$appendFile(path3, data2, options2, cb2, startTime) {
-          return fs$appendFile(path3, data2, options2, function(err) {
+        return go$appendFile(path11, data, options, cb);
+        function go$appendFile(path12, data2, options2, cb2, startTime) {
+          return fs$appendFile(path12, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path3, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path12, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -7370,9 +7370,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs3.copyFile;
+      var fs$copyFile = fs12.copyFile;
       if (fs$copyFile)
-        fs3.copyFile = copyFile;
+        fs12.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -7390,34 +7390,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs3.readdir;
-      fs3.readdir = readdir2;
+      var fs$readdir = fs12.readdir;
+      fs12.readdir = readdir2;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir2(path2, options, cb) {
+      function readdir2(path11, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path3, options2, cb2, startTime) {
-          return fs$readdir(path3, fs$readdirCallback(
-            path3,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path12, options2, cb2, startTime) {
+          return fs$readdir(path12, fs$readdirCallback(
+            path12,
             options2,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path3, options2, cb2, startTime) {
-          return fs$readdir(path3, options2, fs$readdirCallback(
-            path3,
+        } : function go$readdir2(path12, options2, cb2, startTime) {
+          return fs$readdir(path12, options2, fs$readdirCallback(
+            path12,
             options2,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path2, options, cb);
-        function fs$readdirCallback(path3, options2, cb2, startTime) {
+        return go$readdir(path11, options, cb);
+        function fs$readdirCallback(path12, options2, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path3, options2, cb2],
+                [path12, options2, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -7432,21 +7432,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs3);
+        var legStreams = legacy(fs12);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs3.ReadStream;
+      var fs$ReadStream = fs12.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs3.WriteStream;
+      var fs$WriteStream = fs12.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs3, "ReadStream", {
+      Object.defineProperty(fs12, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -7456,7 +7456,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs3, "WriteStream", {
+      Object.defineProperty(fs12, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -7467,7 +7467,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs3, "FileReadStream", {
+      Object.defineProperty(fs12, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -7478,7 +7478,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs3, "FileWriteStream", {
+      Object.defineProperty(fs12, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -7488,7 +7488,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path2, options) {
+      function ReadStream(path11, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -7508,7 +7508,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path2, options) {
+      function WriteStream(path11, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -7526,22 +7526,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path2, options) {
-        return new fs3.ReadStream(path2, options);
+      function createReadStream(path11, options) {
+        return new fs12.ReadStream(path11, options);
       }
-      function createWriteStream(path2, options) {
-        return new fs3.WriteStream(path2, options);
+      function createWriteStream(path11, options) {
+        return new fs12.WriteStream(path11, options);
       }
-      var fs$open = fs3.open;
-      fs3.open = open;
-      function open(path2, flags, mode, cb) {
+      var fs$open = fs12.open;
+      fs12.open = open;
+      function open(path11, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path2, flags, mode, cb);
-        function go$open(path3, flags2, mode2, cb2, startTime) {
-          return fs$open(path3, flags2, mode2, function(err, fd) {
+        return go$open(path11, flags, mode, cb);
+        function go$open(path12, flags2, mode2, cb2, startTime) {
+          return fs$open(path12, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path3, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path12, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -7549,20 +7549,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs3;
+      return fs12;
     }
     function enqueue(elem) {
       debug("ENQUEUE", elem[0].name, elem[1]);
-      fs2[gracefulQueue].push(elem);
+      fs11[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs2[gracefulQueue].length; ++i) {
-        if (fs2[gracefulQueue][i].length > 2) {
-          fs2[gracefulQueue][i][3] = now;
-          fs2[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs11[gracefulQueue].length; ++i) {
+        if (fs11[gracefulQueue][i].length > 2) {
+          fs11[gracefulQueue][i][3] = now;
+          fs11[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -7570,9 +7570,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs2[gracefulQueue].length === 0)
+      if (fs11[gracefulQueue].length === 0)
         return;
-      var elem = fs2[gracefulQueue].shift();
+      var elem = fs11[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -7594,7 +7594,7 @@ var require_graceful_fs = __commonJS({
           debug("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs2[gracefulQueue].push(elem);
+          fs11[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -7609,7 +7609,7 @@ var require_fs = __commonJS({
   "node_modules/fs-extra/lib/fs/index.js"(exports2) {
     "use strict";
     var u = require_universalify().fromCallback;
-    var fs2 = require_graceful_fs();
+    var fs11 = require_graceful_fs();
     var api = [
       "access",
       "appendFile",
@@ -7650,26 +7650,26 @@ var require_fs = __commonJS({
       "utimes",
       "writeFile"
     ].filter((key) => {
-      return typeof fs2[key] === "function";
+      return typeof fs11[key] === "function";
     });
-    Object.assign(exports2, fs2);
+    Object.assign(exports2, fs11);
     api.forEach((method) => {
-      exports2[method] = u(fs2[method]);
+      exports2[method] = u(fs11[method]);
     });
     exports2.exists = function(filename, callback) {
       if (typeof callback === "function") {
-        return fs2.exists(filename, callback);
+        return fs11.exists(filename, callback);
       }
       return new Promise((resolve) => {
-        return fs2.exists(filename, resolve);
+        return fs11.exists(filename, resolve);
       });
     };
     exports2.read = function(fd, buffer, offset, length, position, callback) {
       if (typeof callback === "function") {
-        return fs2.read(fd, buffer, offset, length, position, callback);
+        return fs11.read(fd, buffer, offset, length, position, callback);
       }
       return new Promise((resolve, reject) => {
-        fs2.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
+        fs11.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
           if (err) return reject(err);
           resolve({ bytesRead, buffer: buffer2 });
         });
@@ -7677,10 +7677,10 @@ var require_fs = __commonJS({
     };
     exports2.write = function(fd, buffer, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.write(fd, buffer, ...args);
+        return fs11.write(fd, buffer, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
+        fs11.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
           if (err) return reject(err);
           resolve({ bytesWritten, buffer: buffer2 });
         });
@@ -7688,10 +7688,10 @@ var require_fs = __commonJS({
     };
     exports2.readv = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.readv(fd, buffers, ...args);
+        return fs11.readv(fd, buffers, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
+        fs11.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
           if (err) return reject(err);
           resolve({ bytesRead, buffers: buffers2 });
         });
@@ -7699,17 +7699,17 @@ var require_fs = __commonJS({
     };
     exports2.writev = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs2.writev(fd, buffers, ...args);
+        return fs11.writev(fd, buffers, ...args);
       }
       return new Promise((resolve, reject) => {
-        fs2.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
+        fs11.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
           if (err) return reject(err);
           resolve({ bytesWritten, buffers: buffers2 });
         });
       });
     };
-    if (typeof fs2.realpath.native === "function") {
-      exports2.realpath.native = u(fs2.realpath.native);
+    if (typeof fs11.realpath.native === "function") {
+      exports2.realpath.native = u(fs11.realpath.native);
     } else {
       process.emitWarning(
         "fs.realpath.native is not a function. Is fs being monkey-patched?",
@@ -7724,14 +7724,14 @@ var require_fs = __commonJS({
 var require_utils2 = __commonJS({
   "node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path11 = require("path");
     module2.exports.checkPath = function checkPath(pth) {
       if (process.platform === "win32") {
-        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path2.parse(pth).root, ""));
+        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path11.parse(pth).root, ""));
         if (pathHasInvalidWinCharacters) {
-          const error2 = new Error(`Path contains invalid characters: ${pth}`);
-          error2.code = "EINVAL";
-          throw error2;
+          const error = new Error(`Path contains invalid characters: ${pth}`);
+          error.code = "EINVAL";
+          throw error;
         }
       }
     };
@@ -7742,7 +7742,7 @@ var require_utils2 = __commonJS({
 var require_make_dir = __commonJS({
   "node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs11 = require_fs();
     var { checkPath } = require_utils2();
     var getMode = (options) => {
       const defaults = { mode: 511 };
@@ -7751,14 +7751,14 @@ var require_make_dir = __commonJS({
     };
     module2.exports.makeDir = async (dir, options) => {
       checkPath(dir);
-      return fs2.mkdir(dir, {
+      return fs11.mkdir(dir, {
         mode: getMode(options),
         recursive: true
       });
     };
     module2.exports.makeDirSync = (dir, options) => {
       checkPath(dir);
-      return fs2.mkdirSync(dir, {
+      return fs11.mkdirSync(dir, {
         mode: getMode(options),
         recursive: true
       });
@@ -7790,13 +7790,13 @@ var require_path_exists = __commonJS({
   "node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    function pathExists2(path2) {
-      return fs2.access(path2).then(() => true).catch(() => false);
+    var fs11 = require_fs();
+    function pathExists2(path11) {
+      return fs11.access(path11).then(() => true).catch(() => false);
     }
     module2.exports = {
       pathExists: u(pathExists2),
-      pathExistsSync: fs2.existsSync
+      pathExistsSync: fs11.existsSync
     };
   }
 });
@@ -7805,16 +7805,16 @@ var require_path_exists = __commonJS({
 var require_utimes = __commonJS({
   "node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs11 = require_fs();
     var u = require_universalify().fromPromise;
-    async function utimesMillis(path2, atime, mtime) {
-      const fd = await fs2.open(path2, "r+");
+    async function utimesMillis(path11, atime, mtime) {
+      const fd = await fs11.open(path11, "r+");
       let closeErr = null;
       try {
-        await fs2.futimes(fd, atime, mtime);
+        await fs11.futimes(fd, atime, mtime);
       } finally {
         try {
-          await fs2.close(fd);
+          await fs11.close(fd);
         } catch (e) {
           closeErr = e;
         }
@@ -7823,10 +7823,10 @@ var require_utimes = __commonJS({
         throw closeErr;
       }
     }
-    function utimesMillisSync(path2, atime, mtime) {
-      const fd = fs2.openSync(path2, "r+");
-      fs2.futimesSync(fd, atime, mtime);
-      return fs2.closeSync(fd);
+    function utimesMillisSync(path11, atime, mtime) {
+      const fd = fs11.openSync(path11, "r+");
+      fs11.futimesSync(fd, atime, mtime);
+      return fs11.closeSync(fd);
     }
     module2.exports = {
       utimesMillis: u(utimesMillis),
@@ -7839,11 +7839,11 @@ var require_utimes = __commonJS({
 var require_stat = __commonJS({
   "node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs11 = require_fs();
+    var path11 = require("path");
     var u = require_universalify().fromPromise;
     function getStats(src, dest, opts) {
-      const statFunc = opts.dereference ? (file) => fs2.stat(file, { bigint: true }) : (file) => fs2.lstat(file, { bigint: true });
+      const statFunc = opts.dereference ? (file) => fs11.stat(file, { bigint: true }) : (file) => fs11.lstat(file, { bigint: true });
       return Promise.all([
         statFunc(src),
         statFunc(dest).catch((err) => {
@@ -7854,7 +7854,7 @@ var require_stat = __commonJS({
     }
     function getStatsSync(src, dest, opts) {
       let destStat;
-      const statFunc = opts.dereference ? (file) => fs2.statSync(file, { bigint: true }) : (file) => fs2.lstatSync(file, { bigint: true });
+      const statFunc = opts.dereference ? (file) => fs11.statSync(file, { bigint: true }) : (file) => fs11.lstatSync(file, { bigint: true });
       const srcStat = statFunc(src);
       try {
         destStat = statFunc(dest);
@@ -7868,8 +7868,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = await getStats(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path2.basename(src);
-          const destBaseName = path2.basename(dest);
+          const srcBaseName = path11.basename(src);
+          const destBaseName = path11.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -7891,8 +7891,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = getStatsSync(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path2.basename(src);
-          const destBaseName = path2.basename(dest);
+          const srcBaseName = path11.basename(src);
+          const destBaseName = path11.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -7911,12 +7911,12 @@ var require_stat = __commonJS({
       return { srcStat, destStat };
     }
     async function checkParentPaths(src, srcStat, dest, funcName) {
-      const srcParent = path2.resolve(path2.dirname(src));
-      const destParent = path2.resolve(path2.dirname(dest));
-      if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+      const srcParent = path11.resolve(path11.dirname(src));
+      const destParent = path11.resolve(path11.dirname(dest));
+      if (destParent === srcParent || destParent === path11.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = await fs2.stat(destParent, { bigint: true });
+        destStat = await fs11.stat(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -7927,12 +7927,12 @@ var require_stat = __commonJS({
       return checkParentPaths(src, srcStat, destParent, funcName);
     }
     function checkParentPathsSync(src, srcStat, dest, funcName) {
-      const srcParent = path2.resolve(path2.dirname(src));
-      const destParent = path2.resolve(path2.dirname(dest));
-      if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+      const srcParent = path11.resolve(path11.dirname(src));
+      const destParent = path11.resolve(path11.dirname(dest));
+      if (destParent === srcParent || destParent === path11.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = fs2.statSync(destParent, { bigint: true });
+        destStat = fs11.statSync(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -7946,8 +7946,8 @@ var require_stat = __commonJS({
       return destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
     }
     function isSrcSubdir(src, dest) {
-      const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
-      const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
+      const srcArr = path11.resolve(src).split(path11.sep).filter((i) => i);
+      const destArr = path11.resolve(dest).split(path11.sep).filter((i) => i);
       return srcArr.every((cur, i) => destArr[i] === cur);
     }
     function errMsg(src, dest, funcName) {
@@ -7971,8 +7971,8 @@ var require_stat = __commonJS({
 var require_copy = __commonJS({
   "node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs11 = require_fs();
+    var path11 = require("path");
     var { mkdirs } = require_mkdirs();
     var { pathExists: pathExists2 } = require_path_exists();
     var { utimesMillis } = require_utimes();
@@ -7994,7 +7994,7 @@ var require_copy = __commonJS({
       await stat.checkParentPaths(src, srcStat, dest, "copy");
       const include = await runFilter(src, dest, opts);
       if (!include) return;
-      const destParent = path2.dirname(dest);
+      const destParent = path11.dirname(dest);
       const dirExists = await pathExists2(destParent);
       if (!dirExists) {
         await mkdirs(destParent);
@@ -8006,7 +8006,7 @@ var require_copy = __commonJS({
       return opts.filter(src, dest);
     }
     async function getStatsAndPerformCopy(destStat, src, dest, opts) {
-      const statFn = opts.dereference ? fs2.stat : fs2.lstat;
+      const statFn = opts.dereference ? fs11.stat : fs11.lstat;
       const srcStat = await statFn(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -8018,7 +8018,7 @@ var require_copy = __commonJS({
     async function onFile(srcStat, destStat, src, dest, opts) {
       if (!destStat) return copyFile(srcStat, src, dest, opts);
       if (opts.overwrite) {
-        await fs2.unlink(dest);
+        await fs11.unlink(dest);
         return copyFile(srcStat, src, dest, opts);
       }
       if (opts.errorOnExist) {
@@ -8026,30 +8026,30 @@ var require_copy = __commonJS({
       }
     }
     async function copyFile(srcStat, src, dest, opts) {
-      await fs2.copyFile(src, dest);
+      await fs11.copyFile(src, dest);
       if (opts.preserveTimestamps) {
         if (fileIsNotWritable(srcStat.mode)) {
           await makeFileWritable(dest, srcStat.mode);
         }
-        const updatedSrcStat = await fs2.stat(src);
+        const updatedSrcStat = await fs11.stat(src);
         await utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
       }
-      return fs2.chmod(dest, srcStat.mode);
+      return fs11.chmod(dest, srcStat.mode);
     }
     function fileIsNotWritable(srcMode) {
       return (srcMode & 128) === 0;
     }
     function makeFileWritable(dest, srcMode) {
-      return fs2.chmod(dest, srcMode | 128);
+      return fs11.chmod(dest, srcMode | 128);
     }
     async function onDir(srcStat, destStat, src, dest, opts) {
       if (!destStat) {
-        await fs2.mkdir(dest);
+        await fs11.mkdir(dest);
       }
       const promises = [];
-      for await (const item of await fs2.opendir(src)) {
-        const srcItem = path2.join(src, item.name);
-        const destItem = path2.join(dest, item.name);
+      for await (const item of await fs11.opendir(src)) {
+        const srcItem = path11.join(src, item.name);
+        const destItem = path11.join(dest, item.name);
         promises.push(
           runFilter(srcItem, destItem, opts).then((include) => {
             if (include) {
@@ -8062,26 +8062,26 @@ var require_copy = __commonJS({
       }
       await Promise.all(promises);
       if (!destStat) {
-        await fs2.chmod(dest, srcStat.mode);
+        await fs11.chmod(dest, srcStat.mode);
       }
     }
     async function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = await fs2.readlink(src);
+      let resolvedSrc = await fs11.readlink(src);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path11.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs2.symlink(resolvedSrc, dest);
+        return fs11.symlink(resolvedSrc, dest);
       }
       let resolvedDest = null;
       try {
-        resolvedDest = await fs2.readlink(dest);
+        resolvedDest = await fs11.readlink(dest);
       } catch (e) {
-        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs2.symlink(resolvedSrc, dest);
+        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs11.symlink(resolvedSrc, dest);
         throw e;
       }
       if (opts.dereference) {
-        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path11.resolve(process.cwd(), resolvedDest);
       }
       if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
         throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -8089,8 +8089,8 @@ var require_copy = __commonJS({
       if (stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
         throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
       }
-      await fs2.unlink(dest);
-      return fs2.symlink(resolvedSrc, dest);
+      await fs11.unlink(dest);
+      return fs11.symlink(resolvedSrc, dest);
     }
     module2.exports = copy;
   }
@@ -8100,8 +8100,8 @@ var require_copy = __commonJS({
 var require_copy_sync = __commonJS({
   "node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
-    var path2 = require("path");
+    var fs11 = require_graceful_fs();
+    var path11 = require("path");
     var mkdirsSync = require_mkdirs().mkdirsSync;
     var utimesMillisSync = require_utimes().utimesMillisSync;
     var stat = require_stat();
@@ -8122,12 +8122,12 @@ var require_copy_sync = __commonJS({
       const { srcStat, destStat } = stat.checkPathsSync(src, dest, "copy", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "copy");
       if (opts.filter && !opts.filter(src, dest)) return;
-      const destParent = path2.dirname(dest);
-      if (!fs2.existsSync(destParent)) mkdirsSync(destParent);
+      const destParent = path11.dirname(dest);
+      if (!fs11.existsSync(destParent)) mkdirsSync(destParent);
       return getStats(destStat, src, dest, opts);
     }
     function getStats(destStat, src, dest, opts) {
-      const statSync = opts.dereference ? fs2.statSync : fs2.lstatSync;
+      const statSync = opts.dereference ? fs11.statSync : fs11.lstatSync;
       const srcStat = statSync(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -8142,14 +8142,14 @@ var require_copy_sync = __commonJS({
     }
     function mayCopyFile(srcStat, src, dest, opts) {
       if (opts.overwrite) {
-        fs2.unlinkSync(dest);
+        fs11.unlinkSync(dest);
         return copyFile(srcStat, src, dest, opts);
       } else if (opts.errorOnExist) {
         throw new Error(`'${dest}' already exists`);
       }
     }
     function copyFile(srcStat, src, dest, opts) {
-      fs2.copyFileSync(src, dest);
+      fs11.copyFileSync(src, dest);
       if (opts.preserveTimestamps) handleTimestamps(srcStat.mode, src, dest);
       return setDestMode(dest, srcStat.mode);
     }
@@ -8164,10 +8164,10 @@ var require_copy_sync = __commonJS({
       return setDestMode(dest, srcMode | 128);
     }
     function setDestMode(dest, srcMode) {
-      return fs2.chmodSync(dest, srcMode);
+      return fs11.chmodSync(dest, srcMode);
     }
     function setDestTimestamps(src, dest) {
-      const updatedSrcStat = fs2.statSync(src);
+      const updatedSrcStat = fs11.statSync(src);
       return utimesMillisSync(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
     }
     function onDir(srcStat, destStat, src, dest, opts) {
@@ -8175,12 +8175,12 @@ var require_copy_sync = __commonJS({
       return copyDir(src, dest, opts);
     }
     function mkDirAndCopy(srcMode, src, dest, opts) {
-      fs2.mkdirSync(dest);
+      fs11.mkdirSync(dest);
       copyDir(src, dest, opts);
       return setDestMode(dest, srcMode);
     }
     function copyDir(src, dest, opts) {
-      const dir = fs2.opendirSync(src);
+      const dir = fs11.opendirSync(src);
       try {
         let dirent;
         while ((dirent = dir.readSync()) !== null) {
@@ -8191,29 +8191,29 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyDirItem(item, src, dest, opts) {
-      const srcItem = path2.join(src, item);
-      const destItem = path2.join(dest, item);
+      const srcItem = path11.join(src, item);
+      const destItem = path11.join(dest, item);
       if (opts.filter && !opts.filter(srcItem, destItem)) return;
       const { destStat } = stat.checkPathsSync(srcItem, destItem, "copy", opts);
       return getStats(destStat, srcItem, destItem, opts);
     }
     function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = fs2.readlinkSync(src);
+      let resolvedSrc = fs11.readlinkSync(src);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path11.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs2.symlinkSync(resolvedSrc, dest);
+        return fs11.symlinkSync(resolvedSrc, dest);
       } else {
         let resolvedDest;
         try {
-          resolvedDest = fs2.readlinkSync(dest);
+          resolvedDest = fs11.readlinkSync(dest);
         } catch (err) {
-          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs2.symlinkSync(resolvedSrc, dest);
+          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs11.symlinkSync(resolvedSrc, dest);
           throw err;
         }
         if (opts.dereference) {
-          resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+          resolvedDest = path11.resolve(process.cwd(), resolvedDest);
         }
         if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
           throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -8225,8 +8225,8 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyLink(resolvedSrc, dest) {
-      fs2.unlinkSync(dest);
-      return fs2.symlinkSync(resolvedSrc, dest);
+      fs11.unlinkSync(dest);
+      return fs11.symlinkSync(resolvedSrc, dest);
     }
     module2.exports = copySync;
   }
@@ -8248,13 +8248,13 @@ var require_copy2 = __commonJS({
 var require_remove = __commonJS({
   "node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
+    var fs11 = require_graceful_fs();
     var u = require_universalify().fromCallback;
-    function remove(path2, callback) {
-      fs2.rm(path2, { recursive: true, force: true }, callback);
+    function remove(path11, callback) {
+      fs11.rm(path11, { recursive: true, force: true }, callback);
     }
-    function removeSync(path2) {
-      fs2.rmSync(path2, { recursive: true, force: true });
+    function removeSync(path11) {
+      fs11.rmSync(path11, { recursive: true, force: true });
     }
     module2.exports = {
       remove: u(remove),
@@ -8268,28 +8268,28 @@ var require_empty = __commonJS({
   "node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs11 = require_fs();
+    var path11 = require("path");
     var mkdir = require_mkdirs();
     var remove = require_remove();
     var emptyDir = u(async function emptyDir2(dir) {
       let items;
       try {
-        items = await fs2.readdir(dir);
+        items = await fs11.readdir(dir);
       } catch {
         return mkdir.mkdirs(dir);
       }
-      return Promise.all(items.map((item) => remove.remove(path2.join(dir, item))));
+      return Promise.all(items.map((item) => remove.remove(path11.join(dir, item))));
     });
     function emptyDirSync(dir) {
       let items;
       try {
-        items = fs2.readdirSync(dir);
+        items = fs11.readdirSync(dir);
       } catch {
         return mkdir.mkdirsSync(dir);
       }
       items.forEach((item) => {
-        item = path2.join(dir, item);
+        item = path11.join(dir, item);
         remove.removeSync(item);
       });
     }
@@ -8307,52 +8307,52 @@ var require_file = __commonJS({
   "node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path11 = require("path");
+    var fs11 = require_fs();
     var mkdir = require_mkdirs();
     async function createFile(file) {
       let stats;
       try {
-        stats = await fs2.stat(file);
+        stats = await fs11.stat(file);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path2.dirname(file);
+      const dir = path11.dirname(file);
       let dirStats = null;
       try {
-        dirStats = await fs2.stat(dir);
+        dirStats = await fs11.stat(dir);
       } catch (err) {
         if (err.code === "ENOENT") {
           await mkdir.mkdirs(dir);
-          await fs2.writeFile(file, "");
+          await fs11.writeFile(file, "");
           return;
         } else {
           throw err;
         }
       }
       if (dirStats.isDirectory()) {
-        await fs2.writeFile(file, "");
+        await fs11.writeFile(file, "");
       } else {
-        await fs2.readdir(dir);
+        await fs11.readdir(dir);
       }
     }
     function createFileSync(file) {
       let stats;
       try {
-        stats = fs2.statSync(file);
+        stats = fs11.statSync(file);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path2.dirname(file);
+      const dir = path11.dirname(file);
       try {
-        if (!fs2.statSync(dir).isDirectory()) {
-          fs2.readdirSync(dir);
+        if (!fs11.statSync(dir).isDirectory()) {
+          fs11.readdirSync(dir);
         }
       } catch (err) {
         if (err && err.code === "ENOENT") mkdir.mkdirsSync(dir);
         else throw err;
       }
-      fs2.writeFileSync(file, "");
+      fs11.writeFileSync(file, "");
     }
     module2.exports = {
       createFile: u(createFile),
@@ -8366,50 +8366,50 @@ var require_link = __commonJS({
   "node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path11 = require("path");
+    var fs11 = require_fs();
     var mkdir = require_mkdirs();
     var { pathExists: pathExists2 } = require_path_exists();
     var { areIdentical } = require_stat();
     async function createLink(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = await fs2.lstat(dstpath);
+        dstStat = await fs11.lstat(dstpath);
       } catch {
       }
       let srcStat;
       try {
-        srcStat = await fs2.lstat(srcpath);
+        srcStat = await fs11.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
       if (dstStat && areIdentical(srcStat, dstStat)) return;
-      const dir = path2.dirname(dstpath);
+      const dir = path11.dirname(dstpath);
       const dirExists = await pathExists2(dir);
       if (!dirExists) {
         await mkdir.mkdirs(dir);
       }
-      await fs2.link(srcpath, dstpath);
+      await fs11.link(srcpath, dstpath);
     }
     function createLinkSync(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = fs2.lstatSync(dstpath);
+        dstStat = fs11.lstatSync(dstpath);
       } catch {
       }
       try {
-        const srcStat = fs2.lstatSync(srcpath);
+        const srcStat = fs11.lstatSync(srcpath);
         if (dstStat && areIdentical(srcStat, dstStat)) return;
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
-      const dir = path2.dirname(dstpath);
-      const dirExists = fs2.existsSync(dir);
-      if (dirExists) return fs2.linkSync(srcpath, dstpath);
+      const dir = path11.dirname(dstpath);
+      const dirExists = fs11.existsSync(dir);
+      if (dirExists) return fs11.linkSync(srcpath, dstpath);
       mkdir.mkdirsSync(dir);
-      return fs2.linkSync(srcpath, dstpath);
+      return fs11.linkSync(srcpath, dstpath);
     }
     module2.exports = {
       createLink: u(createLink),
@@ -8422,14 +8422,14 @@ var require_link = __commonJS({
 var require_symlink_paths = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path11 = require("path");
+    var fs11 = require_fs();
     var { pathExists: pathExists2 } = require_path_exists();
     var u = require_universalify().fromPromise;
     async function symlinkPaths(srcpath, dstpath) {
-      if (path2.isAbsolute(srcpath)) {
+      if (path11.isAbsolute(srcpath)) {
         try {
-          await fs2.lstat(srcpath);
+          await fs11.lstat(srcpath);
         } catch (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
           throw err;
@@ -8439,8 +8439,8 @@ var require_symlink_paths = __commonJS({
           toDst: srcpath
         };
       }
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path11.dirname(dstpath);
+      const relativeToDst = path11.join(dstdir, srcpath);
       const exists = await pathExists2(relativeToDst);
       if (exists) {
         return {
@@ -8449,39 +8449,39 @@ var require_symlink_paths = __commonJS({
         };
       }
       try {
-        await fs2.lstat(srcpath);
+        await fs11.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureSymlink");
         throw err;
       }
       return {
         toCwd: srcpath,
-        toDst: path2.relative(dstdir, srcpath)
+        toDst: path11.relative(dstdir, srcpath)
       };
     }
     function symlinkPathsSync(srcpath, dstpath) {
-      if (path2.isAbsolute(srcpath)) {
-        const exists2 = fs2.existsSync(srcpath);
+      if (path11.isAbsolute(srcpath)) {
+        const exists2 = fs11.existsSync(srcpath);
         if (!exists2) throw new Error("absolute srcpath does not exist");
         return {
           toCwd: srcpath,
           toDst: srcpath
         };
       }
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
-      const exists = fs2.existsSync(relativeToDst);
+      const dstdir = path11.dirname(dstpath);
+      const relativeToDst = path11.join(dstdir, srcpath);
+      const exists = fs11.existsSync(relativeToDst);
       if (exists) {
         return {
           toCwd: relativeToDst,
           toDst: srcpath
         };
       }
-      const srcExists = fs2.existsSync(srcpath);
+      const srcExists = fs11.existsSync(srcpath);
       if (!srcExists) throw new Error("relative srcpath does not exist");
       return {
         toCwd: srcpath,
-        toDst: path2.relative(dstdir, srcpath)
+        toDst: path11.relative(dstdir, srcpath)
       };
     }
     module2.exports = {
@@ -8495,13 +8495,13 @@ var require_symlink_paths = __commonJS({
 var require_symlink_type = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
+    var fs11 = require_fs();
     var u = require_universalify().fromPromise;
     async function symlinkType(srcpath, type) {
       if (type) return type;
       let stats;
       try {
-        stats = await fs2.lstat(srcpath);
+        stats = await fs11.lstat(srcpath);
       } catch {
         return "file";
       }
@@ -8511,7 +8511,7 @@ var require_symlink_type = __commonJS({
       if (type) return type;
       let stats;
       try {
-        stats = fs2.lstatSync(srcpath);
+        stats = fs11.lstatSync(srcpath);
       } catch {
         return "file";
       }
@@ -8529,8 +8529,8 @@ var require_symlink = __commonJS({
   "node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path2 = require("path");
-    var fs2 = require_fs();
+    var path11 = require("path");
+    var fs11 = require_fs();
     var { mkdirs, mkdirsSync } = require_mkdirs();
     var { symlinkPaths, symlinkPathsSync } = require_symlink_paths();
     var { symlinkType, symlinkTypeSync } = require_symlink_type();
@@ -8539,44 +8539,44 @@ var require_symlink = __commonJS({
     async function createSymlink(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = await fs2.lstat(dstpath);
+        stats = await fs11.lstat(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
         const [srcStat, dstStat] = await Promise.all([
-          fs2.stat(srcpath),
-          fs2.stat(dstpath)
+          fs11.stat(srcpath),
+          fs11.stat(dstpath)
         ]);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative2 = await symlinkPaths(srcpath, dstpath);
       srcpath = relative2.toDst;
       const toType = await symlinkType(relative2.toCwd, type);
-      const dir = path2.dirname(dstpath);
+      const dir = path11.dirname(dstpath);
       if (!await pathExists2(dir)) {
         await mkdirs(dir);
       }
-      return fs2.symlink(srcpath, dstpath, toType);
+      return fs11.symlink(srcpath, dstpath, toType);
     }
     function createSymlinkSync(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = fs2.lstatSync(dstpath);
+        stats = fs11.lstatSync(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const srcStat = fs2.statSync(srcpath);
-        const dstStat = fs2.statSync(dstpath);
+        const srcStat = fs11.statSync(srcpath);
+        const dstStat = fs11.statSync(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative2 = symlinkPathsSync(srcpath, dstpath);
       srcpath = relative2.toDst;
       type = symlinkTypeSync(relative2.toCwd, type);
-      const dir = path2.dirname(dstpath);
-      const exists = fs2.existsSync(dir);
-      if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
+      const dir = path11.dirname(dstpath);
+      const exists = fs11.existsSync(dir);
+      if (exists) return fs11.symlinkSync(srcpath, dstpath, type);
       mkdirsSync(dir);
-      return fs2.symlinkSync(srcpath, dstpath, type);
+      return fs11.symlinkSync(srcpath, dstpath, type);
     }
     module2.exports = {
       createSymlink: u(createSymlink),
@@ -8643,9 +8643,9 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs2 = options.fs || _fs;
+      const fs11 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
-      let data = await universalify.fromCallback(fs2.readFile)(file, options);
+      let data = await universalify.fromCallback(fs11.readFile)(file, options);
       data = stripBom(data);
       let obj;
       try {
@@ -8661,14 +8661,14 @@ var require_jsonfile = __commonJS({
       return obj;
     }
     var readFile2 = universalify.fromPromise(_readFile);
-    function readFileSync2(file, options = {}) {
+    function readFileSync(file, options = {}) {
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs2 = options.fs || _fs;
+      const fs11 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
       try {
-        let content = fs2.readFileSync(file, options);
+        let content = fs11.readFileSync(file, options);
         content = stripBom(content);
         return JSON.parse(content, options.reviver);
       } catch (err) {
@@ -8681,19 +8681,19 @@ var require_jsonfile = __commonJS({
       }
     }
     async function _writeFile(file, obj, options = {}) {
-      const fs2 = options.fs || _fs;
+      const fs11 = options.fs || _fs;
       const str = stringify(obj, options);
-      await universalify.fromCallback(fs2.writeFile)(file, str, options);
+      await universalify.fromCallback(fs11.writeFile)(file, str, options);
     }
     var writeFile = universalify.fromPromise(_writeFile);
     function writeFileSync(file, obj, options = {}) {
-      const fs2 = options.fs || _fs;
+      const fs11 = options.fs || _fs;
       const str = stringify(obj, options);
-      return fs2.writeFileSync(file, str, options);
+      return fs11.writeFileSync(file, str, options);
     }
     var jsonfile = {
       readFile: readFile2,
-      readFileSync: readFileSync2,
+      readFileSync,
       writeFile,
       writeFileSync
     };
@@ -8721,23 +8721,23 @@ var require_output_file = __commonJS({
   "node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs11 = require_fs();
+    var path11 = require("path");
     var mkdir = require_mkdirs();
     var pathExists2 = require_path_exists().pathExists;
     async function outputFile(file, data, encoding = "utf-8") {
-      const dir = path2.dirname(file);
+      const dir = path11.dirname(file);
       if (!await pathExists2(dir)) {
         await mkdir.mkdirs(dir);
       }
-      return fs2.writeFile(file, data, encoding);
+      return fs11.writeFile(file, data, encoding);
     }
     function outputFileSync(file, ...args) {
-      const dir = path2.dirname(file);
-      if (!fs2.existsSync(dir)) {
+      const dir = path11.dirname(file);
+      if (!fs11.existsSync(dir)) {
         mkdir.mkdirsSync(dir);
       }
-      fs2.writeFileSync(file, ...args);
+      fs11.writeFileSync(file, ...args);
     }
     module2.exports = {
       outputFile: u(outputFile),
@@ -8796,8 +8796,8 @@ var require_json = __commonJS({
 var require_move = __commonJS({
   "node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_fs();
-    var path2 = require("path");
+    var fs11 = require_fs();
+    var path11 = require("path");
     var { copy } = require_copy2();
     var { remove } = require_remove();
     var { mkdirp } = require_mkdirs();
@@ -8807,8 +8807,8 @@ var require_move = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = await stat.checkPaths(src, dest, "move", opts);
       await stat.checkParentPaths(src, srcStat, dest, "move");
-      const destParent = path2.dirname(dest);
-      const parsedParentPath = path2.parse(destParent);
+      const destParent = path11.dirname(dest);
+      const parsedParentPath = path11.parse(destParent);
       if (parsedParentPath.root !== destParent) {
         await mkdirp(destParent);
       }
@@ -8823,7 +8823,7 @@ var require_move = __commonJS({
         }
       }
       try {
-        await fs2.rename(src, dest);
+        await fs11.rename(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") {
           throw err;
@@ -8848,8 +8848,8 @@ var require_move = __commonJS({
 var require_move_sync = __commonJS({
   "node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
     "use strict";
-    var fs2 = require_graceful_fs();
-    var path2 = require("path");
+    var fs11 = require_graceful_fs();
+    var path11 = require("path");
     var copySync = require_copy2().copySync;
     var removeSync = require_remove().removeSync;
     var mkdirpSync = require_mkdirs().mkdirpSync;
@@ -8859,12 +8859,12 @@ var require_move_sync = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = stat.checkPathsSync(src, dest, "move", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "move");
-      if (!isParentRoot(dest)) mkdirpSync(path2.dirname(dest));
+      if (!isParentRoot(dest)) mkdirpSync(path11.dirname(dest));
       return doRename(src, dest, overwrite, isChangingCase);
     }
     function isParentRoot(dest) {
-      const parent = path2.dirname(dest);
-      const parsedPath = path2.parse(parent);
+      const parent = path11.dirname(dest);
+      const parsedPath = path11.parse(parent);
       return parsedPath.root === parent;
     }
     function doRename(src, dest, overwrite, isChangingCase) {
@@ -8873,12 +8873,12 @@ var require_move_sync = __commonJS({
         removeSync(dest);
         return rename(src, dest, overwrite);
       }
-      if (fs2.existsSync(dest)) throw new Error("dest already exists.");
+      if (fs11.existsSync(dest)) throw new Error("dest already exists.");
       return rename(src, dest, overwrite);
     }
     function rename(src, dest, overwrite) {
       try {
-        fs2.renameSync(src, dest);
+        fs11.renameSync(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") throw err;
         return moveAcrossDevice(src, dest, overwrite);
@@ -9047,13 +9047,13 @@ var util;
 (function(util2) {
   util2.assertEqual = (_) => {
   };
-  function assertIs2(_arg) {
+  function assertIs(_arg) {
   }
-  util2.assertIs = assertIs2;
-  function assertNever2(_x) {
+  util2.assertIs = assertIs;
+  function assertNever(_x) {
     throw new Error();
   }
-  util2.assertNever = assertNever2;
+  util2.assertNever = assertNever;
   util2.arrayToEnum = (items) => {
     const obj = {};
     for (const item of items) {
@@ -9074,10 +9074,10 @@ var util;
       return obj[e];
     });
   };
-  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object3) => {
+  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
     const keys = [];
-    for (const key in object3) {
-      if (Object.prototype.hasOwnProperty.call(object3, key)) {
+    for (const key in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
         keys.push(key);
       }
     }
@@ -9091,10 +9091,10 @@ var util;
     return void 0;
   };
   util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-  function joinValues2(array2, separator = " | ") {
-    return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+  function joinValues(array, separator = " | ") {
+    return array.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
-  util2.joinValues = joinValues2;
+  util2.joinValues = joinValues;
   util2.jsonStringifyReplacer = (_, value) => {
     if (typeof value === "bigint") {
       return value.toString();
@@ -9222,31 +9222,31 @@ var ZodError = class _ZodError extends Error {
     this.issues = issues;
   }
   format(_mapper) {
-    const mapper = _mapper || function(issue2) {
-      return issue2.message;
+    const mapper = _mapper || function(issue) {
+      return issue.message;
     };
     const fieldErrors = { _errors: [] };
-    const processError = (error2) => {
-      for (const issue2 of error2.issues) {
-        if (issue2.code === "invalid_union") {
-          issue2.unionErrors.map(processError);
-        } else if (issue2.code === "invalid_return_type") {
-          processError(issue2.returnTypeError);
-        } else if (issue2.code === "invalid_arguments") {
-          processError(issue2.argumentsError);
-        } else if (issue2.path.length === 0) {
-          fieldErrors._errors.push(mapper(issue2));
+    const processError = (error) => {
+      for (const issue of error.issues) {
+        if (issue.code === "invalid_union") {
+          issue.unionErrors.map(processError);
+        } else if (issue.code === "invalid_return_type") {
+          processError(issue.returnTypeError);
+        } else if (issue.code === "invalid_arguments") {
+          processError(issue.argumentsError);
+        } else if (issue.path.length === 0) {
+          fieldErrors._errors.push(mapper(issue));
         } else {
           let curr = fieldErrors;
           let i = 0;
-          while (i < issue2.path.length) {
-            const el = issue2.path[i];
-            const terminal = i === issue2.path.length - 1;
+          while (i < issue.path.length) {
+            const el = issue.path[i];
+            const terminal = i === issue.path.length - 1;
             if (!terminal) {
               curr[el] = curr[el] || { _errors: [] };
             } else {
               curr[el] = curr[el] || { _errors: [] };
-              curr[el]._errors.push(mapper(issue2));
+              curr[el]._errors.push(mapper(issue));
             }
             curr = curr[el];
             i++;
@@ -9271,7 +9271,7 @@ var ZodError = class _ZodError extends Error {
   get isEmpty() {
     return this.issues.length === 0;
   }
-  flatten(mapper = (issue2) => issue2.message) {
+  flatten(mapper = (issue) => issue.message) {
     const fieldErrors = {};
     const formErrors = [];
     for (const sub of this.issues) {
@@ -9290,35 +9290,35 @@ var ZodError = class _ZodError extends Error {
   }
 };
 ZodError.create = (issues) => {
-  const error2 = new ZodError(issues);
-  return error2;
+  const error = new ZodError(issues);
+  return error;
 };
 
 // node_modules/zod/v3/locales/en.js
-var errorMap = (issue2, _ctx) => {
+var errorMap = (issue, _ctx) => {
   let message;
-  switch (issue2.code) {
+  switch (issue.code) {
     case ZodIssueCode.invalid_type:
-      if (issue2.received === ZodParsedType.undefined) {
+      if (issue.received === ZodParsedType.undefined) {
         message = "Required";
       } else {
-        message = `Expected ${issue2.expected}, received ${issue2.received}`;
+        message = `Expected ${issue.expected}, received ${issue.received}`;
       }
       break;
     case ZodIssueCode.invalid_literal:
-      message = `Invalid literal value, expected ${JSON.stringify(issue2.expected, util.jsonStringifyReplacer)}`;
+      message = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
       break;
     case ZodIssueCode.unrecognized_keys:
-      message = `Unrecognized key(s) in object: ${util.joinValues(issue2.keys, ", ")}`;
+      message = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
       break;
     case ZodIssueCode.invalid_union:
       message = `Invalid input`;
       break;
     case ZodIssueCode.invalid_union_discriminator:
-      message = `Invalid discriminator value. Expected ${util.joinValues(issue2.options)}`;
+      message = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
       break;
     case ZodIssueCode.invalid_enum_value:
-      message = `Invalid enum value. Expected ${util.joinValues(issue2.options)}, received '${issue2.received}'`;
+      message = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
       break;
     case ZodIssueCode.invalid_arguments:
       message = `Invalid function arguments`;
@@ -9330,50 +9330,50 @@ var errorMap = (issue2, _ctx) => {
       message = `Invalid date`;
       break;
     case ZodIssueCode.invalid_string:
-      if (typeof issue2.validation === "object") {
-        if ("includes" in issue2.validation) {
-          message = `Invalid input: must include "${issue2.validation.includes}"`;
-          if (typeof issue2.validation.position === "number") {
-            message = `${message} at one or more positions greater than or equal to ${issue2.validation.position}`;
+      if (typeof issue.validation === "object") {
+        if ("includes" in issue.validation) {
+          message = `Invalid input: must include "${issue.validation.includes}"`;
+          if (typeof issue.validation.position === "number") {
+            message = `${message} at one or more positions greater than or equal to ${issue.validation.position}`;
           }
-        } else if ("startsWith" in issue2.validation) {
-          message = `Invalid input: must start with "${issue2.validation.startsWith}"`;
-        } else if ("endsWith" in issue2.validation) {
-          message = `Invalid input: must end with "${issue2.validation.endsWith}"`;
+        } else if ("startsWith" in issue.validation) {
+          message = `Invalid input: must start with "${issue.validation.startsWith}"`;
+        } else if ("endsWith" in issue.validation) {
+          message = `Invalid input: must end with "${issue.validation.endsWith}"`;
         } else {
-          util.assertNever(issue2.validation);
+          util.assertNever(issue.validation);
         }
-      } else if (issue2.validation !== "regex") {
-        message = `Invalid ${issue2.validation}`;
+      } else if (issue.validation !== "regex") {
+        message = `Invalid ${issue.validation}`;
       } else {
         message = "Invalid";
       }
       break;
     case ZodIssueCode.too_small:
-      if (issue2.type === "array")
-        message = `Array must contain ${issue2.exact ? "exactly" : issue2.inclusive ? `at least` : `more than`} ${issue2.minimum} element(s)`;
-      else if (issue2.type === "string")
-        message = `String must contain ${issue2.exact ? "exactly" : issue2.inclusive ? `at least` : `over`} ${issue2.minimum} character(s)`;
-      else if (issue2.type === "number")
-        message = `Number must be ${issue2.exact ? `exactly equal to ` : issue2.inclusive ? `greater than or equal to ` : `greater than `}${issue2.minimum}`;
-      else if (issue2.type === "bigint")
-        message = `Number must be ${issue2.exact ? `exactly equal to ` : issue2.inclusive ? `greater than or equal to ` : `greater than `}${issue2.minimum}`;
-      else if (issue2.type === "date")
-        message = `Date must be ${issue2.exact ? `exactly equal to ` : issue2.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue2.minimum))}`;
+      if (issue.type === "array")
+        message = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
+      else if (issue.type === "string")
+        message = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
+      else if (issue.type === "number")
+        message = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
+      else if (issue.type === "bigint")
+        message = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
+      else if (issue.type === "date")
+        message = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
       else
         message = "Invalid input";
       break;
     case ZodIssueCode.too_big:
-      if (issue2.type === "array")
-        message = `Array must contain ${issue2.exact ? `exactly` : issue2.inclusive ? `at most` : `less than`} ${issue2.maximum} element(s)`;
-      else if (issue2.type === "string")
-        message = `String must contain ${issue2.exact ? `exactly` : issue2.inclusive ? `at most` : `under`} ${issue2.maximum} character(s)`;
-      else if (issue2.type === "number")
-        message = `Number must be ${issue2.exact ? `exactly` : issue2.inclusive ? `less than or equal to` : `less than`} ${issue2.maximum}`;
-      else if (issue2.type === "bigint")
-        message = `BigInt must be ${issue2.exact ? `exactly` : issue2.inclusive ? `less than or equal to` : `less than`} ${issue2.maximum}`;
-      else if (issue2.type === "date")
-        message = `Date must be ${issue2.exact ? `exactly` : issue2.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue2.maximum))}`;
+      if (issue.type === "array")
+        message = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
+      else if (issue.type === "string")
+        message = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
+      else if (issue.type === "number")
+        message = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+      else if (issue.type === "bigint")
+        message = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+      else if (issue.type === "date")
+        message = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
       else
         message = "Invalid input";
       break;
@@ -9384,14 +9384,14 @@ var errorMap = (issue2, _ctx) => {
       message = `Intersection results could not be merged`;
       break;
     case ZodIssueCode.not_multiple_of:
-      message = `Number must be a multiple of ${issue2.multipleOf}`;
+      message = `Number must be a multiple of ${issue.multipleOf}`;
       break;
     case ZodIssueCode.not_finite:
       message = "Number must be finite";
       break;
     default:
       message = _ctx.defaultError;
-      util.assertNever(issue2);
+      util.assertNever(issue);
   }
   return { message };
 };
@@ -9408,8 +9408,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path2, errorMaps, issueData } = params;
-  const fullPath = [...path2, ...issueData.path || []];
+  const { data, path: path11, errorMaps, issueData } = params;
+  const fullPath = [...path11, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -9435,7 +9435,7 @@ var makeIssue = (params) => {
 var EMPTY_PATH = [];
 function addIssueToContext(ctx, issueData) {
   const overrideMap = getErrorMap();
-  const issue2 = makeIssue({
+  const issue = makeIssue({
     issueData,
     data: ctx.data,
     path: ctx.path,
@@ -9450,7 +9450,7 @@ function addIssueToContext(ctx, issueData) {
       // then global default map
     ].filter((x) => !!x)
   });
-  ctx.common.issues.push(issue2);
+  ctx.common.issues.push(issue);
 }
 var ParseStatus = class _ParseStatus {
   constructor() {
@@ -9525,11 +9525,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key) {
+  constructor(parent, value, path11, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path2;
+    this._path = path11;
     this._key = key;
   }
   get path() {
@@ -9555,8 +9555,8 @@ var handleResult = (ctx, result) => {
       get error() {
         if (this._error)
           return this._error;
-        const error2 = new ZodError(ctx.common.issues);
-        this._error = error2;
+        const error = new ZodError(ctx.common.issues);
+        this._error = error;
         return this._error;
       }
     };
@@ -9708,7 +9708,7 @@ var ZodType = class {
     const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
     return handleResult(ctx, result);
   }
-  refine(check2, message) {
+  refine(check, message) {
     const getIssueProperties = (val) => {
       if (typeof message === "string" || typeof message === "undefined") {
         return { message };
@@ -9719,7 +9719,7 @@ var ZodType = class {
       }
     };
     return this._refinement((val, ctx) => {
-      const result = check2(val);
+      const result = check(val);
       const setError = () => ctx.addIssue({
         code: ZodIssueCode.custom,
         ...getIssueProperties(val)
@@ -9742,9 +9742,9 @@ var ZodType = class {
       }
     });
   }
-  refinement(check2, refinementData) {
+  refinement(check, refinementData) {
     return this._refinement((val, ctx) => {
-      if (!check2(val)) {
+      if (!check(val)) {
         ctx.addIssue(typeof refinementData === "function" ? refinementData(val, ctx) : refinementData);
         return false;
       } else {
@@ -9816,12 +9816,12 @@ var ZodType = class {
   and(incoming) {
     return ZodIntersection.create(this, incoming, this._def);
   }
-  transform(transform2) {
+  transform(transform) {
     return new ZodEffects({
       ...processCreateParams(this._def),
       schema: this,
       typeName: ZodFirstPartyTypeKind.ZodEffects,
-      effect: { type: "transform", transform: transform2 }
+      effect: { type: "transform", transform }
     });
   }
   default(def) {
@@ -9909,11 +9909,11 @@ function datetimeRegex(args) {
   regex = `${regex}(${opts.join("|")})`;
   return new RegExp(`^${regex}$`);
 }
-function isValidIP(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
+function isValidIP(ip, version) {
+  if ((version === "v4" || !version) && ipv4Regex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
+  if ((version === "v6" || !version) && ipv6Regex.test(ip)) {
     return true;
   }
   return false;
@@ -9925,8 +9925,8 @@ function isValidJWT(jwt, alg) {
     const [header] = jwt.split(".");
     if (!header)
       return false;
-    const base642 = header.replace(/-/g, "+").replace(/_/g, "/").padEnd(header.length + (4 - header.length % 4) % 4, "=");
-    const decoded = JSON.parse(atob(base642));
+    const base64 = header.replace(/-/g, "+").replace(/_/g, "/").padEnd(header.length + (4 - header.length % 4) % 4, "=");
+    const decoded = JSON.parse(atob(base64));
     if (typeof decoded !== "object" || decoded === null)
       return false;
     if ("typ" in decoded && (decoded == null ? void 0 : decoded.typ) !== "JWT")
@@ -9940,22 +9940,22 @@ function isValidJWT(jwt, alg) {
     return false;
   }
 }
-function isValidCidr(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
+function isValidCidr(ip, version) {
+  if ((version === "v4" || !version) && ipv4CidrRegex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
+  if ((version === "v6" || !version) && ipv6CidrRegex.test(ip)) {
     return true;
   }
   return false;
 }
-var ZodString = class _ZodString2 extends ZodType {
+var ZodString = class _ZodString extends ZodType {
   _parse(input) {
     if (this._def.coerce) {
       input.data = String(input.data);
     }
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.string) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.string) {
       const ctx2 = this._getOrReturnCtx(input);
       addIssueToContext(ctx2, {
         code: ZodIssueCode.invalid_type,
@@ -9966,70 +9966,70 @@ var ZodString = class _ZodString2 extends ZodType {
     }
     const status = new ParseStatus();
     let ctx = void 0;
-    for (const check2 of this._def.checks) {
-      if (check2.kind === "min") {
-        if (input.data.length < check2.value) {
+    for (const check of this._def.checks) {
+      if (check.kind === "min") {
+        if (input.data.length < check.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            minimum: check2.value,
+            minimum: check.value,
             type: "string",
             inclusive: true,
             exact: false,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "max") {
-        if (input.data.length > check2.value) {
+      } else if (check.kind === "max") {
+        if (input.data.length > check.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            maximum: check2.value,
+            maximum: check.value,
             type: "string",
             inclusive: true,
             exact: false,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "length") {
-        const tooBig = input.data.length > check2.value;
-        const tooSmall = input.data.length < check2.value;
+      } else if (check.kind === "length") {
+        const tooBig = input.data.length > check.value;
+        const tooSmall = input.data.length < check.value;
         if (tooBig || tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           if (tooBig) {
             addIssueToContext(ctx, {
               code: ZodIssueCode.too_big,
-              maximum: check2.value,
+              maximum: check.value,
               type: "string",
               inclusive: true,
               exact: true,
-              message: check2.message
+              message: check.message
             });
           } else if (tooSmall) {
             addIssueToContext(ctx, {
               code: ZodIssueCode.too_small,
-              minimum: check2.value,
+              minimum: check.value,
               type: "string",
               inclusive: true,
               exact: true,
-              message: check2.message
+              message: check.message
             });
           }
           status.dirty();
         }
-      } else if (check2.kind === "email") {
+      } else if (check.kind === "email") {
         if (!emailRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "email",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "emoji") {
+      } else if (check.kind === "emoji") {
         if (!emojiRegex) {
           emojiRegex = new RegExp(_emojiRegex, "u");
         }
@@ -10038,61 +10038,61 @@ var ZodString = class _ZodString2 extends ZodType {
           addIssueToContext(ctx, {
             validation: "emoji",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "uuid") {
+      } else if (check.kind === "uuid") {
         if (!uuidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "uuid",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "nanoid") {
+      } else if (check.kind === "nanoid") {
         if (!nanoidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "nanoid",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "cuid") {
+      } else if (check.kind === "cuid") {
         if (!cuidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cuid",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "cuid2") {
+      } else if (check.kind === "cuid2") {
         if (!cuid2Regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cuid2",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "ulid") {
+      } else if (check.kind === "ulid") {
         if (!ulidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "ulid",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "url") {
+      } else if (check.kind === "url") {
         try {
           new URL(input.data);
         } catch {
@@ -10100,153 +10100,153 @@ var ZodString = class _ZodString2 extends ZodType {
           addIssueToContext(ctx, {
             validation: "url",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "regex") {
-        check2.regex.lastIndex = 0;
-        const testResult = check2.regex.test(input.data);
+      } else if (check.kind === "regex") {
+        check.regex.lastIndex = 0;
+        const testResult = check.regex.test(input.data);
         if (!testResult) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "regex",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "trim") {
+      } else if (check.kind === "trim") {
         input.data = input.data.trim();
-      } else if (check2.kind === "includes") {
-        if (!input.data.includes(check2.value, check2.position)) {
+      } else if (check.kind === "includes") {
+        if (!input.data.includes(check.value, check.position)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { includes: check2.value, position: check2.position },
-            message: check2.message
+            validation: { includes: check.value, position: check.position },
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "toLowerCase") {
+      } else if (check.kind === "toLowerCase") {
         input.data = input.data.toLowerCase();
-      } else if (check2.kind === "toUpperCase") {
+      } else if (check.kind === "toUpperCase") {
         input.data = input.data.toUpperCase();
-      } else if (check2.kind === "startsWith") {
-        if (!input.data.startsWith(check2.value)) {
+      } else if (check.kind === "startsWith") {
+        if (!input.data.startsWith(check.value)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { startsWith: check2.value },
-            message: check2.message
+            validation: { startsWith: check.value },
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "endsWith") {
-        if (!input.data.endsWith(check2.value)) {
+      } else if (check.kind === "endsWith") {
+        if (!input.data.endsWith(check.value)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { endsWith: check2.value },
-            message: check2.message
+            validation: { endsWith: check.value },
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "datetime") {
-        const regex = datetimeRegex(check2);
+      } else if (check.kind === "datetime") {
+        const regex = datetimeRegex(check);
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "datetime",
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "date") {
+      } else if (check.kind === "date") {
         const regex = dateRegex;
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "date",
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "time") {
-        const regex = timeRegex(check2);
+      } else if (check.kind === "time") {
+        const regex = timeRegex(check);
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "time",
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "duration") {
+      } else if (check.kind === "duration") {
         if (!durationRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "duration",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "ip") {
-        if (!isValidIP(input.data, check2.version)) {
+      } else if (check.kind === "ip") {
+        if (!isValidIP(input.data, check.version)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "ip",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "jwt") {
-        if (!isValidJWT(input.data, check2.alg)) {
+      } else if (check.kind === "jwt") {
+        if (!isValidJWT(input.data, check.alg)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "jwt",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "cidr") {
-        if (!isValidCidr(input.data, check2.version)) {
+      } else if (check.kind === "cidr") {
+        if (!isValidCidr(input.data, check.version)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cidr",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "base64") {
+      } else if (check.kind === "base64") {
         if (!base64Regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "base64",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "base64url") {
+      } else if (check.kind === "base64url") {
         if (!base64urlRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "base64url",
             code: ZodIssueCode.invalid_string,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
       } else {
-        util.assertNever(check2);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -10258,10 +10258,10 @@ var ZodString = class _ZodString2 extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  _addCheck(check2) {
-    return new _ZodString2({
+  _addCheck(check) {
+    return new _ZodString({
       ...this._def,
-      checks: [...this._def.checks, check2]
+      checks: [...this._def.checks, check]
     });
   }
   email(message) {
@@ -10401,19 +10401,19 @@ var ZodString = class _ZodString2 extends ZodType {
     return this.min(1, errorUtil.errToObj(message));
   }
   trim() {
-    return new _ZodString2({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "trim" }]
     });
   }
   toLowerCase() {
-    return new _ZodString2({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "toLowerCase" }]
     });
   }
   toUpperCase() {
-    return new _ZodString2({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "toUpperCase" }]
     });
@@ -10514,8 +10514,8 @@ var ZodNumber = class _ZodNumber extends ZodType {
     if (this._def.coerce) {
       input.data = Number(input.data);
     }
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.number) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.number) {
       const ctx2 = this._getOrReturnCtx(input);
       addIssueToContext(ctx2, {
         code: ZodIssueCode.invalid_type,
@@ -10526,67 +10526,67 @@ var ZodNumber = class _ZodNumber extends ZodType {
     }
     let ctx = void 0;
     const status = new ParseStatus();
-    for (const check2 of this._def.checks) {
-      if (check2.kind === "int") {
+    for (const check of this._def.checks) {
+      if (check.kind === "int") {
         if (!util.isInteger(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_type,
             expected: "integer",
             received: "float",
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "min") {
-        const tooSmall = check2.inclusive ? input.data < check2.value : input.data <= check2.value;
+      } else if (check.kind === "min") {
+        const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
         if (tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            minimum: check2.value,
+            minimum: check.value,
             type: "number",
-            inclusive: check2.inclusive,
+            inclusive: check.inclusive,
             exact: false,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "max") {
-        const tooBig = check2.inclusive ? input.data > check2.value : input.data >= check2.value;
+      } else if (check.kind === "max") {
+        const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
         if (tooBig) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            maximum: check2.value,
+            maximum: check.value,
             type: "number",
-            inclusive: check2.inclusive,
+            inclusive: check.inclusive,
             exact: false,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "multipleOf") {
-        if (floatSafeRemainder(input.data, check2.value) !== 0) {
+      } else if (check.kind === "multipleOf") {
+        if (floatSafeRemainder(input.data, check.value) !== 0) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_multiple_of,
-            multipleOf: check2.value,
-            message: check2.message
+            multipleOf: check.value,
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "finite") {
+      } else if (check.kind === "finite") {
         if (!Number.isFinite(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_finite,
-            message: check2.message
+            message: check.message
           });
           status.dirty();
         }
       } else {
-        util.assertNever(check2);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -10617,10 +10617,10 @@ var ZodNumber = class _ZodNumber extends ZodType {
       ]
     });
   }
-  _addCheck(check2) {
+  _addCheck(check) {
     return new _ZodNumber({
       ...this._def,
-      checks: [...this._def.checks, check2]
+      checks: [...this._def.checks, check]
     });
   }
   int(message) {
@@ -10749,51 +10749,51 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
         return this._getInvalidInput(input);
       }
     }
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.bigint) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.bigint) {
       return this._getInvalidInput(input);
     }
     let ctx = void 0;
     const status = new ParseStatus();
-    for (const check2 of this._def.checks) {
-      if (check2.kind === "min") {
-        const tooSmall = check2.inclusive ? input.data < check2.value : input.data <= check2.value;
+    for (const check of this._def.checks) {
+      if (check.kind === "min") {
+        const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
         if (tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
             type: "bigint",
-            minimum: check2.value,
-            inclusive: check2.inclusive,
-            message: check2.message
+            minimum: check.value,
+            inclusive: check.inclusive,
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "max") {
-        const tooBig = check2.inclusive ? input.data > check2.value : input.data >= check2.value;
+      } else if (check.kind === "max") {
+        const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
         if (tooBig) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
             type: "bigint",
-            maximum: check2.value,
-            inclusive: check2.inclusive,
-            message: check2.message
+            maximum: check.value,
+            inclusive: check.inclusive,
+            message: check.message
           });
           status.dirty();
         }
-      } else if (check2.kind === "multipleOf") {
-        if (input.data % check2.value !== BigInt(0)) {
+      } else if (check.kind === "multipleOf") {
+        if (input.data % check.value !== BigInt(0)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_multiple_of,
-            multipleOf: check2.value,
-            message: check2.message
+            multipleOf: check.value,
+            message: check.message
           });
           status.dirty();
         }
       } else {
-        util.assertNever(check2);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -10833,10 +10833,10 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
       ]
     });
   }
-  _addCheck(check2) {
+  _addCheck(check) {
     return new _ZodBigInt({
       ...this._def,
-      checks: [...this._def.checks, check2]
+      checks: [...this._def.checks, check]
     });
   }
   positive(message) {
@@ -10912,8 +10912,8 @@ var ZodBoolean = class extends ZodType {
     if (this._def.coerce) {
       input.data = Boolean(input.data);
     }
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.boolean) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.boolean) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -10937,8 +10937,8 @@ var ZodDate = class _ZodDate extends ZodType {
     if (this._def.coerce) {
       input.data = new Date(input.data);
     }
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.date) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.date) {
       const ctx2 = this._getOrReturnCtx(input);
       addIssueToContext(ctx2, {
         code: ZodIssueCode.invalid_type,
@@ -10956,35 +10956,35 @@ var ZodDate = class _ZodDate extends ZodType {
     }
     const status = new ParseStatus();
     let ctx = void 0;
-    for (const check2 of this._def.checks) {
-      if (check2.kind === "min") {
-        if (input.data.getTime() < check2.value) {
+    for (const check of this._def.checks) {
+      if (check.kind === "min") {
+        if (input.data.getTime() < check.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            message: check2.message,
+            message: check.message,
             inclusive: true,
             exact: false,
-            minimum: check2.value,
+            minimum: check.value,
             type: "date"
           });
           status.dirty();
         }
-      } else if (check2.kind === "max") {
-        if (input.data.getTime() > check2.value) {
+      } else if (check.kind === "max") {
+        if (input.data.getTime() > check.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            message: check2.message,
+            message: check.message,
             inclusive: true,
             exact: false,
-            maximum: check2.value,
+            maximum: check.value,
             type: "date"
           });
           status.dirty();
         }
       } else {
-        util.assertNever(check2);
+        util.assertNever(check);
       }
     }
     return {
@@ -10992,10 +10992,10 @@ var ZodDate = class _ZodDate extends ZodType {
       value: new Date(input.data.getTime())
     };
   }
-  _addCheck(check2) {
+  _addCheck(check) {
     return new _ZodDate({
       ...this._def,
-      checks: [...this._def.checks, check2]
+      checks: [...this._def.checks, check]
     });
   }
   min(minDate, message) {
@@ -11043,8 +11043,8 @@ ZodDate.create = (params) => {
 };
 var ZodSymbol = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.symbol) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.symbol) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -11064,8 +11064,8 @@ ZodSymbol.create = (params) => {
 };
 var ZodUndefined = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.undefined) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.undefined) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -11085,8 +11085,8 @@ ZodUndefined.create = (params) => {
 };
 var ZodNull = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.null) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.null) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -11153,8 +11153,8 @@ ZodNever.create = (params) => {
 };
 var ZodVoid = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.undefined) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.undefined) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -11277,8 +11277,8 @@ function deepPartialify(schema) {
   if (schema instanceof ZodObject) {
     const newShape = {};
     for (const key in schema.shape) {
-      const fieldSchema = schema.shape[key];
-      newShape[key] = ZodOptional.create(deepPartialify(fieldSchema));
+      const fieldSchema2 = schema.shape[key];
+      newShape[key] = ZodOptional.create(deepPartialify(fieldSchema2));
     }
     return new ZodObject({
       ...schema._def,
@@ -11315,8 +11315,8 @@ var ZodObject = class _ZodObject extends ZodType {
     return this._cached;
   }
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.object) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.object) {
       const ctx2 = this._getOrReturnCtx(input);
       addIssueToContext(ctx2, {
         code: ZodIssueCode.invalid_type,
@@ -11409,10 +11409,10 @@ var ZodObject = class _ZodObject extends ZodType {
       ...this._def,
       unknownKeys: "strict",
       ...message !== void 0 ? {
-        errorMap: (issue2, ctx) => {
+        errorMap: (issue, ctx) => {
           var _a, _b;
-          const defaultError = ((_b = (_a = this._def).errorMap) == null ? void 0 : _b.call(_a, issue2, ctx).message) ?? ctx.defaultError;
-          if (issue2.code === "unrecognized_keys")
+          const defaultError = ((_b = (_a = this._def).errorMap) == null ? void 0 : _b.call(_a, issue, ctx).message) ?? ctx.defaultError;
+          if (issue.code === "unrecognized_keys")
             return {
               message: errorUtil.errToObj(message).message ?? defaultError
             };
@@ -11576,11 +11576,11 @@ var ZodObject = class _ZodObject extends ZodType {
   partial(mask) {
     const newShape = {};
     for (const key of util.objectKeys(this.shape)) {
-      const fieldSchema = this.shape[key];
+      const fieldSchema2 = this.shape[key];
       if (mask && !mask[key]) {
-        newShape[key] = fieldSchema;
+        newShape[key] = fieldSchema2;
       } else {
-        newShape[key] = fieldSchema.optional();
+        newShape[key] = fieldSchema2.optional();
       }
     }
     return new _ZodObject({
@@ -11594,8 +11594,8 @@ var ZodObject = class _ZodObject extends ZodType {
       if (mask && !mask[key]) {
         newShape[key] = this.shape[key];
       } else {
-        const fieldSchema = this.shape[key];
-        let newField = fieldSchema;
+        const fieldSchema2 = this.shape[key];
+        let newField = fieldSchema2;
         while (newField instanceof ZodOptional) {
           newField = newField._def.innerType;
         }
@@ -12213,25 +12213,25 @@ var ZodFunction = class _ZodFunction extends ZodType {
       });
       return INVALID;
     }
-    function makeArgsIssue(args, error2) {
+    function makeArgsIssue(args, error) {
       return makeIssue({
         data: args,
         path: ctx.path,
         errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
         issueData: {
           code: ZodIssueCode.invalid_arguments,
-          argumentsError: error2
+          argumentsError: error
         }
       });
     }
-    function makeReturnsIssue(returns, error2) {
+    function makeReturnsIssue(returns, error) {
       return makeIssue({
         data: returns,
         path: ctx.path,
         errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
         issueData: {
           code: ZodIssueCode.invalid_return_type,
-          returnTypeError: error2
+          returnTypeError: error
         }
       });
     }
@@ -12240,15 +12240,15 @@ var ZodFunction = class _ZodFunction extends ZodType {
     if (this._def.returns instanceof ZodPromise) {
       const me = this;
       return OK(async function(...args) {
-        const error2 = new ZodError([]);
+        const error = new ZodError([]);
         const parsedArgs = await me._def.args.parseAsync(args, params).catch((e) => {
-          error2.addIssue(makeArgsIssue(args, e));
-          throw error2;
+          error.addIssue(makeArgsIssue(args, e));
+          throw error;
         });
         const result = await Reflect.apply(fn, this, parsedArgs);
         const parsedReturns = await me._def.returns._def.type.parseAsync(result, params).catch((e) => {
-          error2.addIssue(makeReturnsIssue(result, e));
-          throw error2;
+          error.addIssue(makeReturnsIssue(result, e));
+          throw error;
         });
         return parsedReturns;
       });
@@ -12615,18 +12615,18 @@ ZodEffects.create = (schema, effect, params) => {
     ...processCreateParams(params)
   });
 };
-ZodEffects.createWithPreprocess = (preprocess2, schema, params) => {
+ZodEffects.createWithPreprocess = (preprocess, schema, params) => {
   return new ZodEffects({
     schema,
-    effect: { type: "preprocess", transform: preprocess2 },
+    effect: { type: "preprocess", transform: preprocess },
     typeName: ZodFirstPartyTypeKind.ZodEffects,
     ...processCreateParams(params)
   });
 };
 var ZodOptional = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 === ZodParsedType.undefined) {
+    const parsedType = this._getType(input);
+    if (parsedType === ZodParsedType.undefined) {
       return OK(void 0);
     }
     return this._def.innerType._parse(input);
@@ -12644,8 +12644,8 @@ ZodOptional.create = (type, params) => {
 };
 var ZodNullable = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 === ZodParsedType.null) {
+    const parsedType = this._getType(input);
+    if (parsedType === ZodParsedType.null) {
       return OK(null);
     }
     return this._def.innerType._parse(input);
@@ -12741,8 +12741,8 @@ ZodCatch.create = (type, params) => {
 };
 var ZodNaN = class extends ZodType {
   _parse(input) {
-    const parsedType2 = this._getType(input);
-    if (parsedType2 !== ZodParsedType.nan) {
+    const parsedType = this._getType(input);
+    if (parsedType !== ZodParsedType.nan) {
       const ctx = this._getOrReturnCtx(input);
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -12857,10 +12857,10 @@ function cleanParams(params, data) {
   const p2 = typeof p === "string" ? { message: p } : p;
   return p2;
 }
-function custom(check2, _params = {}, fatal) {
-  if (check2)
+function custom(check, _params = {}, fatal) {
+  if (check)
     return ZodAny.create().superRefine((data, ctx) => {
-      const r = check2(data);
+      const r = check(data);
       if (r instanceof Promise) {
         return r.then((r2) => {
           if (!r2) {
@@ -12973,4806 +12973,63 @@ var coerce = {
 };
 var NEVER = INVALID;
 
-// node_modules/zod/v4/core/core.js
-var NEVER2 = Object.freeze({
-  status: "aborted"
-});
-// @__NO_SIDE_EFFECTS__
-function $constructor(name, initializer3, params) {
-  function init(inst, def) {
-    var _a;
-    Object.defineProperty(inst, "_zod", {
-      value: inst._zod ?? {},
-      enumerable: false
-    });
-    (_a = inst._zod).traits ?? (_a.traits = /* @__PURE__ */ new Set());
-    inst._zod.traits.add(name);
-    initializer3(inst, def);
-    for (const k in _.prototype) {
-      if (!(k in inst))
-        Object.defineProperty(inst, k, { value: _.prototype[k].bind(inst) });
-    }
-    inst._zod.constr = _;
-    inst._zod.def = def;
-  }
-  const Parent = (params == null ? void 0 : params.Parent) ?? Object;
-  class Definition extends Parent {
-  }
-  Object.defineProperty(Definition, "name", { value: name });
-  function _(def) {
-    var _a;
-    const inst = (params == null ? void 0 : params.Parent) ? new Definition() : this;
-    init(inst, def);
-    (_a = inst._zod).deferred ?? (_a.deferred = []);
-    for (const fn of inst._zod.deferred) {
-      fn();
-    }
-    return inst;
-  }
-  Object.defineProperty(_, "init", { value: init });
-  Object.defineProperty(_, Symbol.hasInstance, {
-    value: (inst) => {
-      var _a, _b;
-      if ((params == null ? void 0 : params.Parent) && inst instanceof params.Parent)
-        return true;
-      return (_b = (_a = inst == null ? void 0 : inst._zod) == null ? void 0 : _a.traits) == null ? void 0 : _b.has(name);
-    }
-  });
-  Object.defineProperty(_, "name", { value: name });
-  return _;
-}
-var $ZodAsyncError = class extends Error {
-  constructor() {
-    super(`Encountered Promise during synchronous parse. Use .parseAsync() instead.`);
-  }
-};
-var globalConfig = {};
-function config(newConfig) {
-  if (newConfig)
-    Object.assign(globalConfig, newConfig);
-  return globalConfig;
-}
-
-// node_modules/zod/v4/core/util.js
-var util_exports = {};
-__export(util_exports, {
-  BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
-  Class: () => Class,
-  NUMBER_FORMAT_RANGES: () => NUMBER_FORMAT_RANGES,
-  aborted: () => aborted,
-  allowsEval: () => allowsEval,
-  assert: () => assert,
-  assertEqual: () => assertEqual,
-  assertIs: () => assertIs,
-  assertNever: () => assertNever,
-  assertNotEqual: () => assertNotEqual,
-  assignProp: () => assignProp,
-  cached: () => cached,
-  captureStackTrace: () => captureStackTrace,
-  cleanEnum: () => cleanEnum,
-  cleanRegex: () => cleanRegex,
-  clone: () => clone,
-  createTransparentProxy: () => createTransparentProxy,
-  defineLazy: () => defineLazy,
-  esc: () => esc,
-  escapeRegex: () => escapeRegex,
-  extend: () => extend,
-  finalizeIssue: () => finalizeIssue,
-  floatSafeRemainder: () => floatSafeRemainder2,
-  getElementAtPath: () => getElementAtPath,
-  getEnumValues: () => getEnumValues,
-  getLengthableOrigin: () => getLengthableOrigin,
-  getParsedType: () => getParsedType2,
-  getSizableOrigin: () => getSizableOrigin,
-  isObject: () => isObject,
-  isPlainObject: () => isPlainObject,
-  issue: () => issue,
-  joinValues: () => joinValues,
-  jsonStringifyReplacer: () => jsonStringifyReplacer,
-  merge: () => merge,
-  normalizeParams: () => normalizeParams,
-  nullish: () => nullish,
-  numKeys: () => numKeys,
-  omit: () => omit,
-  optionalKeys: () => optionalKeys,
-  partial: () => partial,
-  pick: () => pick,
-  prefixIssues: () => prefixIssues,
-  primitiveTypes: () => primitiveTypes,
-  promiseAllObject: () => promiseAllObject,
-  propertyKeyTypes: () => propertyKeyTypes,
-  randomString: () => randomString,
-  required: () => required,
-  stringifyPrimitive: () => stringifyPrimitive,
-  unwrapMessage: () => unwrapMessage
-});
-function assertEqual(val) {
-  return val;
-}
-function assertNotEqual(val) {
-  return val;
-}
-function assertIs(_arg) {
-}
-function assertNever(_x) {
-  throw new Error();
-}
-function assert(_) {
-}
-function getEnumValues(entries) {
-  const numericValues = Object.values(entries).filter((v) => typeof v === "number");
-  const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
-  return values;
-}
-function joinValues(array2, separator = "|") {
-  return array2.map((val) => stringifyPrimitive(val)).join(separator);
-}
-function jsonStringifyReplacer(_, value) {
-  if (typeof value === "bigint")
-    return value.toString();
-  return value;
-}
-function cached(getter) {
-  const set = false;
-  return {
-    get value() {
-      if (!set) {
-        const value = getter();
-        Object.defineProperty(this, "value", { value });
-        return value;
-      }
-      throw new Error("cached value already set");
-    }
-  };
-}
-function nullish(input) {
-  return input === null || input === void 0;
-}
-function cleanRegex(source) {
-  const start = source.startsWith("^") ? 1 : 0;
-  const end = source.endsWith("$") ? source.length - 1 : source.length;
-  return source.slice(start, end);
-}
-function floatSafeRemainder2(val, step) {
-  const valDecCount = (val.toString().split(".")[1] || "").length;
-  const stepDecCount = (step.toString().split(".")[1] || "").length;
-  const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
-  const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
-  const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
-  return valInt % stepInt / 10 ** decCount;
-}
-function defineLazy(object3, key, getter) {
-  const set = false;
-  Object.defineProperty(object3, key, {
-    get() {
-      if (!set) {
-        const value = getter();
-        object3[key] = value;
-        return value;
-      }
-      throw new Error("cached value already set");
-    },
-    set(v) {
-      Object.defineProperty(object3, key, {
-        value: v
-        // configurable: true,
-      });
-    },
-    configurable: true
-  });
-}
-function assignProp(target, prop, value) {
-  Object.defineProperty(target, prop, {
-    value,
-    writable: true,
-    enumerable: true,
-    configurable: true
-  });
-}
-function getElementAtPath(obj, path2) {
-  if (!path2)
-    return obj;
-  return path2.reduce((acc, key) => acc == null ? void 0 : acc[key], obj);
-}
-function promiseAllObject(promisesObj) {
-  const keys = Object.keys(promisesObj);
-  const promises = keys.map((key) => promisesObj[key]);
-  return Promise.all(promises).then((results) => {
-    const resolvedObj = {};
-    for (let i = 0; i < keys.length; i++) {
-      resolvedObj[keys[i]] = results[i];
-    }
-    return resolvedObj;
-  });
-}
-function randomString(length = 10) {
-  const chars = "abcdefghijklmnopqrstuvwxyz";
-  let str = "";
-  for (let i = 0; i < length; i++) {
-    str += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return str;
-}
-function esc(str) {
-  return JSON.stringify(str);
-}
-var captureStackTrace = Error.captureStackTrace ? Error.captureStackTrace : (..._args) => {
-};
-function isObject(data) {
-  return typeof data === "object" && data !== null && !Array.isArray(data);
-}
-var allowsEval = cached(() => {
-  var _a;
-  if (typeof navigator !== "undefined" && ((_a = navigator == null ? void 0 : navigator.userAgent) == null ? void 0 : _a.includes("Cloudflare"))) {
-    return false;
-  }
-  try {
-    const F = Function;
-    new F("");
-    return true;
-  } catch (_) {
-    return false;
-  }
-});
-function isPlainObject(o) {
-  if (isObject(o) === false)
-    return false;
-  const ctor = o.constructor;
-  if (ctor === void 0)
-    return true;
-  const prot = ctor.prototype;
-  if (isObject(prot) === false)
-    return false;
-  if (Object.prototype.hasOwnProperty.call(prot, "isPrototypeOf") === false) {
-    return false;
-  }
-  return true;
-}
-function numKeys(data) {
-  let keyCount = 0;
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
-      keyCount++;
-    }
-  }
-  return keyCount;
-}
-var getParsedType2 = (data) => {
-  const t = typeof data;
-  switch (t) {
-    case "undefined":
-      return "undefined";
-    case "string":
-      return "string";
-    case "number":
-      return Number.isNaN(data) ? "nan" : "number";
-    case "boolean":
-      return "boolean";
-    case "function":
-      return "function";
-    case "bigint":
-      return "bigint";
-    case "symbol":
-      return "symbol";
-    case "object":
-      if (Array.isArray(data)) {
-        return "array";
-      }
-      if (data === null) {
-        return "null";
-      }
-      if (data.then && typeof data.then === "function" && data.catch && typeof data.catch === "function") {
-        return "promise";
-      }
-      if (typeof Map !== "undefined" && data instanceof Map) {
-        return "map";
-      }
-      if (typeof Set !== "undefined" && data instanceof Set) {
-        return "set";
-      }
-      if (typeof Date !== "undefined" && data instanceof Date) {
-        return "date";
-      }
-      if (typeof File !== "undefined" && data instanceof File) {
-        return "file";
-      }
-      return "object";
-    default:
-      throw new Error(`Unknown data type: ${t}`);
-  }
-};
-var propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
-var primitiveTypes = /* @__PURE__ */ new Set(["string", "number", "bigint", "boolean", "symbol", "undefined"]);
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function clone(inst, def, params) {
-  const cl = new inst._zod.constr(def ?? inst._zod.def);
-  if (!def || (params == null ? void 0 : params.parent))
-    cl._zod.parent = inst;
-  return cl;
-}
-function normalizeParams(_params) {
-  const params = _params;
-  if (!params)
-    return {};
-  if (typeof params === "string")
-    return { error: () => params };
-  if ((params == null ? void 0 : params.message) !== void 0) {
-    if ((params == null ? void 0 : params.error) !== void 0)
-      throw new Error("Cannot specify both `message` and `error` params");
-    params.error = params.message;
-  }
-  delete params.message;
-  if (typeof params.error === "string")
-    return { ...params, error: () => params.error };
-  return params;
-}
-function createTransparentProxy(getter) {
-  let target;
-  return new Proxy({}, {
-    get(_, prop, receiver) {
-      target ?? (target = getter());
-      return Reflect.get(target, prop, receiver);
-    },
-    set(_, prop, value, receiver) {
-      target ?? (target = getter());
-      return Reflect.set(target, prop, value, receiver);
-    },
-    has(_, prop) {
-      target ?? (target = getter());
-      return Reflect.has(target, prop);
-    },
-    deleteProperty(_, prop) {
-      target ?? (target = getter());
-      return Reflect.deleteProperty(target, prop);
-    },
-    ownKeys(_) {
-      target ?? (target = getter());
-      return Reflect.ownKeys(target);
-    },
-    getOwnPropertyDescriptor(_, prop) {
-      target ?? (target = getter());
-      return Reflect.getOwnPropertyDescriptor(target, prop);
-    },
-    defineProperty(_, prop, descriptor) {
-      target ?? (target = getter());
-      return Reflect.defineProperty(target, prop, descriptor);
-    }
-  });
-}
-function stringifyPrimitive(value) {
-  if (typeof value === "bigint")
-    return value.toString() + "n";
-  if (typeof value === "string")
-    return `"${value}"`;
-  return `${value}`;
-}
-function optionalKeys(shape) {
-  return Object.keys(shape).filter((k) => {
-    return shape[k]._zod.optin === "optional" && shape[k]._zod.optout === "optional";
-  });
-}
-var NUMBER_FORMAT_RANGES = {
-  safeint: [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
-  int32: [-2147483648, 2147483647],
-  uint32: [0, 4294967295],
-  float32: [-34028234663852886e22, 34028234663852886e22],
-  float64: [-Number.MAX_VALUE, Number.MAX_VALUE]
-};
-var BIGINT_FORMAT_RANGES = {
-  int64: [/* @__PURE__ */ BigInt("-9223372036854775808"), /* @__PURE__ */ BigInt("9223372036854775807")],
-  uint64: [/* @__PURE__ */ BigInt(0), /* @__PURE__ */ BigInt("18446744073709551615")]
-};
-function pick(schema, mask) {
-  const newShape = {};
-  const currDef = schema._zod.def;
-  for (const key in mask) {
-    if (!(key in currDef.shape)) {
-      throw new Error(`Unrecognized key: "${key}"`);
-    }
-    if (!mask[key])
-      continue;
-    newShape[key] = currDef.shape[key];
-  }
-  return clone(schema, {
-    ...schema._zod.def,
-    shape: newShape,
-    checks: []
-  });
-}
-function omit(schema, mask) {
-  const newShape = { ...schema._zod.def.shape };
-  const currDef = schema._zod.def;
-  for (const key in mask) {
-    if (!(key in currDef.shape)) {
-      throw new Error(`Unrecognized key: "${key}"`);
-    }
-    if (!mask[key])
-      continue;
-    delete newShape[key];
-  }
-  return clone(schema, {
-    ...schema._zod.def,
-    shape: newShape,
-    checks: []
-  });
-}
-function extend(schema, shape) {
-  if (!isPlainObject(shape)) {
-    throw new Error("Invalid input to extend: expected a plain object");
-  }
-  const def = {
-    ...schema._zod.def,
-    get shape() {
-      const _shape = { ...schema._zod.def.shape, ...shape };
-      assignProp(this, "shape", _shape);
-      return _shape;
-    },
-    checks: []
-    // delete existing checks
-  };
-  return clone(schema, def);
-}
-function merge(a, b) {
-  return clone(a, {
-    ...a._zod.def,
-    get shape() {
-      const _shape = { ...a._zod.def.shape, ...b._zod.def.shape };
-      assignProp(this, "shape", _shape);
-      return _shape;
-    },
-    catchall: b._zod.def.catchall,
-    checks: []
-    // delete existing checks
-  });
-}
-function partial(Class2, schema, mask) {
-  const oldShape = schema._zod.def.shape;
-  const shape = { ...oldShape };
-  if (mask) {
-    for (const key in mask) {
-      if (!(key in oldShape)) {
-        throw new Error(`Unrecognized key: "${key}"`);
-      }
-      if (!mask[key])
-        continue;
-      shape[key] = Class2 ? new Class2({
-        type: "optional",
-        innerType: oldShape[key]
-      }) : oldShape[key];
-    }
-  } else {
-    for (const key in oldShape) {
-      shape[key] = Class2 ? new Class2({
-        type: "optional",
-        innerType: oldShape[key]
-      }) : oldShape[key];
-    }
-  }
-  return clone(schema, {
-    ...schema._zod.def,
-    shape,
-    checks: []
-  });
-}
-function required(Class2, schema, mask) {
-  const oldShape = schema._zod.def.shape;
-  const shape = { ...oldShape };
-  if (mask) {
-    for (const key in mask) {
-      if (!(key in shape)) {
-        throw new Error(`Unrecognized key: "${key}"`);
-      }
-      if (!mask[key])
-        continue;
-      shape[key] = new Class2({
-        type: "nonoptional",
-        innerType: oldShape[key]
-      });
-    }
-  } else {
-    for (const key in oldShape) {
-      shape[key] = new Class2({
-        type: "nonoptional",
-        innerType: oldShape[key]
-      });
-    }
-  }
-  return clone(schema, {
-    ...schema._zod.def,
-    shape,
-    // optional: [],
-    checks: []
-  });
-}
-function aborted(x, startIndex = 0) {
-  var _a;
-  for (let i = startIndex; i < x.issues.length; i++) {
-    if (((_a = x.issues[i]) == null ? void 0 : _a.continue) !== true)
-      return true;
-  }
-  return false;
-}
-function prefixIssues(path2, issues) {
-  return issues.map((iss) => {
-    var _a;
-    (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path2);
-    return iss;
-  });
-}
-function unwrapMessage(message) {
-  return typeof message === "string" ? message : message == null ? void 0 : message.message;
-}
-function finalizeIssue(iss, ctx, config2) {
-  var _a, _b, _c, _d, _e, _f;
-  const full = { ...iss, path: iss.path ?? [] };
-  if (!iss.message) {
-    const message = unwrapMessage((_c = (_b = (_a = iss.inst) == null ? void 0 : _a._zod.def) == null ? void 0 : _b.error) == null ? void 0 : _c.call(_b, iss)) ?? unwrapMessage((_d = ctx == null ? void 0 : ctx.error) == null ? void 0 : _d.call(ctx, iss)) ?? unwrapMessage((_e = config2.customError) == null ? void 0 : _e.call(config2, iss)) ?? unwrapMessage((_f = config2.localeError) == null ? void 0 : _f.call(config2, iss)) ?? "Invalid input";
-    full.message = message;
-  }
-  delete full.inst;
-  delete full.continue;
-  if (!(ctx == null ? void 0 : ctx.reportInput)) {
-    delete full.input;
-  }
-  return full;
-}
-function getSizableOrigin(input) {
-  if (input instanceof Set)
-    return "set";
-  if (input instanceof Map)
-    return "map";
-  if (input instanceof File)
-    return "file";
-  return "unknown";
-}
-function getLengthableOrigin(input) {
-  if (Array.isArray(input))
-    return "array";
-  if (typeof input === "string")
-    return "string";
-  return "unknown";
-}
-function issue(...args) {
-  const [iss, input, inst] = args;
-  if (typeof iss === "string") {
-    return {
-      message: iss,
-      code: "custom",
-      input,
-      inst
-    };
-  }
-  return { ...iss };
-}
-function cleanEnum(obj) {
-  return Object.entries(obj).filter(([k, _]) => {
-    return Number.isNaN(Number.parseInt(k, 10));
-  }).map((el) => el[1]);
-}
-var Class = class {
-  constructor(..._args) {
-  }
-};
-
-// node_modules/zod/v4/core/errors.js
-var initializer = (inst, def) => {
-  inst.name = "$ZodError";
-  Object.defineProperty(inst, "_zod", {
-    value: inst._zod,
-    enumerable: false
-  });
-  Object.defineProperty(inst, "issues", {
-    value: def,
-    enumerable: false
-  });
-  Object.defineProperty(inst, "message", {
-    get() {
-      return JSON.stringify(def, jsonStringifyReplacer, 2);
-    },
-    enumerable: true
-    // configurable: false,
-  });
-  Object.defineProperty(inst, "toString", {
-    value: () => inst.message,
-    enumerable: false
-  });
-};
-var $ZodError = $constructor("$ZodError", initializer);
-var $ZodRealError = $constructor("$ZodError", initializer, { Parent: Error });
-function flattenError(error2, mapper = (issue2) => issue2.message) {
-  const fieldErrors = {};
-  const formErrors = [];
-  for (const sub of error2.issues) {
-    if (sub.path.length > 0) {
-      fieldErrors[sub.path[0]] = fieldErrors[sub.path[0]] || [];
-      fieldErrors[sub.path[0]].push(mapper(sub));
-    } else {
-      formErrors.push(mapper(sub));
-    }
-  }
-  return { formErrors, fieldErrors };
-}
-function formatError(error2, _mapper) {
-  const mapper = _mapper || function(issue2) {
-    return issue2.message;
-  };
-  const fieldErrors = { _errors: [] };
-  const processError = (error3) => {
-    for (const issue2 of error3.issues) {
-      if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }));
-      } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues });
-      } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues });
-      } else if (issue2.path.length === 0) {
-        fieldErrors._errors.push(mapper(issue2));
-      } else {
-        let curr = fieldErrors;
-        let i = 0;
-        while (i < issue2.path.length) {
-          const el = issue2.path[i];
-          const terminal = i === issue2.path.length - 1;
-          if (!terminal) {
-            curr[el] = curr[el] || { _errors: [] };
-          } else {
-            curr[el] = curr[el] || { _errors: [] };
-            curr[el]._errors.push(mapper(issue2));
-          }
-          curr = curr[el];
-          i++;
-        }
-      }
-    }
-  };
-  processError(error2);
-  return fieldErrors;
-}
-
-// node_modules/zod/v4/core/parse.js
-var _parse = (_Err) => (schema, value, _ctx, _params) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: false }) : { async: false };
-  const result = schema._zod.run({ value, issues: [] }, ctx);
-  if (result instanceof Promise) {
-    throw new $ZodAsyncError();
-  }
-  if (result.issues.length) {
-    const e = new ((_params == null ? void 0 : _params.Err) ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
-    captureStackTrace(e, _params == null ? void 0 : _params.callee);
-    throw e;
-  }
-  return result.value;
-};
-var parse = /* @__PURE__ */ _parse($ZodRealError);
-var _parseAsync = (_Err) => async (schema, value, _ctx, params) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
-  let result = schema._zod.run({ value, issues: [] }, ctx);
-  if (result instanceof Promise)
-    result = await result;
-  if (result.issues.length) {
-    const e = new ((params == null ? void 0 : params.Err) ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
-    captureStackTrace(e, params == null ? void 0 : params.callee);
-    throw e;
-  }
-  return result.value;
-};
-var parseAsync = /* @__PURE__ */ _parseAsync($ZodRealError);
-var _safeParse = (_Err) => (schema, value, _ctx) => {
-  const ctx = _ctx ? { ..._ctx, async: false } : { async: false };
-  const result = schema._zod.run({ value, issues: [] }, ctx);
-  if (result instanceof Promise) {
-    throw new $ZodAsyncError();
-  }
-  return result.issues.length ? {
-    success: false,
-    error: new (_Err ?? $ZodError)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())))
-  } : { success: true, data: result.value };
-};
-var safeParse = /* @__PURE__ */ _safeParse($ZodRealError);
-var _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
-  let result = schema._zod.run({ value, issues: [] }, ctx);
-  if (result instanceof Promise)
-    result = await result;
-  return result.issues.length ? {
-    success: false,
-    error: new _Err(result.issues.map((iss) => finalizeIssue(iss, ctx, config())))
-  } : { success: true, data: result.value };
-};
-var safeParseAsync = /* @__PURE__ */ _safeParseAsync($ZodRealError);
-
-// node_modules/zod/v4/core/regexes.js
-var cuid = /^[cC][^\s-]{8,}$/;
-var cuid2 = /^[0-9a-z]+$/;
-var ulid = /^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}$/;
-var xid = /^[0-9a-vA-V]{20}$/;
-var ksuid = /^[A-Za-z0-9]{27}$/;
-var nanoid = /^[a-zA-Z0-9_-]{21}$/;
-var duration = /^P(?:(\d+W)|(?!.*W)(?=\d|T\d)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+([.,]\d+)?S)?)?)$/;
-var guid = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
-var uuid = (version2) => {
-  if (!version2)
-    return /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$/;
-  return new RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${version2}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`);
-};
-var email = /^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$/;
-var _emoji = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
-function emoji() {
-  return new RegExp(_emoji, "u");
-}
-var ipv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
-var ipv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F]{1,4})?::([0-9a-fA-F]{1,4}:?){0,6})$/;
-var cidrv4 = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/([0-9]|[1-2][0-9]|3[0-2])$/;
-var cidrv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F]{1,4})?::([0-9a-fA-F]{1,4}:?){0,6})\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
-var base64 = /^$|^(?:[0-9a-zA-Z+/]{4})*(?:(?:[0-9a-zA-Z+/]{2}==)|(?:[0-9a-zA-Z+/]{3}=))?$/;
-var base64url = /^[A-Za-z0-9_-]*$/;
-var hostname = /^([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+$/;
-var e164 = /^\+(?:[0-9]){6,14}[0-9]$/;
-var dateSource = `(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))`;
-var date = /* @__PURE__ */ new RegExp(`^${dateSource}$`);
-function timeSource(args) {
-  const hhmm = `(?:[01]\\d|2[0-3]):[0-5]\\d`;
-  const regex = typeof args.precision === "number" ? args.precision === -1 ? `${hhmm}` : args.precision === 0 ? `${hhmm}:[0-5]\\d` : `${hhmm}:[0-5]\\d\\.\\d{${args.precision}}` : `${hhmm}(?::[0-5]\\d(?:\\.\\d+)?)?`;
-  return regex;
-}
-function time(args) {
-  return new RegExp(`^${timeSource(args)}$`);
-}
-function datetime(args) {
-  const time3 = timeSource({ precision: args.precision });
-  const opts = ["Z"];
-  if (args.local)
-    opts.push("");
-  if (args.offset)
-    opts.push(`([+-]\\d{2}:\\d{2})`);
-  const timeRegex2 = `${time3}(?:${opts.join("|")})`;
-  return new RegExp(`^${dateSource}T(?:${timeRegex2})$`);
-}
-var string = (params) => {
-  const regex = params ? `[\\s\\S]{${(params == null ? void 0 : params.minimum) ?? 0},${(params == null ? void 0 : params.maximum) ?? ""}}` : `[\\s\\S]*`;
-  return new RegExp(`^${regex}$`);
-};
-var integer = /^\d+$/;
-var number = /^-?\d+(?:\.\d+)?/i;
-var boolean = /true|false/i;
-var _null = /null/i;
-var lowercase = /^[^A-Z]*$/;
-var uppercase = /^[^a-z]*$/;
-
-// node_modules/zod/v4/core/checks.js
-var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
-  var _a;
-  inst._zod ?? (inst._zod = {});
-  inst._zod.def = def;
-  (_a = inst._zod).onattach ?? (_a.onattach = []);
-});
-var numericOriginMap = {
-  number: "number",
-  bigint: "bigint",
-  object: "date"
-};
-var $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const origin = numericOriginMap[typeof def.value];
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    const curr = (def.inclusive ? bag.maximum : bag.exclusiveMaximum) ?? Number.POSITIVE_INFINITY;
-    if (def.value < curr) {
-      if (def.inclusive)
-        bag.maximum = def.value;
-      else
-        bag.exclusiveMaximum = def.value;
-    }
-  });
-  inst._zod.check = (payload) => {
-    if (def.inclusive ? payload.value <= def.value : payload.value < def.value) {
-      return;
-    }
-    payload.issues.push({
-      origin,
-      code: "too_big",
-      maximum: def.value,
-      input: payload.value,
-      inclusive: def.inclusive,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const origin = numericOriginMap[typeof def.value];
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    const curr = (def.inclusive ? bag.minimum : bag.exclusiveMinimum) ?? Number.NEGATIVE_INFINITY;
-    if (def.value > curr) {
-      if (def.inclusive)
-        bag.minimum = def.value;
-      else
-        bag.exclusiveMinimum = def.value;
-    }
-  });
-  inst._zod.check = (payload) => {
-    if (def.inclusive ? payload.value >= def.value : payload.value > def.value) {
-      return;
-    }
-    payload.issues.push({
-      origin,
-      code: "too_small",
-      minimum: def.value,
-      input: payload.value,
-      inclusive: def.inclusive,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    var _a;
-    (_a = inst2._zod.bag).multipleOf ?? (_a.multipleOf = def.value);
-  });
-  inst._zod.check = (payload) => {
-    if (typeof payload.value !== typeof def.value)
-      throw new Error("Cannot mix number and bigint in multiple_of check.");
-    const isMultiple = typeof payload.value === "bigint" ? payload.value % def.value === BigInt(0) : floatSafeRemainder2(payload.value, def.value) === 0;
-    if (isMultiple)
-      return;
-    payload.issues.push({
-      origin: typeof payload.value,
-      code: "not_multiple_of",
-      divisor: def.value,
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def) => {
-  var _a;
-  $ZodCheck.init(inst, def);
-  def.format = def.format || "float64";
-  const isInt = (_a = def.format) == null ? void 0 : _a.includes("int");
-  const origin = isInt ? "int" : "number";
-  const [minimum, maximum] = NUMBER_FORMAT_RANGES[def.format];
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.format = def.format;
-    bag.minimum = minimum;
-    bag.maximum = maximum;
-    if (isInt)
-      bag.pattern = integer;
-  });
-  inst._zod.check = (payload) => {
-    const input = payload.value;
-    if (isInt) {
-      if (!Number.isInteger(input)) {
-        payload.issues.push({
-          expected: origin,
-          format: def.format,
-          code: "invalid_type",
-          input,
-          inst
-        });
-        return;
-      }
-      if (!Number.isSafeInteger(input)) {
-        if (input > 0) {
-          payload.issues.push({
-            input,
-            code: "too_big",
-            maximum: Number.MAX_SAFE_INTEGER,
-            note: "Integers must be within the safe integer range.",
-            inst,
-            origin,
-            continue: !def.abort
-          });
-        } else {
-          payload.issues.push({
-            input,
-            code: "too_small",
-            minimum: Number.MIN_SAFE_INTEGER,
-            note: "Integers must be within the safe integer range.",
-            inst,
-            origin,
-            continue: !def.abort
-          });
-        }
-        return;
-      }
-    }
-    if (input < minimum) {
-      payload.issues.push({
-        origin: "number",
-        input,
-        code: "too_small",
-        minimum,
-        inclusive: true,
-        inst,
-        continue: !def.abort
-      });
-    }
-    if (input > maximum) {
-      payload.issues.push({
-        origin: "number",
-        input,
-        code: "too_big",
-        maximum,
-        inst
-      });
-    }
-  };
-});
-var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def) => {
-  var _a;
-  $ZodCheck.init(inst, def);
-  (_a = inst._zod.def).when ?? (_a.when = (payload) => {
-    const val = payload.value;
-    return !nullish(val) && val.length !== void 0;
-  });
-  inst._zod.onattach.push((inst2) => {
-    const curr = inst2._zod.bag.maximum ?? Number.POSITIVE_INFINITY;
-    if (def.maximum < curr)
-      inst2._zod.bag.maximum = def.maximum;
-  });
-  inst._zod.check = (payload) => {
-    const input = payload.value;
-    const length = input.length;
-    if (length <= def.maximum)
-      return;
-    const origin = getLengthableOrigin(input);
-    payload.issues.push({
-      origin,
-      code: "too_big",
-      maximum: def.maximum,
-      inclusive: true,
-      input,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def) => {
-  var _a;
-  $ZodCheck.init(inst, def);
-  (_a = inst._zod.def).when ?? (_a.when = (payload) => {
-    const val = payload.value;
-    return !nullish(val) && val.length !== void 0;
-  });
-  inst._zod.onattach.push((inst2) => {
-    const curr = inst2._zod.bag.minimum ?? Number.NEGATIVE_INFINITY;
-    if (def.minimum > curr)
-      inst2._zod.bag.minimum = def.minimum;
-  });
-  inst._zod.check = (payload) => {
-    const input = payload.value;
-    const length = input.length;
-    if (length >= def.minimum)
-      return;
-    const origin = getLengthableOrigin(input);
-    payload.issues.push({
-      origin,
-      code: "too_small",
-      minimum: def.minimum,
-      inclusive: true,
-      input,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def) => {
-  var _a;
-  $ZodCheck.init(inst, def);
-  (_a = inst._zod.def).when ?? (_a.when = (payload) => {
-    const val = payload.value;
-    return !nullish(val) && val.length !== void 0;
-  });
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.minimum = def.length;
-    bag.maximum = def.length;
-    bag.length = def.length;
-  });
-  inst._zod.check = (payload) => {
-    const input = payload.value;
-    const length = input.length;
-    if (length === def.length)
-      return;
-    const origin = getLengthableOrigin(input);
-    const tooBig = length > def.length;
-    payload.issues.push({
-      origin,
-      ...tooBig ? { code: "too_big", maximum: def.length } : { code: "too_small", minimum: def.length },
-      inclusive: true,
-      exact: true,
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def) => {
-  var _a, _b;
-  $ZodCheck.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.format = def.format;
-    if (def.pattern) {
-      bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-      bag.patterns.add(def.pattern);
-    }
-  });
-  if (def.pattern)
-    (_a = inst._zod).check ?? (_a.check = (payload) => {
-      def.pattern.lastIndex = 0;
-      if (def.pattern.test(payload.value))
-        return;
-      payload.issues.push({
-        origin: "string",
-        code: "invalid_format",
-        format: def.format,
-        input: payload.value,
-        ...def.pattern ? { pattern: def.pattern.toString() } : {},
-        inst,
-        continue: !def.abort
-      });
-    });
-  else
-    (_b = inst._zod).check ?? (_b.check = () => {
-    });
-});
-var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def) => {
-  $ZodCheckStringFormat.init(inst, def);
-  inst._zod.check = (payload) => {
-    def.pattern.lastIndex = 0;
-    if (def.pattern.test(payload.value))
-      return;
-    payload.issues.push({
-      origin: "string",
-      code: "invalid_format",
-      format: "regex",
-      input: payload.value,
-      pattern: def.pattern.toString(),
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckLowerCase = /* @__PURE__ */ $constructor("$ZodCheckLowerCase", (inst, def) => {
-  def.pattern ?? (def.pattern = lowercase);
-  $ZodCheckStringFormat.init(inst, def);
-});
-var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (inst, def) => {
-  def.pattern ?? (def.pattern = uppercase);
-  $ZodCheckStringFormat.init(inst, def);
-});
-var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const escapedRegex = escapeRegex(def.includes);
-  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
-  def.pattern = pattern;
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
-  });
-  inst._zod.check = (payload) => {
-    if (payload.value.includes(def.includes, def.position))
-      return;
-    payload.issues.push({
-      origin: "string",
-      code: "invalid_format",
-      format: "includes",
-      includes: def.includes,
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
-  def.pattern ?? (def.pattern = pattern);
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
-  });
-  inst._zod.check = (payload) => {
-    if (payload.value.startsWith(def.prefix))
-      return;
-    payload.issues.push({
-      origin: "string",
-      code: "invalid_format",
-      format: "starts_with",
-      prefix: def.prefix,
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
-  def.pattern ?? (def.pattern = pattern);
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
-  });
-  inst._zod.check = (payload) => {
-    if (payload.value.endsWith(def.suffix))
-      return;
-    payload.issues.push({
-      origin: "string",
-      code: "invalid_format",
-      format: "ends_with",
-      suffix: def.suffix,
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  inst._zod.check = (payload) => {
-    payload.value = def.tx(payload.value);
-  };
-});
-
-// node_modules/zod/v4/core/doc.js
-var Doc = class {
-  constructor(args = []) {
-    this.content = [];
-    this.indent = 0;
-    if (this)
-      this.args = args;
-  }
-  indented(fn) {
-    this.indent += 1;
-    fn(this);
-    this.indent -= 1;
-  }
-  write(arg) {
-    if (typeof arg === "function") {
-      arg(this, { execution: "sync" });
-      arg(this, { execution: "async" });
-      return;
-    }
-    const content = arg;
-    const lines = content.split("\n").filter((x) => x);
-    const minIndent = Math.min(...lines.map((x) => x.length - x.trimStart().length));
-    const dedented = lines.map((x) => x.slice(minIndent)).map((x) => " ".repeat(this.indent * 2) + x);
-    for (const line of dedented) {
-      this.content.push(line);
-    }
-  }
-  compile() {
-    const F = Function;
-    const args = this == null ? void 0 : this.args;
-    const content = (this == null ? void 0 : this.content) ?? [``];
-    const lines = [...content.map((x) => `  ${x}`)];
-    return new F(...args, lines.join("\n"));
-  }
-};
-
-// node_modules/zod/v4/core/versions.js
-var version = {
-  major: 4,
-  minor: 0,
-  patch: 0
-};
-
-// node_modules/zod/v4/core/schemas.js
-var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
-  var _a2;
-  var _a;
-  inst ?? (inst = {});
-  inst._zod.def = def;
-  inst._zod.bag = inst._zod.bag || {};
-  inst._zod.version = version;
-  const checks = [...inst._zod.def.checks ?? []];
-  if (inst._zod.traits.has("$ZodCheck")) {
-    checks.unshift(inst);
-  }
-  for (const ch of checks) {
-    for (const fn of ch._zod.onattach) {
-      fn(inst);
-    }
-  }
-  if (checks.length === 0) {
-    (_a = inst._zod).deferred ?? (_a.deferred = []);
-    (_a2 = inst._zod.deferred) == null ? void 0 : _a2.push(() => {
-      inst._zod.run = inst._zod.parse;
-    });
-  } else {
-    const runChecks = (payload, checks2, ctx) => {
-      let isAborted2 = aborted(payload);
-      let asyncResult;
-      for (const ch of checks2) {
-        if (ch._zod.def.when) {
-          const shouldRun = ch._zod.def.when(payload);
-          if (!shouldRun)
-            continue;
-        } else if (isAborted2) {
-          continue;
-        }
-        const currLen = payload.issues.length;
-        const _ = ch._zod.check(payload);
-        if (_ instanceof Promise && (ctx == null ? void 0 : ctx.async) === false) {
-          throw new $ZodAsyncError();
-        }
-        if (asyncResult || _ instanceof Promise) {
-          asyncResult = (asyncResult ?? Promise.resolve()).then(async () => {
-            await _;
-            const nextLen = payload.issues.length;
-            if (nextLen === currLen)
-              return;
-            if (!isAborted2)
-              isAborted2 = aborted(payload, currLen);
-          });
-        } else {
-          const nextLen = payload.issues.length;
-          if (nextLen === currLen)
-            continue;
-          if (!isAborted2)
-            isAborted2 = aborted(payload, currLen);
-        }
-      }
-      if (asyncResult) {
-        return asyncResult.then(() => {
-          return payload;
-        });
-      }
-      return payload;
-    };
-    inst._zod.run = (payload, ctx) => {
-      const result = inst._zod.parse(payload, ctx);
-      if (result instanceof Promise) {
-        if (ctx.async === false)
-          throw new $ZodAsyncError();
-        return result.then((result2) => runChecks(result2, checks, ctx));
-      }
-      return runChecks(result, checks, ctx);
-    };
-  }
-  inst["~standard"] = {
-    validate: (value) => {
-      var _a3;
-      try {
-        const r = safeParse(inst, value);
-        return r.success ? { value: r.data } : { issues: (_a3 = r.error) == null ? void 0 : _a3.issues };
-      } catch (_) {
-        return safeParseAsync(inst, value).then((r) => {
-          var _a4;
-          return r.success ? { value: r.data } : { issues: (_a4 = r.error) == null ? void 0 : _a4.issues };
-        });
-      }
-    },
-    vendor: "zod",
-    version: 1
-  };
-});
-var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
-  var _a;
-  $ZodType.init(inst, def);
-  inst._zod.pattern = [...((_a = inst == null ? void 0 : inst._zod.bag) == null ? void 0 : _a.patterns) ?? []].pop() ?? string(inst._zod.bag);
-  inst._zod.parse = (payload, _) => {
-    if (def.coerce)
-      try {
-        payload.value = String(payload.value);
-      } catch (_2) {
-      }
-    if (typeof payload.value === "string")
-      return payload;
-    payload.issues.push({
-      expected: "string",
-      code: "invalid_type",
-      input: payload.value,
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodStringFormat = /* @__PURE__ */ $constructor("$ZodStringFormat", (inst, def) => {
-  $ZodCheckStringFormat.init(inst, def);
-  $ZodString.init(inst, def);
-});
-var $ZodGUID = /* @__PURE__ */ $constructor("$ZodGUID", (inst, def) => {
-  def.pattern ?? (def.pattern = guid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def) => {
-  if (def.version) {
-    const versionMap = {
-      v1: 1,
-      v2: 2,
-      v3: 3,
-      v4: 4,
-      v5: 5,
-      v6: 6,
-      v7: 7,
-      v8: 8
-    };
-    const v = versionMap[def.version];
-    if (v === void 0)
-      throw new Error(`Invalid UUID version: "${def.version}"`);
-    def.pattern ?? (def.pattern = uuid(v));
-  } else
-    def.pattern ?? (def.pattern = uuid());
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodEmail = /* @__PURE__ */ $constructor("$ZodEmail", (inst, def) => {
-  def.pattern ?? (def.pattern = email);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
-  inst._zod.check = (payload) => {
-    try {
-      const orig = payload.value;
-      const url = new URL(orig);
-      const href = url.href;
-      if (def.hostname) {
-        def.hostname.lastIndex = 0;
-        if (!def.hostname.test(url.hostname)) {
-          payload.issues.push({
-            code: "invalid_format",
-            format: "url",
-            note: "Invalid hostname",
-            pattern: hostname.source,
-            input: payload.value,
-            inst,
-            continue: !def.abort
-          });
-        }
-      }
-      if (def.protocol) {
-        def.protocol.lastIndex = 0;
-        if (!def.protocol.test(url.protocol.endsWith(":") ? url.protocol.slice(0, -1) : url.protocol)) {
-          payload.issues.push({
-            code: "invalid_format",
-            format: "url",
-            note: "Invalid protocol",
-            pattern: def.protocol.source,
-            input: payload.value,
-            inst,
-            continue: !def.abort
-          });
-        }
-      }
-      if (!orig.endsWith("/") && href.endsWith("/")) {
-        payload.value = href.slice(0, -1);
-      } else {
-        payload.value = href;
-      }
-      return;
-    } catch (_) {
-      payload.issues.push({
-        code: "invalid_format",
-        format: "url",
-        input: payload.value,
-        inst,
-        continue: !def.abort
-      });
-    }
-  };
-});
-var $ZodEmoji = /* @__PURE__ */ $constructor("$ZodEmoji", (inst, def) => {
-  def.pattern ?? (def.pattern = emoji());
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodNanoID = /* @__PURE__ */ $constructor("$ZodNanoID", (inst, def) => {
-  def.pattern ?? (def.pattern = nanoid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodCUID = /* @__PURE__ */ $constructor("$ZodCUID", (inst, def) => {
-  def.pattern ?? (def.pattern = cuid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodCUID2 = /* @__PURE__ */ $constructor("$ZodCUID2", (inst, def) => {
-  def.pattern ?? (def.pattern = cuid2);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodULID = /* @__PURE__ */ $constructor("$ZodULID", (inst, def) => {
-  def.pattern ?? (def.pattern = ulid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodXID = /* @__PURE__ */ $constructor("$ZodXID", (inst, def) => {
-  def.pattern ?? (def.pattern = xid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodKSUID = /* @__PURE__ */ $constructor("$ZodKSUID", (inst, def) => {
-  def.pattern ?? (def.pattern = ksuid);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodISODateTime = /* @__PURE__ */ $constructor("$ZodISODateTime", (inst, def) => {
-  def.pattern ?? (def.pattern = datetime(def));
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def) => {
-  def.pattern ?? (def.pattern = date);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def) => {
-  def.pattern ?? (def.pattern = time(def));
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def) => {
-  def.pattern ?? (def.pattern = duration);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodIPv4 = /* @__PURE__ */ $constructor("$ZodIPv4", (inst, def) => {
-  def.pattern ?? (def.pattern = ipv4);
-  $ZodStringFormat.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.format = `ipv4`;
-  });
-});
-var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def) => {
-  def.pattern ?? (def.pattern = ipv6);
-  $ZodStringFormat.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    const bag = inst2._zod.bag;
-    bag.format = `ipv6`;
-  });
-  inst._zod.check = (payload) => {
-    try {
-      new URL(`http://[${payload.value}]`);
-    } catch {
-      payload.issues.push({
-        code: "invalid_format",
-        format: "ipv6",
-        input: payload.value,
-        inst,
-        continue: !def.abort
-      });
-    }
-  };
-});
-var $ZodCIDRv4 = /* @__PURE__ */ $constructor("$ZodCIDRv4", (inst, def) => {
-  def.pattern ?? (def.pattern = cidrv4);
-  $ZodStringFormat.init(inst, def);
-});
-var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
-  def.pattern ?? (def.pattern = cidrv6);
-  $ZodStringFormat.init(inst, def);
-  inst._zod.check = (payload) => {
-    const [address, prefix] = payload.value.split("/");
-    try {
-      if (!prefix)
-        throw new Error();
-      const prefixNum = Number(prefix);
-      if (`${prefixNum}` !== prefix)
-        throw new Error();
-      if (prefixNum < 0 || prefixNum > 128)
-        throw new Error();
-      new URL(`http://[${address}]`);
-    } catch {
-      payload.issues.push({
-        code: "invalid_format",
-        format: "cidrv6",
-        input: payload.value,
-        inst,
-        continue: !def.abort
-      });
-    }
-  };
-});
-function isValidBase64(data) {
-  if (data === "")
-    return true;
-  if (data.length % 4 !== 0)
-    return false;
-  try {
-    atob(data);
-    return true;
-  } catch {
-    return false;
-  }
-}
-var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def) => {
-  def.pattern ?? (def.pattern = base64);
-  $ZodStringFormat.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    inst2._zod.bag.contentEncoding = "base64";
-  });
-  inst._zod.check = (payload) => {
-    if (isValidBase64(payload.value))
-      return;
-    payload.issues.push({
-      code: "invalid_format",
-      format: "base64",
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-function isValidBase64URL(data) {
-  if (!base64url.test(data))
-    return false;
-  const base642 = data.replace(/[-_]/g, (c) => c === "-" ? "+" : "/");
-  const padded = base642.padEnd(Math.ceil(base642.length / 4) * 4, "=");
-  return isValidBase64(padded);
-}
-var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def) => {
-  def.pattern ?? (def.pattern = base64url);
-  $ZodStringFormat.init(inst, def);
-  inst._zod.onattach.push((inst2) => {
-    inst2._zod.bag.contentEncoding = "base64url";
-  });
-  inst._zod.check = (payload) => {
-    if (isValidBase64URL(payload.value))
-      return;
-    payload.issues.push({
-      code: "invalid_format",
-      format: "base64url",
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodE164 = /* @__PURE__ */ $constructor("$ZodE164", (inst, def) => {
-  def.pattern ?? (def.pattern = e164);
-  $ZodStringFormat.init(inst, def);
-});
-function isValidJWT2(token, algorithm = null) {
-  try {
-    const tokensParts = token.split(".");
-    if (tokensParts.length !== 3)
-      return false;
-    const [header] = tokensParts;
-    if (!header)
-      return false;
-    const parsedHeader = JSON.parse(atob(header));
-    if ("typ" in parsedHeader && (parsedHeader == null ? void 0 : parsedHeader.typ) !== "JWT")
-      return false;
-    if (!parsedHeader.alg)
-      return false;
-    if (algorithm && (!("alg" in parsedHeader) || parsedHeader.alg !== algorithm))
-      return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-var $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
-  inst._zod.check = (payload) => {
-    if (isValidJWT2(payload.value, def.alg))
-      return;
-    payload.issues.push({
-      code: "invalid_format",
-      format: "jwt",
-      input: payload.value,
-      inst,
-      continue: !def.abort
-    });
-  };
-});
-var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.pattern = inst._zod.bag.pattern ?? number;
-  inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce)
-      try {
-        payload.value = Number(payload.value);
-      } catch (_) {
-      }
-    const input = payload.value;
-    if (typeof input === "number" && !Number.isNaN(input) && Number.isFinite(input)) {
-      return payload;
-    }
-    const received = typeof input === "number" ? Number.isNaN(input) ? "NaN" : !Number.isFinite(input) ? "Infinity" : void 0 : void 0;
-    payload.issues.push({
-      expected: "number",
-      code: "invalid_type",
-      input,
-      inst,
-      ...received ? { received } : {}
-    });
-    return payload;
-  };
-});
-var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
-  $ZodCheckNumberFormat.init(inst, def);
-  $ZodNumber.init(inst, def);
-});
-var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.pattern = boolean;
-  inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce)
-      try {
-        payload.value = Boolean(payload.value);
-      } catch (_) {
-      }
-    const input = payload.value;
-    if (typeof input === "boolean")
-      return payload;
-    payload.issues.push({
-      expected: "boolean",
-      code: "invalid_type",
-      input,
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.pattern = _null;
-  inst._zod.values = /* @__PURE__ */ new Set([null]);
-  inst._zod.parse = (payload, _ctx) => {
-    const input = payload.value;
-    if (input === null)
-      return payload;
-    payload.issues.push({
-      expected: "null",
-      code: "invalid_type",
-      input,
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload) => payload;
-});
-var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, _ctx) => {
-    payload.issues.push({
-      expected: "never",
-      code: "invalid_type",
-      input: payload.value,
-      inst
-    });
-    return payload;
-  };
-});
-function handleArrayResult(result, final, index) {
-  if (result.issues.length) {
-    final.issues.push(...prefixIssues(index, result.issues));
-  }
-  final.value[index] = result.value;
-}
-var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, ctx) => {
-    const input = payload.value;
-    if (!Array.isArray(input)) {
-      payload.issues.push({
-        expected: "array",
-        code: "invalid_type",
-        input,
-        inst
-      });
-      return payload;
-    }
-    payload.value = Array(input.length);
-    const proms = [];
-    for (let i = 0; i < input.length; i++) {
-      const item = input[i];
-      const result = def.element._zod.run({
-        value: item,
-        issues: []
-      }, ctx);
-      if (result instanceof Promise) {
-        proms.push(result.then((result2) => handleArrayResult(result2, payload, i)));
-      } else {
-        handleArrayResult(result, payload, i);
-      }
-    }
-    if (proms.length) {
-      return Promise.all(proms).then(() => payload);
-    }
-    return payload;
-  };
-});
-function handleObjectResult(result, final, key) {
-  if (result.issues.length) {
-    final.issues.push(...prefixIssues(key, result.issues));
-  }
-  final.value[key] = result.value;
-}
-function handleOptionalObjectResult(result, final, key, input) {
-  if (result.issues.length) {
-    if (input[key] === void 0) {
-      if (key in input) {
-        final.value[key] = void 0;
-      } else {
-        final.value[key] = result.value;
-      }
-    } else {
-      final.issues.push(...prefixIssues(key, result.issues));
-    }
-  } else if (result.value === void 0) {
-    if (key in input)
-      final.value[key] = void 0;
-  } else {
-    final.value[key] = result.value;
-  }
-}
-var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
-  $ZodType.init(inst, def);
-  const _normalized = cached(() => {
-    const keys = Object.keys(def.shape);
-    for (const k of keys) {
-      if (!(def.shape[k] instanceof $ZodType)) {
-        throw new Error(`Invalid element at key "${k}": expected a Zod schema`);
-      }
-    }
-    const okeys = optionalKeys(def.shape);
-    return {
-      shape: def.shape,
-      keys,
-      keySet: new Set(keys),
-      numKeys: keys.length,
-      optionalKeys: new Set(okeys)
-    };
-  });
-  defineLazy(inst._zod, "propValues", () => {
-    const shape = def.shape;
-    const propValues = {};
-    for (const key in shape) {
-      const field = shape[key]._zod;
-      if (field.values) {
-        propValues[key] ?? (propValues[key] = /* @__PURE__ */ new Set());
-        for (const v of field.values)
-          propValues[key].add(v);
-      }
-    }
-    return propValues;
-  });
-  const generateFastpass = (shape) => {
-    const doc = new Doc(["shape", "payload", "ctx"]);
-    const normalized = _normalized.value;
-    const parseStr = (key) => {
-      const k = esc(key);
-      return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
-    };
-    doc.write(`const input = payload.value;`);
-    const ids = /* @__PURE__ */ Object.create(null);
-    let counter = 0;
-    for (const key of normalized.keys) {
-      ids[key] = `key_${counter++}`;
-    }
-    doc.write(`const newResult = {}`);
-    for (const key of normalized.keys) {
-      if (normalized.optionalKeys.has(key)) {
-        const id = ids[key];
-        doc.write(`const ${id} = ${parseStr(key)};`);
-        const k = esc(key);
-        doc.write(`
-        if (${id}.issues.length) {
-          if (input[${k}] === undefined) {
-            if (${k} in input) {
-              newResult[${k}] = undefined;
-            }
-          } else {
-            payload.issues = payload.issues.concat(
-              ${id}.issues.map((iss) => ({
-                ...iss,
-                path: iss.path ? [${k}, ...iss.path] : [${k}],
-              }))
-            );
-          }
-        } else if (${id}.value === undefined) {
-          if (${k} in input) newResult[${k}] = undefined;
-        } else {
-          newResult[${k}] = ${id}.value;
-        }
-        `);
-      } else {
-        const id = ids[key];
-        doc.write(`const ${id} = ${parseStr(key)};`);
-        doc.write(`
-          if (${id}.issues.length) payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
-            ...iss,
-            path: iss.path ? [${esc(key)}, ...iss.path] : [${esc(key)}]
-          })));`);
-        doc.write(`newResult[${esc(key)}] = ${id}.value`);
-      }
-    }
-    doc.write(`payload.value = newResult;`);
-    doc.write(`return payload;`);
-    const fn = doc.compile();
-    return (payload, ctx) => fn(shape, payload, ctx);
-  };
-  let fastpass;
-  const isObject2 = isObject;
-  const jit = !globalConfig.jitless;
-  const allowsEval2 = allowsEval;
-  const fastEnabled = jit && allowsEval2.value;
-  const catchall = def.catchall;
-  let value;
-  inst._zod.parse = (payload, ctx) => {
-    value ?? (value = _normalized.value);
-    const input = payload.value;
-    if (!isObject2(input)) {
-      payload.issues.push({
-        expected: "object",
-        code: "invalid_type",
-        input,
-        inst
-      });
-      return payload;
-    }
-    const proms = [];
-    if (jit && fastEnabled && (ctx == null ? void 0 : ctx.async) === false && ctx.jitless !== true) {
-      if (!fastpass)
-        fastpass = generateFastpass(def.shape);
-      payload = fastpass(payload, ctx);
-    } else {
-      payload.value = {};
-      const shape = value.shape;
-      for (const key of value.keys) {
-        const el = shape[key];
-        const r = el._zod.run({ value: input[key], issues: [] }, ctx);
-        const isOptional = el._zod.optin === "optional" && el._zod.optout === "optional";
-        if (r instanceof Promise) {
-          proms.push(r.then((r2) => isOptional ? handleOptionalObjectResult(r2, payload, key, input) : handleObjectResult(r2, payload, key)));
-        } else if (isOptional) {
-          handleOptionalObjectResult(r, payload, key, input);
-        } else {
-          handleObjectResult(r, payload, key);
-        }
-      }
-    }
-    if (!catchall) {
-      return proms.length ? Promise.all(proms).then(() => payload) : payload;
-    }
-    const unrecognized = [];
-    const keySet = value.keySet;
-    const _catchall = catchall._zod;
-    const t = _catchall.def.type;
-    for (const key of Object.keys(input)) {
-      if (keySet.has(key))
-        continue;
-      if (t === "never") {
-        unrecognized.push(key);
-        continue;
-      }
-      const r = _catchall.run({ value: input[key], issues: [] }, ctx);
-      if (r instanceof Promise) {
-        proms.push(r.then((r2) => handleObjectResult(r2, payload, key)));
-      } else {
-        handleObjectResult(r, payload, key);
-      }
-    }
-    if (unrecognized.length) {
-      payload.issues.push({
-        code: "unrecognized_keys",
-        keys: unrecognized,
-        input,
-        inst
-      });
-    }
-    if (!proms.length)
-      return payload;
-    return Promise.all(proms).then(() => {
-      return payload;
-    });
-  };
-});
-function handleUnionResults(results, final, inst, ctx) {
-  for (const result of results) {
-    if (result.issues.length === 0) {
-      final.value = result.value;
-      return final;
-    }
-  }
-  final.issues.push({
-    code: "invalid_union",
-    input: final.value,
-    inst,
-    errors: results.map((result) => result.issues.map((iss) => finalizeIssue(iss, ctx, config())))
-  });
-  return final;
-}
-var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "optin", () => def.options.some((o) => o._zod.optin === "optional") ? "optional" : void 0);
-  defineLazy(inst._zod, "optout", () => def.options.some((o) => o._zod.optout === "optional") ? "optional" : void 0);
-  defineLazy(inst._zod, "values", () => {
-    if (def.options.every((o) => o._zod.values)) {
-      return new Set(def.options.flatMap((option) => Array.from(option._zod.values)));
-    }
-    return void 0;
-  });
-  defineLazy(inst._zod, "pattern", () => {
-    if (def.options.every((o) => o._zod.pattern)) {
-      const patterns = def.options.map((o) => o._zod.pattern);
-      return new RegExp(`^(${patterns.map((p) => cleanRegex(p.source)).join("|")})$`);
-    }
-    return void 0;
-  });
-  inst._zod.parse = (payload, ctx) => {
-    let async = false;
-    const results = [];
-    for (const option of def.options) {
-      const result = option._zod.run({
-        value: payload.value,
-        issues: []
-      }, ctx);
-      if (result instanceof Promise) {
-        results.push(result);
-        async = true;
-      } else {
-        if (result.issues.length === 0)
-          return result;
-        results.push(result);
-      }
-    }
-    if (!async)
-      return handleUnionResults(results, payload, inst, ctx);
-    return Promise.all(results).then((results2) => {
-      return handleUnionResults(results2, payload, inst, ctx);
-    });
-  };
-});
-var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnion", (inst, def) => {
-  $ZodUnion.init(inst, def);
-  const _super = inst._zod.parse;
-  defineLazy(inst._zod, "propValues", () => {
-    const propValues = {};
-    for (const option of def.options) {
-      const pv = option._zod.propValues;
-      if (!pv || Object.keys(pv).length === 0)
-        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(option)}"`);
-      for (const [k, v] of Object.entries(pv)) {
-        if (!propValues[k])
-          propValues[k] = /* @__PURE__ */ new Set();
-        for (const val of v) {
-          propValues[k].add(val);
-        }
-      }
-    }
-    return propValues;
-  });
-  const disc = cached(() => {
-    const opts = def.options;
-    const map = /* @__PURE__ */ new Map();
-    for (const o of opts) {
-      const values = o._zod.propValues[def.discriminator];
-      if (!values || values.size === 0)
-        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(o)}"`);
-      for (const v of values) {
-        if (map.has(v)) {
-          throw new Error(`Duplicate discriminator value "${String(v)}"`);
-        }
-        map.set(v, o);
-      }
-    }
-    return map;
-  });
-  inst._zod.parse = (payload, ctx) => {
-    const input = payload.value;
-    if (!isObject(input)) {
-      payload.issues.push({
-        code: "invalid_type",
-        expected: "object",
-        input,
-        inst
-      });
-      return payload;
-    }
-    const opt = disc.value.get(input == null ? void 0 : input[def.discriminator]);
-    if (opt) {
-      return opt._zod.run(payload, ctx);
-    }
-    if (def.unionFallback) {
-      return _super(payload, ctx);
-    }
-    payload.issues.push({
-      code: "invalid_union",
-      errors: [],
-      note: "No matching discriminator",
-      input,
-      path: [def.discriminator],
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, ctx) => {
-    const input = payload.value;
-    const left = def.left._zod.run({ value: input, issues: [] }, ctx);
-    const right = def.right._zod.run({ value: input, issues: [] }, ctx);
-    const async = left instanceof Promise || right instanceof Promise;
-    if (async) {
-      return Promise.all([left, right]).then(([left2, right2]) => {
-        return handleIntersectionResults(payload, left2, right2);
-      });
-    }
-    return handleIntersectionResults(payload, left, right);
-  };
-});
-function mergeValues2(a, b) {
-  if (a === b) {
-    return { valid: true, data: a };
-  }
-  if (a instanceof Date && b instanceof Date && +a === +b) {
-    return { valid: true, data: a };
-  }
-  if (isPlainObject(a) && isPlainObject(b)) {
-    const bKeys = Object.keys(b);
-    const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
-    const newObj = { ...a, ...b };
-    for (const key of sharedKeys) {
-      const sharedValue = mergeValues2(a[key], b[key]);
-      if (!sharedValue.valid) {
-        return {
-          valid: false,
-          mergeErrorPath: [key, ...sharedValue.mergeErrorPath]
-        };
-      }
-      newObj[key] = sharedValue.data;
-    }
-    return { valid: true, data: newObj };
-  }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) {
-      return { valid: false, mergeErrorPath: [] };
-    }
-    const newArray = [];
-    for (let index = 0; index < a.length; index++) {
-      const itemA = a[index];
-      const itemB = b[index];
-      const sharedValue = mergeValues2(itemA, itemB);
-      if (!sharedValue.valid) {
-        return {
-          valid: false,
-          mergeErrorPath: [index, ...sharedValue.mergeErrorPath]
-        };
-      }
-      newArray.push(sharedValue.data);
-    }
-    return { valid: true, data: newArray };
-  }
-  return { valid: false, mergeErrorPath: [] };
-}
-function handleIntersectionResults(result, left, right) {
-  if (left.issues.length) {
-    result.issues.push(...left.issues);
-  }
-  if (right.issues.length) {
-    result.issues.push(...right.issues);
-  }
-  if (aborted(result))
-    return result;
-  const merged = mergeValues2(left.value, right.value);
-  if (!merged.valid) {
-    throw new Error(`Unmergable intersection. Error path: ${JSON.stringify(merged.mergeErrorPath)}`);
-  }
-  result.value = merged.data;
-  return result;
-}
-var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, ctx) => {
-    const input = payload.value;
-    if (!isPlainObject(input)) {
-      payload.issues.push({
-        expected: "record",
-        code: "invalid_type",
-        input,
-        inst
-      });
-      return payload;
-    }
-    const proms = [];
-    if (def.keyType._zod.values) {
-      const values = def.keyType._zod.values;
-      payload.value = {};
-      for (const key of values) {
-        if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
-          const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
-          if (result instanceof Promise) {
-            proms.push(result.then((result2) => {
-              if (result2.issues.length) {
-                payload.issues.push(...prefixIssues(key, result2.issues));
-              }
-              payload.value[key] = result2.value;
-            }));
-          } else {
-            if (result.issues.length) {
-              payload.issues.push(...prefixIssues(key, result.issues));
-            }
-            payload.value[key] = result.value;
-          }
-        }
-      }
-      let unrecognized;
-      for (const key in input) {
-        if (!values.has(key)) {
-          unrecognized = unrecognized ?? [];
-          unrecognized.push(key);
-        }
-      }
-      if (unrecognized && unrecognized.length > 0) {
-        payload.issues.push({
-          code: "unrecognized_keys",
-          input,
-          inst,
-          keys: unrecognized
-        });
-      }
-    } else {
-      payload.value = {};
-      for (const key of Reflect.ownKeys(input)) {
-        if (key === "__proto__")
-          continue;
-        const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
-        if (keyResult instanceof Promise) {
-          throw new Error("Async schemas not supported in object keys currently");
-        }
-        if (keyResult.issues.length) {
-          payload.issues.push({
-            origin: "record",
-            code: "invalid_key",
-            issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config())),
-            input: key,
-            path: [key],
-            inst
-          });
-          payload.value[keyResult.value] = keyResult.value;
-          continue;
-        }
-        const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
-        if (result instanceof Promise) {
-          proms.push(result.then((result2) => {
-            if (result2.issues.length) {
-              payload.issues.push(...prefixIssues(key, result2.issues));
-            }
-            payload.value[keyResult.value] = result2.value;
-          }));
-        } else {
-          if (result.issues.length) {
-            payload.issues.push(...prefixIssues(key, result.issues));
-          }
-          payload.value[keyResult.value] = result.value;
-        }
-      }
-    }
-    if (proms.length) {
-      return Promise.all(proms).then(() => payload);
-    }
-    return payload;
-  };
-});
-var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
-  $ZodType.init(inst, def);
-  const values = getEnumValues(def.entries);
-  inst._zod.values = new Set(values);
-  inst._zod.pattern = new RegExp(`^(${values.filter((k) => propertyKeyTypes.has(typeof k)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
-  inst._zod.parse = (payload, _ctx) => {
-    const input = payload.value;
-    if (inst._zod.values.has(input)) {
-      return payload;
-    }
-    payload.issues.push({
-      code: "invalid_value",
-      values,
-      input,
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.values = new Set(def.values);
-  inst._zod.pattern = new RegExp(`^(${def.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? o.toString() : String(o)).join("|")})$`);
-  inst._zod.parse = (payload, _ctx) => {
-    const input = payload.value;
-    if (inst._zod.values.has(input)) {
-      return payload;
-    }
-    payload.issues.push({
-      code: "invalid_value",
-      values: def.values,
-      input,
-      inst
-    });
-    return payload;
-  };
-});
-var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, _ctx) => {
-    const _out = def.transform(payload.value, payload);
-    if (_ctx.async) {
-      const output = _out instanceof Promise ? _out : Promise.resolve(_out);
-      return output.then((output2) => {
-        payload.value = output2;
-        return payload;
-      });
-    }
-    if (_out instanceof Promise) {
-      throw new $ZodAsyncError();
-    }
-    payload.value = _out;
-    return payload;
-  };
-});
-var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
-  inst._zod.optout = "optional";
-  defineLazy(inst._zod, "values", () => {
-    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
-  });
-  defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
-  });
-  inst._zod.parse = (payload, ctx) => {
-    if (def.innerType._zod.optin === "optional") {
-      return def.innerType._zod.run(payload, ctx);
-    }
-    if (payload.value === void 0) {
-      return payload;
-    }
-    return def.innerType._zod.run(payload, ctx);
-  };
-});
-var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
-  defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
-  });
-  defineLazy(inst._zod, "values", () => {
-    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
-  });
-  inst._zod.parse = (payload, ctx) => {
-    if (payload.value === null)
-      return payload;
-    return def.innerType._zod.run(payload, ctx);
-  };
-});
-var $ZodDefault = /* @__PURE__ */ $constructor("$ZodDefault", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  inst._zod.parse = (payload, ctx) => {
-    if (payload.value === void 0) {
-      payload.value = def.defaultValue;
-      return payload;
-    }
-    const result = def.innerType._zod.run(payload, ctx);
-    if (result instanceof Promise) {
-      return result.then((result2) => handleDefaultResult(result2, def));
-    }
-    return handleDefaultResult(result, def);
-  };
-});
-function handleDefaultResult(payload, def) {
-  if (payload.value === void 0) {
-    payload.value = def.defaultValue;
-  }
-  return payload;
-}
-var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  inst._zod.parse = (payload, ctx) => {
-    if (payload.value === void 0) {
-      payload.value = def.defaultValue;
-    }
-    return def.innerType._zod.run(payload, ctx);
-  };
-});
-var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "values", () => {
-    const v = def.innerType._zod.values;
-    return v ? new Set([...v].filter((x) => x !== void 0)) : void 0;
-  });
-  inst._zod.parse = (payload, ctx) => {
-    const result = def.innerType._zod.run(payload, ctx);
-    if (result instanceof Promise) {
-      return result.then((result2) => handleNonOptionalResult(result2, inst));
-    }
-    return handleNonOptionalResult(result, inst);
-  };
-});
-function handleNonOptionalResult(payload, inst) {
-  if (!payload.issues.length && payload.value === void 0) {
-    payload.issues.push({
-      code: "invalid_type",
-      expected: "nonoptional",
-      input: payload.value,
-      inst
-    });
-  }
-  return payload;
-}
-var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._zod.optin = "optional";
-  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  inst._zod.parse = (payload, ctx) => {
-    const result = def.innerType._zod.run(payload, ctx);
-    if (result instanceof Promise) {
-      return result.then((result2) => {
-        payload.value = result2.value;
-        if (result2.issues.length) {
-          payload.value = def.catchValue({
-            ...payload,
-            error: {
-              issues: result2.issues.map((iss) => finalizeIssue(iss, ctx, config()))
-            },
-            input: payload.value
-          });
-          payload.issues = [];
-        }
-        return payload;
-      });
-    }
-    payload.value = result.value;
-    if (result.issues.length) {
-      payload.value = def.catchValue({
-        ...payload,
-        error: {
-          issues: result.issues.map((iss) => finalizeIssue(iss, ctx, config()))
-        },
-        input: payload.value
-      });
-      payload.issues = [];
-    }
-    return payload;
-  };
-});
-var $ZodPipe = /* @__PURE__ */ $constructor("$ZodPipe", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "values", () => def.in._zod.values);
-  defineLazy(inst._zod, "optin", () => def.in._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.out._zod.optout);
-  inst._zod.parse = (payload, ctx) => {
-    const left = def.in._zod.run(payload, ctx);
-    if (left instanceof Promise) {
-      return left.then((left2) => handlePipeResult(left2, def, ctx));
-    }
-    return handlePipeResult(left, def, ctx);
-  };
-});
-function handlePipeResult(left, def, ctx) {
-  if (aborted(left)) {
-    return left;
-  }
-  return def.out._zod.run({ value: left.value, issues: left.issues }, ctx);
-}
-var $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "propValues", () => def.innerType._zod.propValues);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
-  inst._zod.parse = (payload, ctx) => {
-    const result = def.innerType._zod.run(payload, ctx);
-    if (result instanceof Promise) {
-      return result.then(handleReadonlyResult);
-    }
-    return handleReadonlyResult(result);
-  };
-});
-function handleReadonlyResult(payload) {
-  payload.value = Object.freeze(payload.value);
-  return payload;
-}
-var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  $ZodType.init(inst, def);
-  inst._zod.parse = (payload, _) => {
-    return payload;
-  };
-  inst._zod.check = (payload) => {
-    const input = payload.value;
-    const r = def.fn(input);
-    if (r instanceof Promise) {
-      return r.then((r2) => handleRefineResult(r2, payload, input, inst));
-    }
-    handleRefineResult(r, payload, input, inst);
-    return;
-  };
-});
-function handleRefineResult(result, payload, input, inst) {
-  if (!result) {
-    const _iss = {
-      code: "custom",
-      input,
-      inst,
-      // incorporates params.error into issue reporting
-      path: [...inst._zod.def.path ?? []],
-      // incorporates params.error into issue reporting
-      continue: !inst._zod.def.abort
-      // params: inst._zod.def.params,
-    };
-    if (inst._zod.def.params)
-      _iss.params = inst._zod.def.params;
-    payload.issues.push(issue(_iss));
-  }
-}
-
-// node_modules/zod/v4/locales/en.js
-var parsedType = (data) => {
-  const t = typeof data;
-  switch (t) {
-    case "number": {
-      return Number.isNaN(data) ? "NaN" : "number";
-    }
-    case "object": {
-      if (Array.isArray(data)) {
-        return "array";
-      }
-      if (data === null) {
-        return "null";
-      }
-      if (Object.getPrototypeOf(data) !== Object.prototype && data.constructor) {
-        return data.constructor.name;
-      }
-    }
-  }
-  return t;
-};
-var error = () => {
-  const Sizable = {
-    string: { unit: "characters", verb: "to have" },
-    file: { unit: "bytes", verb: "to have" },
-    array: { unit: "items", verb: "to have" },
-    set: { unit: "items", verb: "to have" }
-  };
-  function getSizing(origin) {
-    return Sizable[origin] ?? null;
-  }
-  const Nouns = {
-    regex: "input",
-    email: "email address",
-    url: "URL",
-    emoji: "emoji",
-    uuid: "UUID",
-    uuidv4: "UUIDv4",
-    uuidv6: "UUIDv6",
-    nanoid: "nanoid",
-    guid: "GUID",
-    cuid: "cuid",
-    cuid2: "cuid2",
-    ulid: "ULID",
-    xid: "XID",
-    ksuid: "KSUID",
-    datetime: "ISO datetime",
-    date: "ISO date",
-    time: "ISO time",
-    duration: "ISO duration",
-    ipv4: "IPv4 address",
-    ipv6: "IPv6 address",
-    cidrv4: "IPv4 range",
-    cidrv6: "IPv6 range",
-    base64: "base64-encoded string",
-    base64url: "base64url-encoded string",
-    json_string: "JSON string",
-    e164: "E.164 number",
-    jwt: "JWT",
-    template_literal: "input"
-  };
-  return (issue2) => {
-    switch (issue2.code) {
-      case "invalid_type":
-        return `Invalid input: expected ${issue2.expected}, received ${parsedType(issue2.input)}`;
-      case "invalid_value":
-        if (issue2.values.length === 1)
-          return `Invalid input: expected ${stringifyPrimitive(issue2.values[0])}`;
-        return `Invalid option: expected one of ${joinValues(issue2.values, "|")}`;
-      case "too_big": {
-        const adj = issue2.inclusive ? "<=" : "<";
-        const sizing = getSizing(issue2.origin);
-        if (sizing)
-          return `Too big: expected ${issue2.origin ?? "value"} to have ${adj}${issue2.maximum.toString()} ${sizing.unit ?? "elements"}`;
-        return `Too big: expected ${issue2.origin ?? "value"} to be ${adj}${issue2.maximum.toString()}`;
-      }
-      case "too_small": {
-        const adj = issue2.inclusive ? ">=" : ">";
-        const sizing = getSizing(issue2.origin);
-        if (sizing) {
-          return `Too small: expected ${issue2.origin} to have ${adj}${issue2.minimum.toString()} ${sizing.unit}`;
-        }
-        return `Too small: expected ${issue2.origin} to be ${adj}${issue2.minimum.toString()}`;
-      }
-      case "invalid_format": {
-        const _issue = issue2;
-        if (_issue.format === "starts_with") {
-          return `Invalid string: must start with "${_issue.prefix}"`;
-        }
-        if (_issue.format === "ends_with")
-          return `Invalid string: must end with "${_issue.suffix}"`;
-        if (_issue.format === "includes")
-          return `Invalid string: must include "${_issue.includes}"`;
-        if (_issue.format === "regex")
-          return `Invalid string: must match pattern ${_issue.pattern}`;
-        return `Invalid ${Nouns[_issue.format] ?? issue2.format}`;
-      }
-      case "not_multiple_of":
-        return `Invalid number: must be a multiple of ${issue2.divisor}`;
-      case "unrecognized_keys":
-        return `Unrecognized key${issue2.keys.length > 1 ? "s" : ""}: ${joinValues(issue2.keys, ", ")}`;
-      case "invalid_key":
-        return `Invalid key in ${issue2.origin}`;
-      case "invalid_union":
-        return "Invalid input";
-      case "invalid_element":
-        return `Invalid value in ${issue2.origin}`;
-      default:
-        return `Invalid input`;
-    }
-  };
-};
-function en_default2() {
-  return {
-    localeError: error()
-  };
-}
-
-// node_modules/zod/v4/core/registries.js
-var $ZodRegistry = class {
-  constructor() {
-    this._map = /* @__PURE__ */ new Map();
-    this._idmap = /* @__PURE__ */ new Map();
-  }
-  add(schema, ..._meta) {
-    const meta = _meta[0];
-    this._map.set(schema, meta);
-    if (meta && typeof meta === "object" && "id" in meta) {
-      if (this._idmap.has(meta.id)) {
-        throw new Error(`ID ${meta.id} already exists in the registry`);
-      }
-      this._idmap.set(meta.id, schema);
-    }
-    return this;
-  }
-  clear() {
-    this._map = /* @__PURE__ */ new Map();
-    this._idmap = /* @__PURE__ */ new Map();
-    return this;
-  }
-  remove(schema) {
-    const meta = this._map.get(schema);
-    if (meta && typeof meta === "object" && "id" in meta) {
-      this._idmap.delete(meta.id);
-    }
-    this._map.delete(schema);
-    return this;
-  }
-  get(schema) {
-    const p = schema._zod.parent;
-    if (p) {
-      const pm = { ...this.get(p) ?? {} };
-      delete pm.id;
-      return { ...pm, ...this._map.get(schema) };
-    }
-    return this._map.get(schema);
-  }
-  has(schema) {
-    return this._map.has(schema);
-  }
-};
-function registry() {
-  return new $ZodRegistry();
-}
-var globalRegistry = /* @__PURE__ */ registry();
-
-// node_modules/zod/v4/core/api.js
-function _string(Class2, params) {
-  return new Class2({
-    type: "string",
-    ...normalizeParams(params)
-  });
-}
-function _email(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "email",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _guid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "guid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _uuid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "uuid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _uuidv4(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "uuid",
-    check: "string_format",
-    abort: false,
-    version: "v4",
-    ...normalizeParams(params)
-  });
-}
-function _uuidv6(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "uuid",
-    check: "string_format",
-    abort: false,
-    version: "v6",
-    ...normalizeParams(params)
-  });
-}
-function _uuidv7(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "uuid",
-    check: "string_format",
-    abort: false,
-    version: "v7",
-    ...normalizeParams(params)
-  });
-}
-function _url(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "url",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _emoji2(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "emoji",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _nanoid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "nanoid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _cuid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "cuid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _cuid2(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "cuid2",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _ulid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "ulid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _xid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "xid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _ksuid(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "ksuid",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _ipv4(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "ipv4",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _ipv6(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "ipv6",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _cidrv4(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "cidrv4",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _cidrv6(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "cidrv6",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _base64(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "base64",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _base64url(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "base64url",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _e164(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "e164",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _jwt(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "jwt",
-    check: "string_format",
-    abort: false,
-    ...normalizeParams(params)
-  });
-}
-function _isoDateTime(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "datetime",
-    check: "string_format",
-    offset: false,
-    local: false,
-    precision: null,
-    ...normalizeParams(params)
-  });
-}
-function _isoDate(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "date",
-    check: "string_format",
-    ...normalizeParams(params)
-  });
-}
-function _isoTime(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "time",
-    check: "string_format",
-    precision: null,
-    ...normalizeParams(params)
-  });
-}
-function _isoDuration(Class2, params) {
-  return new Class2({
-    type: "string",
-    format: "duration",
-    check: "string_format",
-    ...normalizeParams(params)
-  });
-}
-function _number(Class2, params) {
-  return new Class2({
-    type: "number",
-    checks: [],
-    ...normalizeParams(params)
-  });
-}
-function _int(Class2, params) {
-  return new Class2({
-    type: "number",
-    check: "number_format",
-    abort: false,
-    format: "safeint",
-    ...normalizeParams(params)
-  });
-}
-function _boolean(Class2, params) {
-  return new Class2({
-    type: "boolean",
-    ...normalizeParams(params)
-  });
-}
-function _null2(Class2, params) {
-  return new Class2({
-    type: "null",
-    ...normalizeParams(params)
-  });
-}
-function _unknown(Class2) {
-  return new Class2({
-    type: "unknown"
-  });
-}
-function _never(Class2, params) {
-  return new Class2({
-    type: "never",
-    ...normalizeParams(params)
-  });
-}
-function _lt(value, params) {
-  return new $ZodCheckLessThan({
-    check: "less_than",
-    ...normalizeParams(params),
-    value,
-    inclusive: false
-  });
-}
-function _lte(value, params) {
-  return new $ZodCheckLessThan({
-    check: "less_than",
-    ...normalizeParams(params),
-    value,
-    inclusive: true
-  });
-}
-function _gt(value, params) {
-  return new $ZodCheckGreaterThan({
-    check: "greater_than",
-    ...normalizeParams(params),
-    value,
-    inclusive: false
-  });
-}
-function _gte(value, params) {
-  return new $ZodCheckGreaterThan({
-    check: "greater_than",
-    ...normalizeParams(params),
-    value,
-    inclusive: true
-  });
-}
-function _multipleOf(value, params) {
-  return new $ZodCheckMultipleOf({
-    check: "multiple_of",
-    ...normalizeParams(params),
-    value
-  });
-}
-function _maxLength(maximum, params) {
-  const ch = new $ZodCheckMaxLength({
-    check: "max_length",
-    ...normalizeParams(params),
-    maximum
-  });
-  return ch;
-}
-function _minLength(minimum, params) {
-  return new $ZodCheckMinLength({
-    check: "min_length",
-    ...normalizeParams(params),
-    minimum
-  });
-}
-function _length(length, params) {
-  return new $ZodCheckLengthEquals({
-    check: "length_equals",
-    ...normalizeParams(params),
-    length
-  });
-}
-function _regex(pattern, params) {
-  return new $ZodCheckRegex({
-    check: "string_format",
-    format: "regex",
-    ...normalizeParams(params),
-    pattern
-  });
-}
-function _lowercase(params) {
-  return new $ZodCheckLowerCase({
-    check: "string_format",
-    format: "lowercase",
-    ...normalizeParams(params)
-  });
-}
-function _uppercase(params) {
-  return new $ZodCheckUpperCase({
-    check: "string_format",
-    format: "uppercase",
-    ...normalizeParams(params)
-  });
-}
-function _includes(includes, params) {
-  return new $ZodCheckIncludes({
-    check: "string_format",
-    format: "includes",
-    ...normalizeParams(params),
-    includes
-  });
-}
-function _startsWith(prefix, params) {
-  return new $ZodCheckStartsWith({
-    check: "string_format",
-    format: "starts_with",
-    ...normalizeParams(params),
-    prefix
-  });
-}
-function _endsWith(suffix, params) {
-  return new $ZodCheckEndsWith({
-    check: "string_format",
-    format: "ends_with",
-    ...normalizeParams(params),
-    suffix
-  });
-}
-function _overwrite(tx) {
-  return new $ZodCheckOverwrite({
-    check: "overwrite",
-    tx
-  });
-}
-function _normalize(form) {
-  return _overwrite((input) => input.normalize(form));
-}
-function _trim() {
-  return _overwrite((input) => input.trim());
-}
-function _toLowerCase() {
-  return _overwrite((input) => input.toLowerCase());
-}
-function _toUpperCase() {
-  return _overwrite((input) => input.toUpperCase());
-}
-function _array(Class2, element, params) {
-  return new Class2({
-    type: "array",
-    element,
-    // get element() {
-    //   return element;
-    // },
-    ...normalizeParams(params)
-  });
-}
-function _custom(Class2, fn, _params) {
-  const norm = normalizeParams(_params);
-  norm.abort ?? (norm.abort = true);
-  const schema = new Class2({
-    type: "custom",
-    check: "custom",
-    fn,
-    ...norm
-  });
-  return schema;
-}
-function _refine(Class2, fn, _params) {
-  const schema = new Class2({
-    type: "custom",
-    check: "custom",
-    fn,
-    ...normalizeParams(_params)
-  });
-  return schema;
-}
-
-// node_modules/zod/v4/core/to-json-schema.js
-var JSONSchemaGenerator = class {
-  constructor(params) {
-    this.counter = 0;
-    this.metadataRegistry = (params == null ? void 0 : params.metadata) ?? globalRegistry;
-    this.target = (params == null ? void 0 : params.target) ?? "draft-2020-12";
-    this.unrepresentable = (params == null ? void 0 : params.unrepresentable) ?? "throw";
-    this.override = (params == null ? void 0 : params.override) ?? (() => {
-    });
-    this.io = (params == null ? void 0 : params.io) ?? "output";
-    this.seen = /* @__PURE__ */ new Map();
-  }
-  process(schema, _params = { path: [], schemaPath: [] }) {
-    var _a2, _b, _c;
-    var _a;
-    const def = schema._zod.def;
-    const formatMap = {
-      guid: "uuid",
-      url: "uri",
-      datetime: "date-time",
-      json_string: "json-string",
-      regex: ""
-      // do not set
-    };
-    const seen = this.seen.get(schema);
-    if (seen) {
-      seen.count++;
-      const isCycle = _params.schemaPath.includes(schema);
-      if (isCycle) {
-        seen.cycle = _params.path;
-      }
-      return seen.schema;
-    }
-    const result = { schema: {}, count: 1, cycle: void 0, path: _params.path };
-    this.seen.set(schema, result);
-    const overrideSchema = (_b = (_a2 = schema._zod).toJSONSchema) == null ? void 0 : _b.call(_a2);
-    if (overrideSchema) {
-      result.schema = overrideSchema;
-    } else {
-      const params = {
-        ..._params,
-        schemaPath: [..._params.schemaPath, schema],
-        path: _params.path
-      };
-      const parent = schema._zod.parent;
-      if (parent) {
-        result.ref = parent;
-        this.process(parent, params);
-        this.seen.get(parent).isParent = true;
-      } else {
-        const _json = result.schema;
-        switch (def.type) {
-          case "string": {
-            const json = _json;
-            json.type = "string";
-            const { minimum, maximum, format, patterns, contentEncoding } = schema._zod.bag;
-            if (typeof minimum === "number")
-              json.minLength = minimum;
-            if (typeof maximum === "number")
-              json.maxLength = maximum;
-            if (format) {
-              json.format = formatMap[format] ?? format;
-              if (json.format === "")
-                delete json.format;
-            }
-            if (contentEncoding)
-              json.contentEncoding = contentEncoding;
-            if (patterns && patterns.size > 0) {
-              const regexes = [...patterns];
-              if (regexes.length === 1)
-                json.pattern = regexes[0].source;
-              else if (regexes.length > 1) {
-                result.schema.allOf = [
-                  ...regexes.map((regex) => ({
-                    ...this.target === "draft-7" ? { type: "string" } : {},
-                    pattern: regex.source
-                  }))
-                ];
-              }
-            }
-            break;
-          }
-          case "number": {
-            const json = _json;
-            const { minimum, maximum, format, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
-            if (typeof format === "string" && format.includes("int"))
-              json.type = "integer";
-            else
-              json.type = "number";
-            if (typeof exclusiveMinimum === "number")
-              json.exclusiveMinimum = exclusiveMinimum;
-            if (typeof minimum === "number") {
-              json.minimum = minimum;
-              if (typeof exclusiveMinimum === "number") {
-                if (exclusiveMinimum >= minimum)
-                  delete json.minimum;
-                else
-                  delete json.exclusiveMinimum;
-              }
-            }
-            if (typeof exclusiveMaximum === "number")
-              json.exclusiveMaximum = exclusiveMaximum;
-            if (typeof maximum === "number") {
-              json.maximum = maximum;
-              if (typeof exclusiveMaximum === "number") {
-                if (exclusiveMaximum <= maximum)
-                  delete json.maximum;
-                else
-                  delete json.exclusiveMaximum;
-              }
-            }
-            if (typeof multipleOf === "number")
-              json.multipleOf = multipleOf;
-            break;
-          }
-          case "boolean": {
-            const json = _json;
-            json.type = "boolean";
-            break;
-          }
-          case "bigint": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("BigInt cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "symbol": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Symbols cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "null": {
-            _json.type = "null";
-            break;
-          }
-          case "any": {
-            break;
-          }
-          case "unknown": {
-            break;
-          }
-          case "undefined": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Undefined cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "void": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Void cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "never": {
-            _json.not = {};
-            break;
-          }
-          case "date": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Date cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "array": {
-            const json = _json;
-            const { minimum, maximum } = schema._zod.bag;
-            if (typeof minimum === "number")
-              json.minItems = minimum;
-            if (typeof maximum === "number")
-              json.maxItems = maximum;
-            json.type = "array";
-            json.items = this.process(def.element, { ...params, path: [...params.path, "items"] });
-            break;
-          }
-          case "object": {
-            const json = _json;
-            json.type = "object";
-            json.properties = {};
-            const shape = def.shape;
-            for (const key in shape) {
-              json.properties[key] = this.process(shape[key], {
-                ...params,
-                path: [...params.path, "properties", key]
-              });
-            }
-            const allKeys = new Set(Object.keys(shape));
-            const requiredKeys = new Set([...allKeys].filter((key) => {
-              const v = def.shape[key]._zod;
-              if (this.io === "input") {
-                return v.optin === void 0;
-              } else {
-                return v.optout === void 0;
-              }
-            }));
-            if (requiredKeys.size > 0) {
-              json.required = Array.from(requiredKeys);
-            }
-            if (((_c = def.catchall) == null ? void 0 : _c._zod.def.type) === "never") {
-              json.additionalProperties = false;
-            } else if (!def.catchall) {
-              if (this.io === "output")
-                json.additionalProperties = false;
-            } else if (def.catchall) {
-              json.additionalProperties = this.process(def.catchall, {
-                ...params,
-                path: [...params.path, "additionalProperties"]
-              });
-            }
-            break;
-          }
-          case "union": {
-            const json = _json;
-            json.anyOf = def.options.map((x, i) => this.process(x, {
-              ...params,
-              path: [...params.path, "anyOf", i]
-            }));
-            break;
-          }
-          case "intersection": {
-            const json = _json;
-            const a = this.process(def.left, {
-              ...params,
-              path: [...params.path, "allOf", 0]
-            });
-            const b = this.process(def.right, {
-              ...params,
-              path: [...params.path, "allOf", 1]
-            });
-            const isSimpleIntersection = (val) => "allOf" in val && Object.keys(val).length === 1;
-            const allOf = [
-              ...isSimpleIntersection(a) ? a.allOf : [a],
-              ...isSimpleIntersection(b) ? b.allOf : [b]
-            ];
-            json.allOf = allOf;
-            break;
-          }
-          case "tuple": {
-            const json = _json;
-            json.type = "array";
-            const prefixItems = def.items.map((x, i) => this.process(x, { ...params, path: [...params.path, "prefixItems", i] }));
-            if (this.target === "draft-2020-12") {
-              json.prefixItems = prefixItems;
-            } else {
-              json.items = prefixItems;
-            }
-            if (def.rest) {
-              const rest = this.process(def.rest, {
-                ...params,
-                path: [...params.path, "items"]
-              });
-              if (this.target === "draft-2020-12") {
-                json.items = rest;
-              } else {
-                json.additionalItems = rest;
-              }
-            }
-            if (def.rest) {
-              json.items = this.process(def.rest, {
-                ...params,
-                path: [...params.path, "items"]
-              });
-            }
-            const { minimum, maximum } = schema._zod.bag;
-            if (typeof minimum === "number")
-              json.minItems = minimum;
-            if (typeof maximum === "number")
-              json.maxItems = maximum;
-            break;
-          }
-          case "record": {
-            const json = _json;
-            json.type = "object";
-            json.propertyNames = this.process(def.keyType, { ...params, path: [...params.path, "propertyNames"] });
-            json.additionalProperties = this.process(def.valueType, {
-              ...params,
-              path: [...params.path, "additionalProperties"]
-            });
-            break;
-          }
-          case "map": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Map cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "set": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Set cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "enum": {
-            const json = _json;
-            const values = getEnumValues(def.entries);
-            if (values.every((v) => typeof v === "number"))
-              json.type = "number";
-            if (values.every((v) => typeof v === "string"))
-              json.type = "string";
-            json.enum = values;
-            break;
-          }
-          case "literal": {
-            const json = _json;
-            const vals = [];
-            for (const val of def.values) {
-              if (val === void 0) {
-                if (this.unrepresentable === "throw") {
-                  throw new Error("Literal `undefined` cannot be represented in JSON Schema");
-                } else {
-                }
-              } else if (typeof val === "bigint") {
-                if (this.unrepresentable === "throw") {
-                  throw new Error("BigInt literals cannot be represented in JSON Schema");
-                } else {
-                  vals.push(Number(val));
-                }
-              } else {
-                vals.push(val);
-              }
-            }
-            if (vals.length === 0) {
-            } else if (vals.length === 1) {
-              const val = vals[0];
-              json.type = val === null ? "null" : typeof val;
-              json.const = val;
-            } else {
-              if (vals.every((v) => typeof v === "number"))
-                json.type = "number";
-              if (vals.every((v) => typeof v === "string"))
-                json.type = "string";
-              if (vals.every((v) => typeof v === "boolean"))
-                json.type = "string";
-              if (vals.every((v) => v === null))
-                json.type = "null";
-              json.enum = vals;
-            }
-            break;
-          }
-          case "file": {
-            const json = _json;
-            const file = {
-              type: "string",
-              format: "binary",
-              contentEncoding: "binary"
-            };
-            const { minimum, maximum, mime } = schema._zod.bag;
-            if (minimum !== void 0)
-              file.minLength = minimum;
-            if (maximum !== void 0)
-              file.maxLength = maximum;
-            if (mime) {
-              if (mime.length === 1) {
-                file.contentMediaType = mime[0];
-                Object.assign(json, file);
-              } else {
-                json.anyOf = mime.map((m) => {
-                  const mFile = { ...file, contentMediaType: m };
-                  return mFile;
-                });
-              }
-            } else {
-              Object.assign(json, file);
-            }
-            break;
-          }
-          case "transform": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Transforms cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "nullable": {
-            const inner = this.process(def.innerType, params);
-            _json.anyOf = [inner, { type: "null" }];
-            break;
-          }
-          case "nonoptional": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            break;
-          }
-          case "success": {
-            const json = _json;
-            json.type = "boolean";
-            break;
-          }
-          case "default": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            _json.default = JSON.parse(JSON.stringify(def.defaultValue));
-            break;
-          }
-          case "prefault": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            if (this.io === "input")
-              _json._prefault = JSON.parse(JSON.stringify(def.defaultValue));
-            break;
-          }
-          case "catch": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            let catchValue;
-            try {
-              catchValue = def.catchValue(void 0);
-            } catch {
-              throw new Error("Dynamic catch values are not supported in JSON Schema");
-            }
-            _json.default = catchValue;
-            break;
-          }
-          case "nan": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("NaN cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          case "template_literal": {
-            const json = _json;
-            const pattern = schema._zod.pattern;
-            if (!pattern)
-              throw new Error("Pattern not found in template literal");
-            json.type = "string";
-            json.pattern = pattern.source;
-            break;
-          }
-          case "pipe": {
-            const innerType = this.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
-            this.process(innerType, params);
-            result.ref = innerType;
-            break;
-          }
-          case "readonly": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            _json.readOnly = true;
-            break;
-          }
-          // passthrough types
-          case "promise": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            break;
-          }
-          case "optional": {
-            this.process(def.innerType, params);
-            result.ref = def.innerType;
-            break;
-          }
-          case "lazy": {
-            const innerType = schema._zod.innerType;
-            this.process(innerType, params);
-            result.ref = innerType;
-            break;
-          }
-          case "custom": {
-            if (this.unrepresentable === "throw") {
-              throw new Error("Custom types cannot be represented in JSON Schema");
-            }
-            break;
-          }
-          default: {
-            def;
-          }
-        }
-      }
-    }
-    const meta = this.metadataRegistry.get(schema);
-    if (meta)
-      Object.assign(result.schema, meta);
-    if (this.io === "input" && isTransforming(schema)) {
-      delete result.schema.examples;
-      delete result.schema.default;
-    }
-    if (this.io === "input" && result.schema._prefault)
-      (_a = result.schema).default ?? (_a.default = result.schema._prefault);
-    delete result.schema._prefault;
-    const _result = this.seen.get(schema);
-    return _result.schema;
-  }
-  emit(schema, _params) {
-    var _a, _b, _c, _d, _e, _f;
-    const params = {
-      cycles: (_params == null ? void 0 : _params.cycles) ?? "ref",
-      reused: (_params == null ? void 0 : _params.reused) ?? "inline",
-      // unrepresentable: _params?.unrepresentable ?? "throw",
-      // uri: _params?.uri ?? ((id) => `${id}`),
-      external: (_params == null ? void 0 : _params.external) ?? void 0
-    };
-    const root = this.seen.get(schema);
-    if (!root)
-      throw new Error("Unprocessed schema. This is a bug in Zod.");
-    const makeURI = (entry) => {
-      var _a2;
-      const defsSegment = this.target === "draft-2020-12" ? "$defs" : "definitions";
-      if (params.external) {
-        const externalId = (_a2 = params.external.registry.get(entry[0])) == null ? void 0 : _a2.id;
-        const uriGenerator = params.external.uri ?? ((id2) => id2);
-        if (externalId) {
-          return { ref: uriGenerator(externalId) };
-        }
-        const id = entry[1].defId ?? entry[1].schema.id ?? `schema${this.counter++}`;
-        entry[1].defId = id;
-        return { defId: id, ref: `${uriGenerator("__shared")}#/${defsSegment}/${id}` };
-      }
-      if (entry[1] === root) {
-        return { ref: "#" };
-      }
-      const uriPrefix = `#`;
-      const defUriPrefix = `${uriPrefix}/${defsSegment}/`;
-      const defId = entry[1].schema.id ?? `__schema${this.counter++}`;
-      return { defId, ref: defUriPrefix + defId };
-    };
-    const extractToDef = (entry) => {
-      if (entry[1].schema.$ref) {
-        return;
-      }
-      const seen = entry[1];
-      const { ref, defId } = makeURI(entry);
-      seen.def = { ...seen.schema };
-      if (defId)
-        seen.defId = defId;
-      const schema2 = seen.schema;
-      for (const key in schema2) {
-        delete schema2[key];
-      }
-      schema2.$ref = ref;
-    };
-    if (params.cycles === "throw") {
-      for (const entry of this.seen.entries()) {
-        const seen = entry[1];
-        if (seen.cycle) {
-          throw new Error(`Cycle detected: #/${(_a = seen.cycle) == null ? void 0 : _a.join("/")}/<root>
-
-Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.`);
-        }
-      }
-    }
-    for (const entry of this.seen.entries()) {
-      const seen = entry[1];
-      if (schema === entry[0]) {
-        extractToDef(entry);
-        continue;
-      }
-      if (params.external) {
-        const ext = (_b = params.external.registry.get(entry[0])) == null ? void 0 : _b.id;
-        if (schema !== entry[0] && ext) {
-          extractToDef(entry);
-          continue;
-        }
-      }
-      const id = (_c = this.metadataRegistry.get(entry[0])) == null ? void 0 : _c.id;
-      if (id) {
-        extractToDef(entry);
-        continue;
-      }
-      if (seen.cycle) {
-        extractToDef(entry);
-        continue;
-      }
-      if (seen.count > 1) {
-        if (params.reused === "ref") {
-          extractToDef(entry);
-          continue;
-        }
-      }
-    }
-    const flattenRef = (zodSchema, params2) => {
-      const seen = this.seen.get(zodSchema);
-      const schema2 = seen.def ?? seen.schema;
-      const _cached = { ...schema2 };
-      if (seen.ref === null) {
-        return;
-      }
-      const ref = seen.ref;
-      seen.ref = null;
-      if (ref) {
-        flattenRef(ref, params2);
-        const refSchema = this.seen.get(ref).schema;
-        if (refSchema.$ref && params2.target === "draft-7") {
-          schema2.allOf = schema2.allOf ?? [];
-          schema2.allOf.push(refSchema);
-        } else {
-          Object.assign(schema2, refSchema);
-          Object.assign(schema2, _cached);
-        }
-      }
-      if (!seen.isParent)
-        this.override({
-          zodSchema,
-          jsonSchema: schema2,
-          path: seen.path ?? []
-        });
-    };
-    for (const entry of [...this.seen.entries()].reverse()) {
-      flattenRef(entry[0], { target: this.target });
-    }
-    const result = {};
-    if (this.target === "draft-2020-12") {
-      result.$schema = "https://json-schema.org/draft/2020-12/schema";
-    } else if (this.target === "draft-7") {
-      result.$schema = "http://json-schema.org/draft-07/schema#";
-    } else {
-      console.warn(`Invalid target: ${this.target}`);
-    }
-    if ((_d = params.external) == null ? void 0 : _d.uri) {
-      const id = (_e = params.external.registry.get(schema)) == null ? void 0 : _e.id;
-      if (!id)
-        throw new Error("Schema is missing an `id` property");
-      result.$id = params.external.uri(id);
-    }
-    Object.assign(result, root.def);
-    const defs = ((_f = params.external) == null ? void 0 : _f.defs) ?? {};
-    for (const entry of this.seen.entries()) {
-      const seen = entry[1];
-      if (seen.def && seen.defId) {
-        defs[seen.defId] = seen.def;
-      }
-    }
-    if (params.external) {
-    } else {
-      if (Object.keys(defs).length > 0) {
-        if (this.target === "draft-2020-12") {
-          result.$defs = defs;
-        } else {
-          result.definitions = defs;
-        }
-      }
-    }
-    try {
-      return JSON.parse(JSON.stringify(result));
-    } catch (_err) {
-      throw new Error("Error converting schema to JSON.");
-    }
-  }
-};
-function toJSONSchema(input, _params) {
-  if (input instanceof $ZodRegistry) {
-    const gen2 = new JSONSchemaGenerator(_params);
-    const defs = {};
-    for (const entry of input._idmap.entries()) {
-      const [_, schema] = entry;
-      gen2.process(schema);
-    }
-    const schemas = {};
-    const external = {
-      registry: input,
-      uri: _params == null ? void 0 : _params.uri,
-      defs
-    };
-    for (const entry of input._idmap.entries()) {
-      const [key, schema] = entry;
-      schemas[key] = gen2.emit(schema, {
-        ..._params,
-        external
-      });
-    }
-    if (Object.keys(defs).length > 0) {
-      const defsSegment = gen2.target === "draft-2020-12" ? "$defs" : "definitions";
-      schemas.__shared = {
-        [defsSegment]: defs
-      };
-    }
-    return { schemas };
-  }
-  const gen = new JSONSchemaGenerator(_params);
-  gen.process(input);
-  return gen.emit(input, _params);
-}
-function isTransforming(_schema, _ctx) {
-  const ctx = _ctx ?? { seen: /* @__PURE__ */ new Set() };
-  if (ctx.seen.has(_schema))
-    return false;
-  ctx.seen.add(_schema);
-  const schema = _schema;
-  const def = schema._zod.def;
-  switch (def.type) {
-    case "string":
-    case "number":
-    case "bigint":
-    case "boolean":
-    case "date":
-    case "symbol":
-    case "undefined":
-    case "null":
-    case "any":
-    case "unknown":
-    case "never":
-    case "void":
-    case "literal":
-    case "enum":
-    case "nan":
-    case "file":
-    case "template_literal":
-      return false;
-    case "array": {
-      return isTransforming(def.element, ctx);
-    }
-    case "object": {
-      for (const key in def.shape) {
-        if (isTransforming(def.shape[key], ctx))
-          return true;
-      }
-      return false;
-    }
-    case "union": {
-      for (const option of def.options) {
-        if (isTransforming(option, ctx))
-          return true;
-      }
-      return false;
-    }
-    case "intersection": {
-      return isTransforming(def.left, ctx) || isTransforming(def.right, ctx);
-    }
-    case "tuple": {
-      for (const item of def.items) {
-        if (isTransforming(item, ctx))
-          return true;
-      }
-      if (def.rest && isTransforming(def.rest, ctx))
-        return true;
-      return false;
-    }
-    case "record": {
-      return isTransforming(def.keyType, ctx) || isTransforming(def.valueType, ctx);
-    }
-    case "map": {
-      return isTransforming(def.keyType, ctx) || isTransforming(def.valueType, ctx);
-    }
-    case "set": {
-      return isTransforming(def.valueType, ctx);
-    }
-    // inner types
-    case "promise":
-    case "optional":
-    case "nonoptional":
-    case "nullable":
-    case "readonly":
-      return isTransforming(def.innerType, ctx);
-    case "lazy":
-      return isTransforming(def.getter(), ctx);
-    case "default": {
-      return isTransforming(def.innerType, ctx);
-    }
-    case "prefault": {
-      return isTransforming(def.innerType, ctx);
-    }
-    case "custom": {
-      return false;
-    }
-    case "transform": {
-      return true;
-    }
-    case "pipe": {
-      return isTransforming(def.in, ctx) || isTransforming(def.out, ctx);
-    }
-    case "success": {
-      return false;
-    }
-    case "catch": {
-      return false;
-    }
-    default:
-      def;
-  }
-  throw new Error(`Unknown schema type: ${def.type}`);
-}
-
-// node_modules/zod/v4/mini/schemas.js
-var ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
-  if (!inst._zod)
-    throw new Error("Uninitialized schema in ZodMiniType.");
-  $ZodType.init(inst, def);
-  inst.def = def;
-  inst.parse = (data, params) => parse(inst, data, params, { callee: inst.parse });
-  inst.safeParse = (data, params) => safeParse(inst, data, params);
-  inst.parseAsync = async (data, params) => parseAsync(inst, data, params, { callee: inst.parseAsync });
-  inst.safeParseAsync = async (data, params) => safeParseAsync(inst, data, params);
-  inst.check = (...checks) => {
-    return inst.clone(
-      {
-        ...def,
-        checks: [
-          ...def.checks ?? [],
-          ...checks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
-        ]
-      }
-      // { parent: true }
-    );
-  };
-  inst.clone = (_def, params) => clone(inst, _def, params);
-  inst.brand = () => inst;
-  inst.register = ((reg, meta) => {
-    reg.add(inst, meta);
-    return inst;
-  });
-});
-var ZodMiniObject = /* @__PURE__ */ $constructor("ZodMiniObject", (inst, def) => {
-  $ZodObject.init(inst, def);
-  ZodMiniType.init(inst, def);
-  util_exports.defineLazy(inst, "shape", () => def.shape);
-});
-function object(shape, params) {
-  const def = {
-    type: "object",
-    get shape() {
-      util_exports.assignProp(this, "shape", { ...shape });
-      return this.shape;
-    },
-    ...util_exports.normalizeParams(params)
-  };
-  return new ZodMiniObject(def);
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
-function isZ4Schema(s) {
-  const schema = s;
-  return !!schema._zod;
-}
-function objectFromShape(shape) {
-  const values = Object.values(shape);
-  if (values.length === 0)
-    return object({});
-  const allV4 = values.every(isZ4Schema);
-  const allV3 = values.every((s) => !isZ4Schema(s));
-  if (allV4)
-    return object(shape);
-  if (allV3)
-    return objectType(shape);
-  throw new Error("Mixed Zod versions detected in object shape.");
-}
-function safeParse2(schema, data) {
-  if (isZ4Schema(schema)) {
-    const result2 = safeParse(schema, data);
-    return result2;
-  }
-  const v3Schema = schema;
-  const result = v3Schema.safeParse(data);
-  return result;
-}
-async function safeParseAsync2(schema, data) {
-  if (isZ4Schema(schema)) {
-    const result2 = await safeParseAsync(schema, data);
-    return result2;
-  }
-  const v3Schema = schema;
-  const result = await v3Schema.safeParseAsync(data);
-  return result;
-}
-function getObjectShape(schema) {
-  var _a, _b;
-  if (!schema)
-    return void 0;
-  let rawShape;
-  if (isZ4Schema(schema)) {
-    const v4Schema = schema;
-    rawShape = (_b = (_a = v4Schema._zod) == null ? void 0 : _a.def) == null ? void 0 : _b.shape;
-  } else {
-    const v3Schema = schema;
-    rawShape = v3Schema.shape;
-  }
-  if (!rawShape)
-    return void 0;
-  if (typeof rawShape === "function") {
-    try {
-      return rawShape();
-    } catch {
-      return void 0;
-    }
-  }
-  return rawShape;
-}
-function normalizeObjectSchema(schema) {
-  var _a;
-  if (!schema)
-    return void 0;
-  if (typeof schema === "object") {
-    const asV3 = schema;
-    const asV4 = schema;
-    if (!asV3._def && !asV4._zod) {
-      const values = Object.values(schema);
-      if (values.length > 0 && values.every((v) => typeof v === "object" && v !== null && (v._def !== void 0 || v._zod !== void 0 || typeof v.parse === "function"))) {
-        return objectFromShape(schema);
-      }
-    }
-  }
-  if (isZ4Schema(schema)) {
-    const v4Schema = schema;
-    const def = (_a = v4Schema._zod) == null ? void 0 : _a.def;
-    if (def && (def.type === "object" || def.shape !== void 0)) {
-      return schema;
-    }
-  } else {
-    const v3Schema = schema;
-    if (v3Schema.shape !== void 0) {
-      return schema;
-    }
-  }
-  return void 0;
-}
-function getParseErrorMessage(error2) {
-  if (error2 && typeof error2 === "object") {
-    if ("message" in error2 && typeof error2.message === "string") {
-      return error2.message;
-    }
-    if ("issues" in error2 && Array.isArray(error2.issues) && error2.issues.length > 0) {
-      const firstIssue = error2.issues[0];
-      if (firstIssue && typeof firstIssue === "object" && "message" in firstIssue) {
-        return String(firstIssue.message);
-      }
-    }
-    try {
-      return JSON.stringify(error2);
-    } catch {
-      return String(error2);
-    }
-  }
-  return String(error2);
-}
-function getSchemaDescription(schema) {
-  return schema.description;
-}
-function isSchemaOptional(schema) {
-  var _a, _b, _c;
-  if (isZ4Schema(schema)) {
-    const v4Schema = schema;
-    return ((_b = (_a = v4Schema._zod) == null ? void 0 : _a.def) == null ? void 0 : _b.type) === "optional";
-  }
-  const v3Schema = schema;
-  if (typeof schema.isOptional === "function") {
-    return schema.isOptional();
-  }
-  return ((_c = v3Schema._def) == null ? void 0 : _c.typeName) === "ZodOptional";
-}
-function getLiteralValue(schema) {
-  var _a;
-  if (isZ4Schema(schema)) {
-    const v4Schema = schema;
-    const def2 = (_a = v4Schema._zod) == null ? void 0 : _a.def;
-    if (def2) {
-      if (def2.value !== void 0)
-        return def2.value;
-      if (Array.isArray(def2.values) && def2.values.length > 0) {
-        return def2.values[0];
-      }
-    }
-  }
-  const v3Schema = schema;
-  const def = v3Schema._def;
-  if (def) {
-    if (def.value !== void 0)
-      return def.value;
-    if (Array.isArray(def.values) && def.values.length > 0) {
-      return def.values[0];
-    }
-  }
-  const directValue = schema.value;
-  if (directValue !== void 0)
-    return directValue;
-  return void 0;
-}
-
-// node_modules/zod/v4/classic/iso.js
-var iso_exports2 = {};
-__export(iso_exports2, {
-  ZodISODate: () => ZodISODate,
-  ZodISODateTime: () => ZodISODateTime,
-  ZodISODuration: () => ZodISODuration,
-  ZodISOTime: () => ZodISOTime,
-  date: () => date2,
-  datetime: () => datetime2,
-  duration: () => duration2,
-  time: () => time2
-});
-var ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def) => {
-  $ZodISODateTime.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-function datetime2(params) {
-  return _isoDateTime(ZodISODateTime, params);
-}
-var ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def) => {
-  $ZodISODate.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-function date2(params) {
-  return _isoDate(ZodISODate, params);
-}
-var ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
-  $ZodISOTime.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-function time2(params) {
-  return _isoTime(ZodISOTime, params);
-}
-var ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
-  $ZodISODuration.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-function duration2(params) {
-  return _isoDuration(ZodISODuration, params);
-}
-
-// node_modules/zod/v4/classic/errors.js
-var initializer2 = (inst, issues) => {
-  $ZodError.init(inst, issues);
-  inst.name = "ZodError";
-  Object.defineProperties(inst, {
-    format: {
-      value: (mapper) => formatError(inst, mapper)
-      // enumerable: false,
-    },
-    flatten: {
-      value: (mapper) => flattenError(inst, mapper)
-      // enumerable: false,
-    },
-    addIssue: {
-      value: (issue2) => inst.issues.push(issue2)
-      // enumerable: false,
-    },
-    addIssues: {
-      value: (issues2) => inst.issues.push(...issues2)
-      // enumerable: false,
-    },
-    isEmpty: {
-      get() {
-        return inst.issues.length === 0;
-      }
-      // enumerable: false,
-    }
-  });
-};
-var ZodError2 = $constructor("ZodError", initializer2);
-var ZodRealError = $constructor("ZodError", initializer2, {
-  Parent: Error
-});
-
-// node_modules/zod/v4/classic/parse.js
-var parse2 = /* @__PURE__ */ _parse(ZodRealError);
-var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
-var safeParse3 = /* @__PURE__ */ _safeParse(ZodRealError);
-var safeParseAsync3 = /* @__PURE__ */ _safeParseAsync(ZodRealError);
-
-// node_modules/zod/v4/classic/schemas.js
-var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst.def = def;
-  Object.defineProperty(inst, "_def", { value: def });
-  inst.check = (...checks) => {
-    return inst.clone(
-      {
-        ...def,
-        checks: [
-          ...def.checks ?? [],
-          ...checks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
-        ]
-      }
-      // { parent: true }
-    );
-  };
-  inst.clone = (def2, params) => clone(inst, def2, params);
-  inst.brand = () => inst;
-  inst.register = ((reg, meta) => {
-    reg.add(inst, meta);
-    return inst;
-  });
-  inst.parse = (data, params) => parse2(inst, data, params, { callee: inst.parse });
-  inst.safeParse = (data, params) => safeParse3(inst, data, params);
-  inst.parseAsync = async (data, params) => parseAsync2(inst, data, params, { callee: inst.parseAsync });
-  inst.safeParseAsync = async (data, params) => safeParseAsync3(inst, data, params);
-  inst.spa = inst.safeParseAsync;
-  inst.refine = (check2, params) => inst.check(refine(check2, params));
-  inst.superRefine = (refinement) => inst.check(superRefine(refinement));
-  inst.overwrite = (fn) => inst.check(_overwrite(fn));
-  inst.optional = () => optional(inst);
-  inst.nullable = () => nullable(inst);
-  inst.nullish = () => optional(nullable(inst));
-  inst.nonoptional = (params) => nonoptional(inst, params);
-  inst.array = () => array(inst);
-  inst.or = (arg) => union([inst, arg]);
-  inst.and = (arg) => intersection(inst, arg);
-  inst.transform = (tx) => pipe(inst, transform(tx));
-  inst.default = (def2) => _default(inst, def2);
-  inst.prefault = (def2) => prefault(inst, def2);
-  inst.catch = (params) => _catch(inst, params);
-  inst.pipe = (target) => pipe(inst, target);
-  inst.readonly = () => readonly(inst);
-  inst.describe = (description) => {
-    const cl = inst.clone();
-    globalRegistry.add(cl, { description });
-    return cl;
-  };
-  Object.defineProperty(inst, "description", {
-    get() {
-      var _a;
-      return (_a = globalRegistry.get(inst)) == null ? void 0 : _a.description;
-    },
-    configurable: true
-  });
-  inst.meta = (...args) => {
-    if (args.length === 0) {
-      return globalRegistry.get(inst);
-    }
-    const cl = inst.clone();
-    globalRegistry.add(cl, args[0]);
-    return cl;
-  };
-  inst.isOptional = () => inst.safeParse(void 0).success;
-  inst.isNullable = () => inst.safeParse(null).success;
-  return inst;
-});
-var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
-  $ZodString.init(inst, def);
-  ZodType2.init(inst, def);
-  const bag = inst._zod.bag;
-  inst.format = bag.format ?? null;
-  inst.minLength = bag.minimum ?? null;
-  inst.maxLength = bag.maximum ?? null;
-  inst.regex = (...args) => inst.check(_regex(...args));
-  inst.includes = (...args) => inst.check(_includes(...args));
-  inst.startsWith = (...args) => inst.check(_startsWith(...args));
-  inst.endsWith = (...args) => inst.check(_endsWith(...args));
-  inst.min = (...args) => inst.check(_minLength(...args));
-  inst.max = (...args) => inst.check(_maxLength(...args));
-  inst.length = (...args) => inst.check(_length(...args));
-  inst.nonempty = (...args) => inst.check(_minLength(1, ...args));
-  inst.lowercase = (params) => inst.check(_lowercase(params));
-  inst.uppercase = (params) => inst.check(_uppercase(params));
-  inst.trim = () => inst.check(_trim());
-  inst.normalize = (...args) => inst.check(_normalize(...args));
-  inst.toLowerCase = () => inst.check(_toLowerCase());
-  inst.toUpperCase = () => inst.check(_toUpperCase());
-});
-var ZodString2 = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
-  $ZodString.init(inst, def);
-  _ZodString.init(inst, def);
-  inst.email = (params) => inst.check(_email(ZodEmail, params));
-  inst.url = (params) => inst.check(_url(ZodURL, params));
-  inst.jwt = (params) => inst.check(_jwt(ZodJWT, params));
-  inst.emoji = (params) => inst.check(_emoji2(ZodEmoji, params));
-  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
-  inst.uuid = (params) => inst.check(_uuid(ZodUUID, params));
-  inst.uuidv4 = (params) => inst.check(_uuidv4(ZodUUID, params));
-  inst.uuidv6 = (params) => inst.check(_uuidv6(ZodUUID, params));
-  inst.uuidv7 = (params) => inst.check(_uuidv7(ZodUUID, params));
-  inst.nanoid = (params) => inst.check(_nanoid(ZodNanoID, params));
-  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
-  inst.cuid = (params) => inst.check(_cuid(ZodCUID, params));
-  inst.cuid2 = (params) => inst.check(_cuid2(ZodCUID2, params));
-  inst.ulid = (params) => inst.check(_ulid(ZodULID, params));
-  inst.base64 = (params) => inst.check(_base64(ZodBase64, params));
-  inst.base64url = (params) => inst.check(_base64url(ZodBase64URL, params));
-  inst.xid = (params) => inst.check(_xid(ZodXID, params));
-  inst.ksuid = (params) => inst.check(_ksuid(ZodKSUID, params));
-  inst.ipv4 = (params) => inst.check(_ipv4(ZodIPv4, params));
-  inst.ipv6 = (params) => inst.check(_ipv6(ZodIPv6, params));
-  inst.cidrv4 = (params) => inst.check(_cidrv4(ZodCIDRv4, params));
-  inst.cidrv6 = (params) => inst.check(_cidrv6(ZodCIDRv6, params));
-  inst.e164 = (params) => inst.check(_e164(ZodE164, params));
-  inst.datetime = (params) => inst.check(datetime2(params));
-  inst.date = (params) => inst.check(date2(params));
-  inst.time = (params) => inst.check(time2(params));
-  inst.duration = (params) => inst.check(duration2(params));
-});
-function string2(params) {
-  return _string(ZodString2, params);
-}
-var ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
-  _ZodString.init(inst, def);
-});
-var ZodEmail = /* @__PURE__ */ $constructor("ZodEmail", (inst, def) => {
-  $ZodEmail.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodGUID = /* @__PURE__ */ $constructor("ZodGUID", (inst, def) => {
-  $ZodGUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodUUID = /* @__PURE__ */ $constructor("ZodUUID", (inst, def) => {
-  $ZodUUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodURL = /* @__PURE__ */ $constructor("ZodURL", (inst, def) => {
-  $ZodURL.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodEmoji = /* @__PURE__ */ $constructor("ZodEmoji", (inst, def) => {
-  $ZodEmoji.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodNanoID = /* @__PURE__ */ $constructor("ZodNanoID", (inst, def) => {
-  $ZodNanoID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodCUID = /* @__PURE__ */ $constructor("ZodCUID", (inst, def) => {
-  $ZodCUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodCUID2 = /* @__PURE__ */ $constructor("ZodCUID2", (inst, def) => {
-  $ZodCUID2.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodULID = /* @__PURE__ */ $constructor("ZodULID", (inst, def) => {
-  $ZodULID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodXID = /* @__PURE__ */ $constructor("ZodXID", (inst, def) => {
-  $ZodXID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodKSUID = /* @__PURE__ */ $constructor("ZodKSUID", (inst, def) => {
-  $ZodKSUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodIPv4 = /* @__PURE__ */ $constructor("ZodIPv4", (inst, def) => {
-  $ZodIPv4.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodIPv6 = /* @__PURE__ */ $constructor("ZodIPv6", (inst, def) => {
-  $ZodIPv6.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodCIDRv4 = /* @__PURE__ */ $constructor("ZodCIDRv4", (inst, def) => {
-  $ZodCIDRv4.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodCIDRv6 = /* @__PURE__ */ $constructor("ZodCIDRv6", (inst, def) => {
-  $ZodCIDRv6.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodBase64 = /* @__PURE__ */ $constructor("ZodBase64", (inst, def) => {
-  $ZodBase64.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodBase64URL = /* @__PURE__ */ $constructor("ZodBase64URL", (inst, def) => {
-  $ZodBase64URL.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodE164 = /* @__PURE__ */ $constructor("ZodE164", (inst, def) => {
-  $ZodE164.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def) => {
-  $ZodJWT.init(inst, def);
-  ZodStringFormat.init(inst, def);
-});
-var ZodNumber2 = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
-  $ZodNumber.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.gt = (value, params) => inst.check(_gt(value, params));
-  inst.gte = (value, params) => inst.check(_gte(value, params));
-  inst.min = (value, params) => inst.check(_gte(value, params));
-  inst.lt = (value, params) => inst.check(_lt(value, params));
-  inst.lte = (value, params) => inst.check(_lte(value, params));
-  inst.max = (value, params) => inst.check(_lte(value, params));
-  inst.int = (params) => inst.check(int(params));
-  inst.safe = (params) => inst.check(int(params));
-  inst.positive = (params) => inst.check(_gt(0, params));
-  inst.nonnegative = (params) => inst.check(_gte(0, params));
-  inst.negative = (params) => inst.check(_lt(0, params));
-  inst.nonpositive = (params) => inst.check(_lte(0, params));
-  inst.multipleOf = (value, params) => inst.check(_multipleOf(value, params));
-  inst.step = (value, params) => inst.check(_multipleOf(value, params));
-  inst.finite = () => inst;
-  const bag = inst._zod.bag;
-  inst.minValue = Math.max(bag.minimum ?? Number.NEGATIVE_INFINITY, bag.exclusiveMinimum ?? Number.NEGATIVE_INFINITY) ?? null;
-  inst.maxValue = Math.min(bag.maximum ?? Number.POSITIVE_INFINITY, bag.exclusiveMaximum ?? Number.POSITIVE_INFINITY) ?? null;
-  inst.isInt = (bag.format ?? "").includes("int") || Number.isSafeInteger(bag.multipleOf ?? 0.5);
-  inst.isFinite = true;
-  inst.format = bag.format ?? null;
-});
-function number2(params) {
-  return _number(ZodNumber2, params);
-}
-var ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
-  $ZodNumberFormat.init(inst, def);
-  ZodNumber2.init(inst, def);
-});
-function int(params) {
-  return _int(ZodNumberFormat, params);
-}
-var ZodBoolean2 = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
-  $ZodBoolean.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function boolean2(params) {
-  return _boolean(ZodBoolean2, params);
-}
-var ZodNull2 = /* @__PURE__ */ $constructor("ZodNull", (inst, def) => {
-  $ZodNull.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function _null3(params) {
-  return _null2(ZodNull2, params);
-}
-var ZodUnknown2 = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
-  $ZodUnknown.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function unknown() {
-  return _unknown(ZodUnknown2);
-}
-var ZodNever2 = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
-  $ZodNever.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function never(params) {
-  return _never(ZodNever2, params);
-}
-var ZodArray2 = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
-  $ZodArray.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.element = def.element;
-  inst.min = (minLength, params) => inst.check(_minLength(minLength, params));
-  inst.nonempty = (params) => inst.check(_minLength(1, params));
-  inst.max = (maxLength, params) => inst.check(_maxLength(maxLength, params));
-  inst.length = (len, params) => inst.check(_length(len, params));
-  inst.unwrap = () => inst.element;
-});
-function array(element, params) {
-  return _array(ZodArray2, element, params);
-}
-var ZodObject2 = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
-  $ZodObject.init(inst, def);
-  ZodType2.init(inst, def);
-  util_exports.defineLazy(inst, "shape", () => def.shape);
-  inst.keyof = () => _enum(Object.keys(inst._zod.def.shape));
-  inst.catchall = (catchall) => inst.clone({ ...inst._zod.def, catchall });
-  inst.passthrough = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
-  inst.loose = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
-  inst.strict = () => inst.clone({ ...inst._zod.def, catchall: never() });
-  inst.strip = () => inst.clone({ ...inst._zod.def, catchall: void 0 });
-  inst.extend = (incoming) => {
-    return util_exports.extend(inst, incoming);
-  };
-  inst.merge = (other) => util_exports.merge(inst, other);
-  inst.pick = (mask) => util_exports.pick(inst, mask);
-  inst.omit = (mask) => util_exports.omit(inst, mask);
-  inst.partial = (...args) => util_exports.partial(ZodOptional2, inst, args[0]);
-  inst.required = (...args) => util_exports.required(ZodNonOptional, inst, args[0]);
-});
-function object2(shape, params) {
-  const def = {
-    type: "object",
-    get shape() {
-      util_exports.assignProp(this, "shape", { ...shape });
-      return this.shape;
-    },
-    ...util_exports.normalizeParams(params)
-  };
-  return new ZodObject2(def);
-}
-function looseObject(shape, params) {
-  return new ZodObject2({
-    type: "object",
-    get shape() {
-      util_exports.assignProp(this, "shape", { ...shape });
-      return this.shape;
-    },
-    catchall: unknown(),
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodUnion2 = /* @__PURE__ */ $constructor("ZodUnion", (inst, def) => {
-  $ZodUnion.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.options = def.options;
-});
-function union(options, params) {
-  return new ZodUnion2({
-    type: "union",
-    options,
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodDiscriminatedUnion2 = /* @__PURE__ */ $constructor("ZodDiscriminatedUnion", (inst, def) => {
-  ZodUnion2.init(inst, def);
-  $ZodDiscriminatedUnion.init(inst, def);
-});
-function discriminatedUnion(discriminator, options, params) {
-  return new ZodDiscriminatedUnion2({
-    type: "union",
-    options,
-    discriminator,
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodIntersection2 = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def) => {
-  $ZodIntersection.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function intersection(left, right) {
-  return new ZodIntersection2({
-    type: "intersection",
-    left,
-    right
-  });
-}
-var ZodRecord2 = /* @__PURE__ */ $constructor("ZodRecord", (inst, def) => {
-  $ZodRecord.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.keyType = def.keyType;
-  inst.valueType = def.valueType;
-});
-function record(keyType, valueType, params) {
-  return new ZodRecord2({
-    type: "record",
-    keyType,
-    valueType,
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
-  $ZodEnum.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.enum = def.entries;
-  inst.options = Object.values(def.entries);
-  const keys = new Set(Object.keys(def.entries));
-  inst.extract = (values, params) => {
-    const newEntries = {};
-    for (const value of values) {
-      if (keys.has(value)) {
-        newEntries[value] = def.entries[value];
-      } else
-        throw new Error(`Key ${value} not found in enum`);
-    }
-    return new ZodEnum2({
-      ...def,
-      checks: [],
-      ...util_exports.normalizeParams(params),
-      entries: newEntries
-    });
-  };
-  inst.exclude = (values, params) => {
-    const newEntries = { ...def.entries };
-    for (const value of values) {
-      if (keys.has(value)) {
-        delete newEntries[value];
-      } else
-        throw new Error(`Key ${value} not found in enum`);
-    }
-    return new ZodEnum2({
-      ...def,
-      checks: [],
-      ...util_exports.normalizeParams(params),
-      entries: newEntries
-    });
-  };
-});
-function _enum(values, params) {
-  const entries = Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values;
-  return new ZodEnum2({
-    type: "enum",
-    entries,
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodLiteral2 = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def) => {
-  $ZodLiteral.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.values = new Set(def.values);
-  Object.defineProperty(inst, "value", {
-    get() {
-      if (def.values.length > 1) {
-        throw new Error("This schema contains multiple valid literal values. Use `.values` instead.");
-      }
-      return def.values[0];
-    }
-  });
-});
-function literal(value, params) {
-  return new ZodLiteral2({
-    type: "literal",
-    values: Array.isArray(value) ? value : [value],
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
-  $ZodTransform.init(inst, def);
-  ZodType2.init(inst, def);
-  inst._zod.parse = (payload, _ctx) => {
-    payload.addIssue = (issue2) => {
-      if (typeof issue2 === "string") {
-        payload.issues.push(util_exports.issue(issue2, payload.value, def));
-      } else {
-        const _issue = issue2;
-        if (_issue.fatal)
-          _issue.continue = false;
-        _issue.code ?? (_issue.code = "custom");
-        _issue.input ?? (_issue.input = payload.value);
-        _issue.inst ?? (_issue.inst = inst);
-        _issue.continue ?? (_issue.continue = true);
-        payload.issues.push(util_exports.issue(_issue));
-      }
-    };
-    const output = def.transform(payload.value, payload);
-    if (output instanceof Promise) {
-      return output.then((output2) => {
-        payload.value = output2;
-        return payload;
-      });
-    }
-    payload.value = output;
-    return payload;
-  };
-});
-function transform(fn) {
-  return new ZodTransform({
-    type: "transform",
-    transform: fn
-  });
-}
-var ZodOptional2 = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
-  $ZodOptional.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-});
-function optional(innerType) {
-  return new ZodOptional2({
-    type: "optional",
-    innerType
-  });
-}
-var ZodNullable2 = /* @__PURE__ */ $constructor("ZodNullable", (inst, def) => {
-  $ZodNullable.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-});
-function nullable(innerType) {
-  return new ZodNullable2({
-    type: "nullable",
-    innerType
-  });
-}
-var ZodDefault2 = /* @__PURE__ */ $constructor("ZodDefault", (inst, def) => {
-  $ZodDefault.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-  inst.removeDefault = inst.unwrap;
-});
-function _default(innerType, defaultValue) {
-  return new ZodDefault2({
-    type: "default",
-    innerType,
-    get defaultValue() {
-      return typeof defaultValue === "function" ? defaultValue() : defaultValue;
-    }
-  });
-}
-var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def) => {
-  $ZodPrefault.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-});
-function prefault(innerType, defaultValue) {
-  return new ZodPrefault({
-    type: "prefault",
-    innerType,
-    get defaultValue() {
-      return typeof defaultValue === "function" ? defaultValue() : defaultValue;
-    }
-  });
-}
-var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def) => {
-  $ZodNonOptional.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-});
-function nonoptional(innerType, params) {
-  return new ZodNonOptional({
-    type: "nonoptional",
-    innerType,
-    ...util_exports.normalizeParams(params)
-  });
-}
-var ZodCatch2 = /* @__PURE__ */ $constructor("ZodCatch", (inst, def) => {
-  $ZodCatch.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.unwrap = () => inst._zod.def.innerType;
-  inst.removeCatch = inst.unwrap;
-});
-function _catch(innerType, catchValue) {
-  return new ZodCatch2({
-    type: "catch",
-    innerType,
-    catchValue: typeof catchValue === "function" ? catchValue : () => catchValue
-  });
-}
-var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def) => {
-  $ZodPipe.init(inst, def);
-  ZodType2.init(inst, def);
-  inst.in = def.in;
-  inst.out = def.out;
-});
-function pipe(in_, out) {
-  return new ZodPipe({
-    type: "pipe",
-    in: in_,
-    out
-    // ...util.normalizeParams(params),
-  });
-}
-var ZodReadonly2 = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def) => {
-  $ZodReadonly.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function readonly(innerType) {
-  return new ZodReadonly2({
-    type: "readonly",
-    innerType
-  });
-}
-var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
-  $ZodCustom.init(inst, def);
-  ZodType2.init(inst, def);
-});
-function check(fn) {
-  const ch = new $ZodCheck({
-    check: "custom"
-    // ...util.normalizeParams(params),
-  });
-  ch._zod.check = fn;
-  return ch;
-}
-function custom2(fn, _params) {
-  return _custom(ZodCustom, fn ?? (() => true), _params);
-}
-function refine(fn, _params = {}) {
-  return _refine(ZodCustom, fn, _params);
-}
-function superRefine(fn) {
-  const ch = check((payload) => {
-    payload.addIssue = (issue2) => {
-      if (typeof issue2 === "string") {
-        payload.issues.push(util_exports.issue(issue2, payload.value, ch._zod.def));
-      } else {
-        const _issue = issue2;
-        if (_issue.fatal)
-          _issue.continue = false;
-        _issue.code ?? (_issue.code = "custom");
-        _issue.input ?? (_issue.input = payload.value);
-        _issue.inst ?? (_issue.inst = ch);
-        _issue.continue ?? (_issue.continue = !ch._zod.def.abort);
-        payload.issues.push(util_exports.issue(_issue));
-      }
-    };
-    return fn(payload.value, payload);
-  });
-  return ch;
-}
-function preprocess(fn, schema) {
-  return pipe(transform(fn), schema);
-}
-
-// node_modules/zod/v4/classic/external.js
-config(en_default2());
-
 // node_modules/@modelcontextprotocol/sdk/dist/esm/types.js
-var LATEST_PROTOCOL_VERSION = "2025-11-25";
-var SUPPORTED_PROTOCOL_VERSIONS = [LATEST_PROTOCOL_VERSION, "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"];
-var RELATED_TASK_META_KEY = "io.modelcontextprotocol/related-task";
+var LATEST_PROTOCOL_VERSION = "2025-06-18";
+var SUPPORTED_PROTOCOL_VERSIONS = [LATEST_PROTOCOL_VERSION, "2025-03-26", "2024-11-05", "2024-10-07"];
 var JSONRPC_VERSION = "2.0";
-var AssertObjectSchema = custom2((v) => v !== null && (typeof v === "object" || typeof v === "function"));
-var ProgressTokenSchema = union([string2(), number2().int()]);
-var CursorSchema = string2();
-var TaskCreationParamsSchema = looseObject({
-  /**
-   * Time in milliseconds to keep task results available after completion.
-   * If null, the task has unlimited lifetime until manually cleaned up.
-   */
-  ttl: union([number2(), _null3()]).optional(),
-  /**
-   * Time in milliseconds to wait between task status requests.
-   */
-  pollInterval: number2().optional()
-});
-var TaskMetadataSchema = object2({
-  ttl: number2().optional()
-});
-var RelatedTaskMetadataSchema = object2({
-  taskId: string2()
-});
-var RequestMetaSchema = looseObject({
+var AssertObjectSchema = external_exports.custom((v) => v !== null && (typeof v === "object" || typeof v === "function"));
+var ProgressTokenSchema = external_exports.union([external_exports.string(), external_exports.number().int()]);
+var CursorSchema = external_exports.string();
+var RequestMetaSchema = external_exports.object({
   /**
    * If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.
    */
-  progressToken: ProgressTokenSchema.optional(),
-  /**
-   * If specified, this request is related to the provided task.
-   */
-  [RELATED_TASK_META_KEY]: RelatedTaskMetadataSchema.optional()
-});
-var BaseRequestParamsSchema = object2({
+  progressToken: ProgressTokenSchema.optional()
+}).passthrough();
+var BaseRequestParamsSchema = external_exports.object({
   /**
    * See [General fields: `_meta`](/specification/draft/basic/index#meta) for notes on `_meta` usage.
    */
   _meta: RequestMetaSchema.optional()
 });
-var TaskAugmentedRequestParamsSchema = BaseRequestParamsSchema.extend({
-  /**
-   * If specified, the caller is requesting task-augmented execution for this request.
-   * The request will return a CreateTaskResult immediately, and the actual result can be
-   * retrieved later via tasks/result.
-   *
-   * Task augmentation is subject to capability negotiation - receivers MUST declare support
-   * for task augmentation of specific request types in their capabilities.
-   */
-  task: TaskMetadataSchema.optional()
+var RequestSchema = external_exports.object({
+  method: external_exports.string(),
+  params: BaseRequestParamsSchema.passthrough().optional()
 });
-var isTaskAugmentedRequestParams = (value) => TaskAugmentedRequestParamsSchema.safeParse(value).success;
-var RequestSchema = object2({
-  method: string2(),
-  params: BaseRequestParamsSchema.loose().optional()
-});
-var NotificationsParamsSchema = object2({
+var NotificationsParamsSchema = external_exports.object({
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: RequestMetaSchema.optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
-var NotificationSchema = object2({
-  method: string2(),
-  params: NotificationsParamsSchema.loose().optional()
+var NotificationSchema = external_exports.object({
+  method: external_exports.string(),
+  params: NotificationsParamsSchema.passthrough().optional()
 });
-var ResultSchema = looseObject({
+var ResultSchema = external_exports.object({
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: RequestMetaSchema.optional()
-});
-var RequestIdSchema = union([string2(), number2().int()]);
-var JSONRPCRequestSchema = object2({
-  jsonrpc: literal(JSONRPC_VERSION),
-  id: RequestIdSchema,
-  ...RequestSchema.shape
-}).strict();
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
+}).passthrough();
+var RequestIdSchema = external_exports.union([external_exports.string(), external_exports.number().int()]);
+var JSONRPCRequestSchema = external_exports.object({
+  jsonrpc: external_exports.literal(JSONRPC_VERSION),
+  id: RequestIdSchema
+}).merge(RequestSchema).strict();
 var isJSONRPCRequest = (value) => JSONRPCRequestSchema.safeParse(value).success;
-var JSONRPCNotificationSchema = object2({
-  jsonrpc: literal(JSONRPC_VERSION),
-  ...NotificationSchema.shape
-}).strict();
+var JSONRPCNotificationSchema = external_exports.object({
+  jsonrpc: external_exports.literal(JSONRPC_VERSION)
+}).merge(NotificationSchema).strict();
 var isJSONRPCNotification = (value) => JSONRPCNotificationSchema.safeParse(value).success;
-var JSONRPCResultResponseSchema = object2({
-  jsonrpc: literal(JSONRPC_VERSION),
+var JSONRPCResponseSchema = external_exports.object({
+  jsonrpc: external_exports.literal(JSONRPC_VERSION),
   id: RequestIdSchema,
   result: ResultSchema
 }).strict();
-var isJSONRPCResultResponse = (value) => JSONRPCResultResponseSchema.safeParse(value).success;
+var isJSONRPCResponse = (value) => JSONRPCResponseSchema.safeParse(value).success;
 var ErrorCode;
 (function(ErrorCode2) {
   ErrorCode2[ErrorCode2["ConnectionClosed"] = -32e3] = "ConnectionClosed";
@@ -17782,34 +13039,27 @@ var ErrorCode;
   ErrorCode2[ErrorCode2["MethodNotFound"] = -32601] = "MethodNotFound";
   ErrorCode2[ErrorCode2["InvalidParams"] = -32602] = "InvalidParams";
   ErrorCode2[ErrorCode2["InternalError"] = -32603] = "InternalError";
-  ErrorCode2[ErrorCode2["UrlElicitationRequired"] = -32042] = "UrlElicitationRequired";
 })(ErrorCode || (ErrorCode = {}));
-var JSONRPCErrorResponseSchema = object2({
-  jsonrpc: literal(JSONRPC_VERSION),
-  id: RequestIdSchema.optional(),
-  error: object2({
+var JSONRPCErrorSchema = external_exports.object({
+  jsonrpc: external_exports.literal(JSONRPC_VERSION),
+  id: RequestIdSchema,
+  error: external_exports.object({
     /**
      * The error type that occurred.
      */
-    code: number2().int(),
+    code: external_exports.number().int(),
     /**
      * A short description of the error. The message SHOULD be limited to a concise single sentence.
      */
-    message: string2(),
+    message: external_exports.string(),
     /**
      * Additional information about the error. The value of this member is defined by the sender (e.g. detailed error information, nested errors etc.).
      */
-    data: unknown().optional()
+    data: external_exports.optional(external_exports.unknown())
   })
 }).strict();
-var isJSONRPCErrorResponse = (value) => JSONRPCErrorResponseSchema.safeParse(value).success;
-var JSONRPCMessageSchema = union([
-  JSONRPCRequestSchema,
-  JSONRPCNotificationSchema,
-  JSONRPCResultResponseSchema,
-  JSONRPCErrorResponseSchema
-]);
-var JSONRPCResponseSchema = union([JSONRPCResultResponseSchema, JSONRPCErrorResponseSchema]);
+var isJSONRPCError = (value) => JSONRPCErrorSchema.safeParse(value).success;
+var JSONRPCMessageSchema = external_exports.union([JSONRPCRequestSchema, JSONRPCNotificationSchema, JSONRPCResponseSchema, JSONRPCErrorSchema]);
 var EmptyResultSchema = ResultSchema.strict();
 var CancelledNotificationParamsSchema = NotificationsParamsSchema.extend({
   /**
@@ -17817,42 +13067,34 @@ var CancelledNotificationParamsSchema = NotificationsParamsSchema.extend({
    *
    * This MUST correspond to the ID of a request previously issued in the same direction.
    */
-  requestId: RequestIdSchema.optional(),
+  requestId: RequestIdSchema,
   /**
    * An optional string describing the reason for the cancellation. This MAY be logged or presented to the user.
    */
-  reason: string2().optional()
+  reason: external_exports.string().optional()
 });
 var CancelledNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/cancelled"),
+  method: external_exports.literal("notifications/cancelled"),
   params: CancelledNotificationParamsSchema
 });
-var IconSchema = object2({
+var IconSchema = external_exports.object({
   /**
    * URL or data URI for the icon.
    */
-  src: string2(),
+  src: external_exports.string(),
   /**
    * Optional MIME type for the icon.
    */
-  mimeType: string2().optional(),
+  mimeType: external_exports.string().optional(),
   /**
    * Optional array of strings that specify sizes at which the icon can be used.
    * Each string should be in WxH format (e.g., `"48x48"`, `"96x96"`) or `"any"` for scalable formats like SVG.
    *
    * If not provided, the client should assume that the icon can be used at any size.
    */
-  sizes: array(string2()).optional(),
-  /**
-   * Optional specifier for the theme this icon is designed for. `light` indicates
-   * the icon is designed to be used with a light background, and `dark` indicates
-   * the icon is designed to be used with a dark background.
-   *
-   * If not provided, the client should assume the icon can be used with any theme.
-   */
-  theme: _enum(["light", "dark"]).optional()
+  sizes: external_exports.array(external_exports.string()).optional()
 });
-var IconsSchema = object2({
+var IconsSchema = external_exports.object({
   /**
    * Optional set of sized icons that the client can display in a user interface.
    *
@@ -17864,11 +13106,11 @@ var IconsSchema = object2({
    * - `image/svg+xml` - SVG images (scalable but requires security precautions)
    * - `image/webp` - WebP images (modern, efficient format)
    */
-  icons: array(IconSchema).optional()
+  icons: external_exports.array(IconSchema).optional()
 });
-var BaseMetadataSchema = object2({
+var BaseMetadataSchema = external_exports.object({
   /** Intended for programmatic or logical use, but used as a display name in past specs or fallback */
-  name: string2(),
+  name: external_exports.string(),
   /**
    * Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
    * even by those unfamiliar with domain-specific terminology.
@@ -17877,141 +13119,60 @@ var BaseMetadataSchema = object2({
    * where `annotations.title` should be given precedence over using `name`,
    * if present).
    */
-  title: string2().optional()
+  title: external_exports.string().optional()
 });
 var ImplementationSchema = BaseMetadataSchema.extend({
-  ...BaseMetadataSchema.shape,
-  ...IconsSchema.shape,
-  version: string2(),
+  version: external_exports.string(),
   /**
    * An optional URL of the website for this implementation.
    */
-  websiteUrl: string2().optional(),
-  /**
-   * An optional human-readable description of what this implementation does.
-   *
-   * This can be used by clients or servers to provide context about their purpose
-   * and capabilities. For example, a server might describe the types of resources
-   * or tools it provides, while a client might describe its intended use case.
-   */
-  description: string2().optional()
-});
-var FormElicitationCapabilitySchema = intersection(object2({
-  applyDefaults: boolean2().optional()
-}), record(string2(), unknown()));
-var ElicitationCapabilitySchema = preprocess((value) => {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    if (Object.keys(value).length === 0) {
-      return { form: {} };
-    }
-  }
-  return value;
-}, intersection(object2({
-  form: FormElicitationCapabilitySchema.optional(),
-  url: AssertObjectSchema.optional()
-}), record(string2(), unknown()).optional()));
-var ClientTasksCapabilitySchema = looseObject({
-  /**
-   * Present if the client supports listing tasks.
-   */
-  list: AssertObjectSchema.optional(),
-  /**
-   * Present if the client supports cancelling tasks.
-   */
-  cancel: AssertObjectSchema.optional(),
-  /**
-   * Capabilities for task creation on specific request types.
-   */
-  requests: looseObject({
-    /**
-     * Task support for sampling requests.
-     */
-    sampling: looseObject({
-      createMessage: AssertObjectSchema.optional()
-    }).optional(),
-    /**
-     * Task support for elicitation requests.
-     */
-    elicitation: looseObject({
-      create: AssertObjectSchema.optional()
-    }).optional()
-  }).optional()
-});
-var ServerTasksCapabilitySchema = looseObject({
-  /**
-   * Present if the server supports listing tasks.
-   */
-  list: AssertObjectSchema.optional(),
-  /**
-   * Present if the server supports cancelling tasks.
-   */
-  cancel: AssertObjectSchema.optional(),
-  /**
-   * Capabilities for task creation on specific request types.
-   */
-  requests: looseObject({
-    /**
-     * Task support for tool requests.
-     */
-    tools: looseObject({
-      call: AssertObjectSchema.optional()
-    }).optional()
-  }).optional()
-});
-var ClientCapabilitiesSchema = object2({
+  websiteUrl: external_exports.string().optional()
+}).merge(IconsSchema);
+var ClientCapabilitiesSchema = external_exports.object({
   /**
    * Experimental, non-standard capabilities that the client supports.
    */
-  experimental: record(string2(), AssertObjectSchema).optional(),
+  experimental: external_exports.record(external_exports.string(), AssertObjectSchema).optional(),
   /**
    * Present if the client supports sampling from an LLM.
    */
-  sampling: object2({
-    /**
-     * Present if the client supports context inclusion via includeContext parameter.
-     * If not declared, servers SHOULD only use `includeContext: "none"` (or omit it).
-     */
-    context: AssertObjectSchema.optional(),
-    /**
-     * Present if the client supports tool use via tools and toolChoice parameters.
-     */
-    tools: AssertObjectSchema.optional()
-  }).optional(),
+  sampling: AssertObjectSchema.optional(),
   /**
    * Present if the client supports eliciting user input.
    */
-  elicitation: ElicitationCapabilitySchema.optional(),
+  elicitation: external_exports.intersection(external_exports.object({
+    /**
+     * Whether the client should apply defaults to the user input.
+     */
+    applyDefaults: external_exports.boolean().optional()
+  }).optional(), external_exports.record(external_exports.string(), external_exports.unknown()).optional()),
   /**
    * Present if the client supports listing roots.
    */
-  roots: object2({
+  roots: external_exports.object({
     /**
      * Whether the client supports issuing notifications for changes to the roots list.
      */
-    listChanged: boolean2().optional()
-  }).optional(),
-  /**
-   * Present if the client supports task creation.
-   */
-  tasks: ClientTasksCapabilitySchema.optional()
+    listChanged: external_exports.boolean().optional()
+  }).optional()
 });
 var InitializeRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
    * The latest version of the Model Context Protocol that the client supports. The client MAY decide to support older versions as well.
    */
-  protocolVersion: string2(),
+  protocolVersion: external_exports.string(),
   capabilities: ClientCapabilitiesSchema,
   clientInfo: ImplementationSchema
 });
 var InitializeRequestSchema = RequestSchema.extend({
-  method: literal("initialize"),
+  method: external_exports.literal("initialize"),
   params: InitializeRequestParamsSchema
 });
-var ServerCapabilitiesSchema = object2({
+var ServerCapabilitiesSchema = external_exports.object({
   /**
    * Experimental, non-standard capabilities that the server supports.
    */
-  experimental: record(string2(), AssertObjectSchema).optional(),
+  experimental: external_exports.record(external_exports.string(), AssertObjectSchema).optional(),
   /**
    * Present if the server supports sending log messages to the client.
    */
@@ -18023,44 +13184,40 @@ var ServerCapabilitiesSchema = object2({
   /**
    * Present if the server offers any prompt templates.
    */
-  prompts: object2({
+  prompts: external_exports.optional(external_exports.object({
     /**
      * Whether this server supports issuing notifications for changes to the prompt list.
      */
-    listChanged: boolean2().optional()
-  }).optional(),
+    listChanged: external_exports.optional(external_exports.boolean())
+  })),
   /**
    * Present if the server offers any resources to read.
    */
-  resources: object2({
+  resources: external_exports.object({
     /**
      * Whether this server supports clients subscribing to resource updates.
      */
-    subscribe: boolean2().optional(),
+    subscribe: external_exports.boolean().optional(),
     /**
      * Whether this server supports issuing notifications for changes to the resource list.
      */
-    listChanged: boolean2().optional()
+    listChanged: external_exports.boolean().optional()
   }).optional(),
   /**
    * Present if the server offers any tools to call.
    */
-  tools: object2({
+  tools: external_exports.object({
     /**
      * Whether this server supports issuing notifications for changes to the tool list.
      */
-    listChanged: boolean2().optional()
-  }).optional(),
-  /**
-   * Present if the server supports task creation.
-   */
-  tasks: ServerTasksCapabilitySchema.optional()
+    listChanged: external_exports.boolean().optional()
+  }).optional()
 });
 var InitializeResultSchema = ResultSchema.extend({
   /**
    * The version of the Model Context Protocol that the server wants to use. This may not match the version that the client requested. If the client cannot support this version, it MUST disconnect.
    */
-  protocolVersion: string2(),
+  protocolVersion: external_exports.string(),
   capabilities: ServerCapabilitiesSchema,
   serverInfo: ImplementationSchema,
   /**
@@ -18068,40 +13225,36 @@ var InitializeResultSchema = ResultSchema.extend({
    *
    * This can be used by clients to improve the LLM's understanding of available tools, resources, etc. It can be thought of like a "hint" to the model. For example, this information MAY be added to the system prompt.
    */
-  instructions: string2().optional()
+  instructions: external_exports.string().optional()
 });
 var InitializedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/initialized"),
-  params: NotificationsParamsSchema.optional()
+  method: external_exports.literal("notifications/initialized")
 });
 var PingRequestSchema = RequestSchema.extend({
-  method: literal("ping"),
-  params: BaseRequestParamsSchema.optional()
+  method: external_exports.literal("ping")
 });
-var ProgressSchema = object2({
+var ProgressSchema = external_exports.object({
   /**
    * The progress thus far. This should increase every time progress is made, even if the total is unknown.
    */
-  progress: number2(),
+  progress: external_exports.number(),
   /**
    * Total number of items to process (or total progress required), if known.
    */
-  total: optional(number2()),
+  total: external_exports.optional(external_exports.number()),
   /**
    * An optional message describing the current progress.
    */
-  message: optional(string2())
+  message: external_exports.optional(external_exports.string())
 });
-var ProgressNotificationParamsSchema = object2({
-  ...NotificationsParamsSchema.shape,
-  ...ProgressSchema.shape,
+var ProgressNotificationParamsSchema = NotificationsParamsSchema.merge(ProgressSchema).extend({
   /**
    * The progress token which was given in the initial request, used to associate this notification with the request that is proceeding.
    */
   progressToken: ProgressTokenSchema
 });
 var ProgressNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/progress"),
+  method: external_exports.literal("notifications/progress"),
   params: ProgressNotificationParamsSchema
 });
 var PaginatedRequestParamsSchema = BaseRequestParamsSchema.extend({
@@ -18119,92 +13272,34 @@ var PaginatedResultSchema = ResultSchema.extend({
    * An opaque token representing the pagination position after the last returned result.
    * If present, there may be more results available.
    */
-  nextCursor: CursorSchema.optional()
+  nextCursor: external_exports.optional(CursorSchema)
 });
-var TaskStatusSchema = _enum(["working", "input_required", "completed", "failed", "cancelled"]);
-var TaskSchema = object2({
-  taskId: string2(),
-  status: TaskStatusSchema,
-  /**
-   * Time in milliseconds to keep task results available after completion.
-   * If null, the task has unlimited lifetime until manually cleaned up.
-   */
-  ttl: union([number2(), _null3()]),
-  /**
-   * ISO 8601 timestamp when the task was created.
-   */
-  createdAt: string2(),
-  /**
-   * ISO 8601 timestamp when the task was last updated.
-   */
-  lastUpdatedAt: string2(),
-  pollInterval: optional(number2()),
-  /**
-   * Optional diagnostic message for failed tasks or other status information.
-   */
-  statusMessage: optional(string2())
-});
-var CreateTaskResultSchema = ResultSchema.extend({
-  task: TaskSchema
-});
-var TaskStatusNotificationParamsSchema = NotificationsParamsSchema.merge(TaskSchema);
-var TaskStatusNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/tasks/status"),
-  params: TaskStatusNotificationParamsSchema
-});
-var GetTaskRequestSchema = RequestSchema.extend({
-  method: literal("tasks/get"),
-  params: BaseRequestParamsSchema.extend({
-    taskId: string2()
-  })
-});
-var GetTaskResultSchema = ResultSchema.merge(TaskSchema);
-var GetTaskPayloadRequestSchema = RequestSchema.extend({
-  method: literal("tasks/result"),
-  params: BaseRequestParamsSchema.extend({
-    taskId: string2()
-  })
-});
-var GetTaskPayloadResultSchema = ResultSchema.loose();
-var ListTasksRequestSchema = PaginatedRequestSchema.extend({
-  method: literal("tasks/list")
-});
-var ListTasksResultSchema = PaginatedResultSchema.extend({
-  tasks: array(TaskSchema)
-});
-var CancelTaskRequestSchema = RequestSchema.extend({
-  method: literal("tasks/cancel"),
-  params: BaseRequestParamsSchema.extend({
-    taskId: string2()
-  })
-});
-var CancelTaskResultSchema = ResultSchema.merge(TaskSchema);
-var ResourceContentsSchema = object2({
+var ResourceContentsSchema = external_exports.object({
   /**
    * The URI of this resource.
    */
-  uri: string2(),
+  uri: external_exports.string(),
   /**
    * The MIME type of this resource, if known.
    */
-  mimeType: optional(string2()),
+  mimeType: external_exports.optional(external_exports.string()),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
 var TextResourceContentsSchema = ResourceContentsSchema.extend({
   /**
    * The text of the item. This must only be set if the item can actually be represented as text (not binary data).
    */
-  text: string2()
+  text: external_exports.string()
 });
-var Base64Schema = string2().refine((val) => {
+var Base64Schema = external_exports.string().refine((val) => {
   try {
     atob(val);
     return true;
-  } catch {
+  } catch (_a) {
     return false;
   }
 }, { message: "Invalid Base64 string" });
@@ -18214,86 +13309,59 @@ var BlobResourceContentsSchema = ResourceContentsSchema.extend({
    */
   blob: Base64Schema
 });
-var RoleSchema = _enum(["user", "assistant"]);
-var AnnotationsSchema = object2({
-  /**
-   * Intended audience(s) for the resource.
-   */
-  audience: array(RoleSchema).optional(),
-  /**
-   * Importance hint for the resource, from 0 (least) to 1 (most).
-   */
-  priority: number2().min(0).max(1).optional(),
-  /**
-   * ISO 8601 timestamp for the most recent modification.
-   */
-  lastModified: iso_exports2.datetime({ offset: true }).optional()
-});
-var ResourceSchema = object2({
-  ...BaseMetadataSchema.shape,
-  ...IconsSchema.shape,
+var ResourceSchema = BaseMetadataSchema.extend({
   /**
    * The URI of this resource.
    */
-  uri: string2(),
+  uri: external_exports.string(),
   /**
    * A description of what this resource represents.
    *
    * This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
    */
-  description: optional(string2()),
+  description: external_exports.optional(external_exports.string()),
   /**
    * The MIME type of this resource, if known.
    */
-  mimeType: optional(string2()),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
+  mimeType: external_exports.optional(external_exports.string()),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: optional(looseObject({}))
-});
-var ResourceTemplateSchema = object2({
-  ...BaseMetadataSchema.shape,
-  ...IconsSchema.shape,
+  _meta: external_exports.optional(external_exports.object({}).passthrough())
+}).merge(IconsSchema);
+var ResourceTemplateSchema = BaseMetadataSchema.extend({
   /**
    * A URI template (according to RFC 6570) that can be used to construct resource URIs.
    */
-  uriTemplate: string2(),
+  uriTemplate: external_exports.string(),
   /**
    * A description of what this template is for.
    *
    * This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
    */
-  description: optional(string2()),
+  description: external_exports.optional(external_exports.string()),
   /**
    * The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.
    */
-  mimeType: optional(string2()),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
+  mimeType: external_exports.optional(external_exports.string()),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: optional(looseObject({}))
-});
+  _meta: external_exports.optional(external_exports.object({}).passthrough())
+}).merge(IconsSchema);
 var ListResourcesRequestSchema = PaginatedRequestSchema.extend({
-  method: literal("resources/list")
+  method: external_exports.literal("resources/list")
 });
 var ListResourcesResultSchema = PaginatedResultSchema.extend({
-  resources: array(ResourceSchema)
+  resources: external_exports.array(ResourceSchema)
 });
 var ListResourceTemplatesRequestSchema = PaginatedRequestSchema.extend({
-  method: literal("resources/templates/list")
+  method: external_exports.literal("resources/templates/list")
 });
 var ListResourceTemplatesResultSchema = PaginatedResultSchema.extend({
-  resourceTemplates: array(ResourceTemplateSchema)
+  resourceTemplates: external_exports.array(ResourceTemplateSchema)
 });
 var ResourceRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
@@ -18301,109 +13369,102 @@ var ResourceRequestParamsSchema = BaseRequestParamsSchema.extend({
    *
    * @format uri
    */
-  uri: string2()
+  uri: external_exports.string()
 });
 var ReadResourceRequestParamsSchema = ResourceRequestParamsSchema;
 var ReadResourceRequestSchema = RequestSchema.extend({
-  method: literal("resources/read"),
+  method: external_exports.literal("resources/read"),
   params: ReadResourceRequestParamsSchema
 });
 var ReadResourceResultSchema = ResultSchema.extend({
-  contents: array(union([TextResourceContentsSchema, BlobResourceContentsSchema]))
+  contents: external_exports.array(external_exports.union([TextResourceContentsSchema, BlobResourceContentsSchema]))
 });
 var ResourceListChangedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/resources/list_changed"),
-  params: NotificationsParamsSchema.optional()
+  method: external_exports.literal("notifications/resources/list_changed")
 });
 var SubscribeRequestParamsSchema = ResourceRequestParamsSchema;
 var SubscribeRequestSchema = RequestSchema.extend({
-  method: literal("resources/subscribe"),
+  method: external_exports.literal("resources/subscribe"),
   params: SubscribeRequestParamsSchema
 });
 var UnsubscribeRequestParamsSchema = ResourceRequestParamsSchema;
 var UnsubscribeRequestSchema = RequestSchema.extend({
-  method: literal("resources/unsubscribe"),
+  method: external_exports.literal("resources/unsubscribe"),
   params: UnsubscribeRequestParamsSchema
 });
 var ResourceUpdatedNotificationParamsSchema = NotificationsParamsSchema.extend({
   /**
    * The URI of the resource that has been updated. This might be a sub-resource of the one that the client actually subscribed to.
    */
-  uri: string2()
+  uri: external_exports.string()
 });
 var ResourceUpdatedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/resources/updated"),
+  method: external_exports.literal("notifications/resources/updated"),
   params: ResourceUpdatedNotificationParamsSchema
 });
-var PromptArgumentSchema = object2({
+var PromptArgumentSchema = external_exports.object({
   /**
    * The name of the argument.
    */
-  name: string2(),
+  name: external_exports.string(),
   /**
    * A human-readable description of the argument.
    */
-  description: optional(string2()),
+  description: external_exports.optional(external_exports.string()),
   /**
    * Whether this argument must be provided.
    */
-  required: optional(boolean2())
+  required: external_exports.optional(external_exports.boolean())
 });
-var PromptSchema = object2({
-  ...BaseMetadataSchema.shape,
-  ...IconsSchema.shape,
+var PromptSchema = BaseMetadataSchema.extend({
   /**
    * An optional description of what this prompt provides
    */
-  description: optional(string2()),
+  description: external_exports.optional(external_exports.string()),
   /**
    * A list of arguments to use for templating the prompt.
    */
-  arguments: optional(array(PromptArgumentSchema)),
+  arguments: external_exports.optional(external_exports.array(PromptArgumentSchema)),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: optional(looseObject({}))
-});
+  _meta: external_exports.optional(external_exports.object({}).passthrough())
+}).merge(IconsSchema);
 var ListPromptsRequestSchema = PaginatedRequestSchema.extend({
-  method: literal("prompts/list")
+  method: external_exports.literal("prompts/list")
 });
 var ListPromptsResultSchema = PaginatedResultSchema.extend({
-  prompts: array(PromptSchema)
+  prompts: external_exports.array(PromptSchema)
 });
 var GetPromptRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
    * The name of the prompt or prompt template.
    */
-  name: string2(),
+  name: external_exports.string(),
   /**
    * Arguments to use for templating the prompt.
    */
-  arguments: record(string2(), string2()).optional()
+  arguments: external_exports.record(external_exports.string(), external_exports.string()).optional()
 });
 var GetPromptRequestSchema = RequestSchema.extend({
-  method: literal("prompts/get"),
+  method: external_exports.literal("prompts/get"),
   params: GetPromptRequestParamsSchema
 });
-var TextContentSchema = object2({
-  type: literal("text"),
+var TextContentSchema = external_exports.object({
+  type: external_exports.literal("text"),
   /**
    * The text content of the message.
    */
-  text: string2(),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
+  text: external_exports.string(),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
-var ImageContentSchema = object2({
-  type: literal("image"),
+var ImageContentSchema = external_exports.object({
+  type: external_exports.literal("image"),
   /**
    * The base64-encoded image data.
    */
@@ -18411,19 +13472,15 @@ var ImageContentSchema = object2({
   /**
    * The MIME type of the image. Different providers may support different image types.
    */
-  mimeType: string2(),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
+  mimeType: external_exports.string(),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
-var AudioContentSchema = object2({
-  type: literal("audio"),
+var AudioContentSchema = external_exports.object({
+  type: external_exports.literal("audio"),
   /**
    * The base64-encoded audio data.
    */
@@ -18431,89 +13488,57 @@ var AudioContentSchema = object2({
   /**
    * The MIME type of the audio. Different providers may support different audio types.
    */
-  mimeType: string2(),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
+  mimeType: external_exports.string(),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
-var ToolUseContentSchema = object2({
-  type: literal("tool_use"),
-  /**
-   * The name of the tool to invoke.
-   * Must match a tool name from the request's tools array.
-   */
-  name: string2(),
-  /**
-   * Unique identifier for this tool call.
-   * Used to correlate with ToolResultContent in subsequent messages.
-   */
-  id: string2(),
-  /**
-   * Arguments to pass to the tool.
-   * Must conform to the tool's inputSchema.
-   */
-  input: record(string2(), unknown()),
+var EmbeddedResourceSchema = external_exports.object({
+  type: external_exports.literal("resource"),
+  resource: external_exports.union([TextResourceContentsSchema, BlobResourceContentsSchema]),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
-});
-var EmbeddedResourceSchema = object2({
-  type: literal("resource"),
-  resource: union([TextResourceContentsSchema, BlobResourceContentsSchema]),
-  /**
-   * Optional annotations for the client.
-   */
-  annotations: AnnotationsSchema.optional(),
-  /**
-   * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
-   * for notes on _meta usage.
-   */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
 var ResourceLinkSchema = ResourceSchema.extend({
-  type: literal("resource_link")
+  type: external_exports.literal("resource_link")
 });
-var ContentBlockSchema = union([
+var ContentBlockSchema = external_exports.union([
   TextContentSchema,
   ImageContentSchema,
   AudioContentSchema,
   ResourceLinkSchema,
   EmbeddedResourceSchema
 ]);
-var PromptMessageSchema = object2({
-  role: RoleSchema,
+var PromptMessageSchema = external_exports.object({
+  role: external_exports.enum(["user", "assistant"]),
   content: ContentBlockSchema
 });
 var GetPromptResultSchema = ResultSchema.extend({
   /**
    * An optional description for the prompt.
    */
-  description: string2().optional(),
-  messages: array(PromptMessageSchema)
+  description: external_exports.optional(external_exports.string()),
+  messages: external_exports.array(PromptMessageSchema)
 });
 var PromptListChangedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/prompts/list_changed"),
-  params: NotificationsParamsSchema.optional()
+  method: external_exports.literal("notifications/prompts/list_changed")
 });
-var ToolAnnotationsSchema = object2({
+var ToolAnnotationsSchema = external_exports.object({
   /**
    * A human-readable title for the tool.
    */
-  title: string2().optional(),
+  title: external_exports.string().optional(),
   /**
    * If true, the tool does not modify its environment.
    *
    * Default: false
    */
-  readOnlyHint: boolean2().optional(),
+  readOnlyHint: external_exports.boolean().optional(),
   /**
    * If true, the tool may perform destructive updates to its environment.
    * If false, the tool performs only additive updates.
@@ -18522,7 +13547,7 @@ var ToolAnnotationsSchema = object2({
    *
    * Default: true
    */
-  destructiveHint: boolean2().optional(),
+  destructiveHint: external_exports.boolean().optional(),
   /**
    * If true, calling the tool repeatedly with the same arguments
    * will have no additional effect on the its environment.
@@ -18531,7 +13556,7 @@ var ToolAnnotationsSchema = object2({
    *
    * Default: false
    */
-  idempotentHint: boolean2().optional(),
+  idempotentHint: external_exports.boolean().optional(),
   /**
    * If true, this tool may interact with an "open world" of external
    * entities. If false, the tool's domain of interaction is closed.
@@ -18540,64 +13565,49 @@ var ToolAnnotationsSchema = object2({
    *
    * Default: true
    */
-  openWorldHint: boolean2().optional()
+  openWorldHint: external_exports.boolean().optional()
 });
-var ToolExecutionSchema = object2({
-  /**
-   * Indicates the tool's preference for task-augmented execution.
-   * - "required": Clients MUST invoke the tool as a task
-   * - "optional": Clients MAY invoke the tool as a task or normal request
-   * - "forbidden": Clients MUST NOT attempt to invoke the tool as a task
-   *
-   * If not present, defaults to "forbidden".
-   */
-  taskSupport: _enum(["required", "optional", "forbidden"]).optional()
-});
-var ToolSchema = object2({
-  ...BaseMetadataSchema.shape,
-  ...IconsSchema.shape,
+var ToolSchema = BaseMetadataSchema.extend({
   /**
    * A human-readable description of the tool.
    */
-  description: string2().optional(),
+  description: external_exports.string().optional(),
   /**
-   * A JSON Schema 2020-12 object defining the expected parameters for the tool.
-   * Must have type: 'object' at the root level per MCP spec.
+   * A JSON Schema object defining the expected parameters for the tool.
    */
-  inputSchema: object2({
-    type: literal("object"),
-    properties: record(string2(), AssertObjectSchema).optional(),
-    required: array(string2()).optional()
-  }).catchall(unknown()),
+  inputSchema: external_exports.object({
+    type: external_exports.literal("object"),
+    properties: external_exports.record(external_exports.string(), AssertObjectSchema).optional(),
+    required: external_exports.optional(external_exports.array(external_exports.string()))
+  }),
   /**
-   * An optional JSON Schema 2020-12 object defining the structure of the tool's output
-   * returned in the structuredContent field of a CallToolResult.
-   * Must have type: 'object' at the root level per MCP spec.
+   * An optional JSON Schema object defining the structure of the tool's output returned in
+   * the structuredContent field of a CallToolResult.
    */
-  outputSchema: object2({
-    type: literal("object"),
-    properties: record(string2(), AssertObjectSchema).optional(),
-    required: array(string2()).optional()
-  }).catchall(unknown()).optional(),
+  outputSchema: external_exports.object({
+    type: external_exports.literal("object"),
+    properties: external_exports.record(external_exports.string(), AssertObjectSchema).optional(),
+    required: external_exports.optional(external_exports.array(external_exports.string())),
+    /**
+     * Not in the MCP specification, but added to support the Ajv validator while removing .passthrough() which previously allowed additionalProperties to be passed through.
+     */
+    additionalProperties: external_exports.optional(external_exports.boolean())
+  }).optional(),
   /**
    * Optional additional tool information.
    */
-  annotations: ToolAnnotationsSchema.optional(),
-  /**
-   * Execution-related properties for this tool.
-   */
-  execution: ToolExecutionSchema.optional(),
+  annotations: external_exports.optional(ToolAnnotationsSchema),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
-});
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
+}).merge(IconsSchema);
 var ListToolsRequestSchema = PaginatedRequestSchema.extend({
-  method: literal("tools/list")
+  method: external_exports.literal("tools/list")
 });
 var ListToolsResultSchema = PaginatedResultSchema.extend({
-  tools: array(ToolSchema)
+  tools: external_exports.array(ToolSchema)
 });
 var CallToolResultSchema = ResultSchema.extend({
   /**
@@ -18606,13 +13616,13 @@ var CallToolResultSchema = ResultSchema.extend({
    * If the Tool does not define an outputSchema, this field MUST be present in the result.
    * For backwards compatibility, this field is always present, but it may be empty.
    */
-  content: array(ContentBlockSchema).default([]),
+  content: external_exports.array(ContentBlockSchema).default([]),
   /**
    * An object containing structured tool output.
    *
    * If the Tool defines an outputSchema, this field MUST be present in the result, and contain a JSON object that matches the schema.
    */
-  structuredContent: record(string2(), unknown()).optional(),
+  structuredContent: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
   /**
    * Whether the tool call ended in an error.
    *
@@ -18627,50 +13637,29 @@ var CallToolResultSchema = ResultSchema.extend({
    * server does not support tool calls, or any other exceptional conditions,
    * should be reported as an MCP error response.
    */
-  isError: boolean2().optional()
+  isError: external_exports.optional(external_exports.boolean())
 });
 var CompatibilityCallToolResultSchema = CallToolResultSchema.or(ResultSchema.extend({
-  toolResult: unknown()
+  toolResult: external_exports.unknown()
 }));
-var CallToolRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
+var CallToolRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
    * The name of the tool to call.
    */
-  name: string2(),
+  name: external_exports.string(),
   /**
    * Arguments to pass to the tool.
    */
-  arguments: record(string2(), unknown()).optional()
+  arguments: external_exports.optional(external_exports.record(external_exports.string(), external_exports.unknown()))
 });
 var CallToolRequestSchema = RequestSchema.extend({
-  method: literal("tools/call"),
+  method: external_exports.literal("tools/call"),
   params: CallToolRequestParamsSchema
 });
 var ToolListChangedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/tools/list_changed"),
-  params: NotificationsParamsSchema.optional()
+  method: external_exports.literal("notifications/tools/list_changed")
 });
-var ListChangedOptionsBaseSchema = object2({
-  /**
-   * If true, the list will be refreshed automatically when a list changed notification is received.
-   * The callback will be called with the updated list.
-   *
-   * If false, the callback will be called with null items, allowing manual refresh.
-   *
-   * @default true
-   */
-  autoRefresh: boolean2().default(true),
-  /**
-   * Debounce time in milliseconds for list changed notification processing.
-   *
-   * Multiple notifications received within this timeframe will only trigger one refresh.
-   * Set to 0 to disable debouncing.
-   *
-   * @default 300
-   */
-  debounceMs: number2().int().nonnegative().default(300)
-});
-var LoggingLevelSchema = _enum(["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"]);
+var LoggingLevelSchema = external_exports.enum(["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"]);
 var SetLevelRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
    * The level of logging that the client wants to receive from the server. The server should send all logs at this level and higher (i.e., more severe) to the client as notifications/logging/message.
@@ -18678,7 +13667,7 @@ var SetLevelRequestParamsSchema = BaseRequestParamsSchema.extend({
   level: LoggingLevelSchema
 });
 var SetLevelRequestSchema = RequestSchema.extend({
-  method: literal("logging/setLevel"),
+  method: external_exports.literal("logging/setLevel"),
   params: SetLevelRequestParamsSchema
 });
 var LoggingMessageNotificationParamsSchema = NotificationsParamsSchema.extend({
@@ -18689,80 +13678,46 @@ var LoggingMessageNotificationParamsSchema = NotificationsParamsSchema.extend({
   /**
    * An optional name of the logger issuing this message.
    */
-  logger: string2().optional(),
+  logger: external_exports.string().optional(),
   /**
    * The data to be logged, such as a string message or an object. Any JSON serializable type is allowed here.
    */
-  data: unknown()
+  data: external_exports.unknown()
 });
 var LoggingMessageNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/message"),
+  method: external_exports.literal("notifications/message"),
   params: LoggingMessageNotificationParamsSchema
 });
-var ModelHintSchema = object2({
+var ModelHintSchema = external_exports.object({
   /**
    * A hint for a model name.
    */
-  name: string2().optional()
+  name: external_exports.string().optional()
 });
-var ModelPreferencesSchema = object2({
+var ModelPreferencesSchema = external_exports.object({
   /**
    * Optional hints to use for model selection.
    */
-  hints: array(ModelHintSchema).optional(),
+  hints: external_exports.optional(external_exports.array(ModelHintSchema)),
   /**
    * How much to prioritize cost when selecting a model.
    */
-  costPriority: number2().min(0).max(1).optional(),
+  costPriority: external_exports.optional(external_exports.number().min(0).max(1)),
   /**
    * How much to prioritize sampling speed (latency) when selecting a model.
    */
-  speedPriority: number2().min(0).max(1).optional(),
+  speedPriority: external_exports.optional(external_exports.number().min(0).max(1)),
   /**
    * How much to prioritize intelligence and capabilities when selecting a model.
    */
-  intelligencePriority: number2().min(0).max(1).optional()
+  intelligencePriority: external_exports.optional(external_exports.number().min(0).max(1))
 });
-var ToolChoiceSchema = object2({
-  /**
-   * Controls when tools are used:
-   * - "auto": Model decides whether to use tools (default)
-   * - "required": Model MUST use at least one tool before completing
-   * - "none": Model MUST NOT use any tools
-   */
-  mode: _enum(["auto", "required", "none"]).optional()
+var SamplingMessageSchema = external_exports.object({
+  role: external_exports.enum(["user", "assistant"]),
+  content: external_exports.union([TextContentSchema, ImageContentSchema, AudioContentSchema])
 });
-var ToolResultContentSchema = object2({
-  type: literal("tool_result"),
-  toolUseId: string2().describe("The unique identifier for the corresponding tool call."),
-  content: array(ContentBlockSchema).default([]),
-  structuredContent: object2({}).loose().optional(),
-  isError: boolean2().optional(),
-  /**
-   * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
-   * for notes on _meta usage.
-   */
-  _meta: record(string2(), unknown()).optional()
-});
-var SamplingContentSchema = discriminatedUnion("type", [TextContentSchema, ImageContentSchema, AudioContentSchema]);
-var SamplingMessageContentBlockSchema = discriminatedUnion("type", [
-  TextContentSchema,
-  ImageContentSchema,
-  AudioContentSchema,
-  ToolUseContentSchema,
-  ToolResultContentSchema
-]);
-var SamplingMessageSchema = object2({
-  role: RoleSchema,
-  content: union([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)]),
-  /**
-   * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
-   * for notes on _meta usage.
-   */
-  _meta: record(string2(), unknown()).optional()
-});
-var CreateMessageRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
-  messages: array(SamplingMessageSchema),
+var CreateMessageRequestParamsSchema = BaseRequestParamsSchema.extend({
+  messages: external_exports.array(SamplingMessageSchema),
   /**
    * The server's preferences for which model to select. The client MAY modify or omit this request.
    */
@@ -18770,220 +13725,136 @@ var CreateMessageRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
   /**
    * An optional system prompt the server wants to use for sampling. The client MAY modify or omit this prompt.
    */
-  systemPrompt: string2().optional(),
+  systemPrompt: external_exports.string().optional(),
   /**
-   * A request to include context from one or more MCP servers (including the caller), to be attached to the prompt.
-   * The client MAY ignore this request.
-   *
-   * Default is "none". Values "thisServer" and "allServers" are soft-deprecated. Servers SHOULD only use these values if the client
-   * declares ClientCapabilities.sampling.context. These values may be removed in future spec releases.
+   * A request to include context from one or more MCP servers (including the caller), to be attached to the prompt. The client MAY ignore this request.
    */
-  includeContext: _enum(["none", "thisServer", "allServers"]).optional(),
-  temperature: number2().optional(),
+  includeContext: external_exports.enum(["none", "thisServer", "allServers"]).optional(),
+  temperature: external_exports.number().optional(),
   /**
    * The requested maximum number of tokens to sample (to prevent runaway completions).
    *
    * The client MAY choose to sample fewer tokens than the requested maximum.
    */
-  maxTokens: number2().int(),
-  stopSequences: array(string2()).optional(),
+  maxTokens: external_exports.number().int(),
+  stopSequences: external_exports.array(external_exports.string()).optional(),
   /**
    * Optional metadata to pass through to the LLM provider. The format of this metadata is provider-specific.
    */
-  metadata: AssertObjectSchema.optional(),
-  /**
-   * Tools that the model may use during generation.
-   * The client MUST return an error if this field is provided but ClientCapabilities.sampling.tools is not declared.
-   */
-  tools: array(ToolSchema).optional(),
-  /**
-   * Controls how the model uses tools.
-   * The client MUST return an error if this field is provided but ClientCapabilities.sampling.tools is not declared.
-   * Default is `{ mode: "auto" }`.
-   */
-  toolChoice: ToolChoiceSchema.optional()
+  metadata: AssertObjectSchema.optional()
 });
 var CreateMessageRequestSchema = RequestSchema.extend({
-  method: literal("sampling/createMessage"),
+  method: external_exports.literal("sampling/createMessage"),
   params: CreateMessageRequestParamsSchema
 });
 var CreateMessageResultSchema = ResultSchema.extend({
   /**
    * The name of the model that generated the message.
    */
-  model: string2(),
+  model: external_exports.string(),
   /**
-   * The reason why sampling stopped, if known.
-   *
-   * Standard values:
-   * - "endTurn": Natural end of the assistant's turn
-   * - "stopSequence": A stop sequence was encountered
-   * - "maxTokens": Maximum token limit was reached
-   *
-   * This field is an open string to allow for provider-specific stop reasons.
+   * The reason why sampling stopped.
    */
-  stopReason: optional(_enum(["endTurn", "stopSequence", "maxTokens"]).or(string2())),
-  role: RoleSchema,
-  /**
-   * Response content. Single content block (text, image, or audio).
-   */
-  content: SamplingContentSchema
+  stopReason: external_exports.optional(external_exports.enum(["endTurn", "stopSequence", "maxTokens"]).or(external_exports.string())),
+  role: external_exports.enum(["user", "assistant"]),
+  content: external_exports.discriminatedUnion("type", [TextContentSchema, ImageContentSchema, AudioContentSchema])
 });
-var CreateMessageResultWithToolsSchema = ResultSchema.extend({
-  /**
-   * The name of the model that generated the message.
-   */
-  model: string2(),
-  /**
-   * The reason why sampling stopped, if known.
-   *
-   * Standard values:
-   * - "endTurn": Natural end of the assistant's turn
-   * - "stopSequence": A stop sequence was encountered
-   * - "maxTokens": Maximum token limit was reached
-   * - "toolUse": The model wants to use one or more tools
-   *
-   * This field is an open string to allow for provider-specific stop reasons.
-   */
-  stopReason: optional(_enum(["endTurn", "stopSequence", "maxTokens", "toolUse"]).or(string2())),
-  role: RoleSchema,
-  /**
-   * Response content. May be a single block or array. May include ToolUseContent if stopReason is "toolUse".
-   */
-  content: union([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)])
+var BooleanSchemaSchema = external_exports.object({
+  type: external_exports.literal("boolean"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  default: external_exports.boolean().optional()
 });
-var BooleanSchemaSchema = object2({
-  type: literal("boolean"),
-  title: string2().optional(),
-  description: string2().optional(),
-  default: boolean2().optional()
+var StringSchemaSchema = external_exports.object({
+  type: external_exports.literal("string"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  minLength: external_exports.number().optional(),
+  maxLength: external_exports.number().optional(),
+  format: external_exports.enum(["email", "uri", "date", "date-time"]).optional(),
+  default: external_exports.string().optional()
 });
-var StringSchemaSchema = object2({
-  type: literal("string"),
-  title: string2().optional(),
-  description: string2().optional(),
-  minLength: number2().optional(),
-  maxLength: number2().optional(),
-  format: _enum(["email", "uri", "date", "date-time"]).optional(),
-  default: string2().optional()
+var NumberSchemaSchema = external_exports.object({
+  type: external_exports.enum(["number", "integer"]),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  minimum: external_exports.number().optional(),
+  maximum: external_exports.number().optional(),
+  default: external_exports.number().optional()
 });
-var NumberSchemaSchema = object2({
-  type: _enum(["number", "integer"]),
-  title: string2().optional(),
-  description: string2().optional(),
-  minimum: number2().optional(),
-  maximum: number2().optional(),
-  default: number2().optional()
+var UntitledSingleSelectEnumSchemaSchema = external_exports.object({
+  type: external_exports.literal("string"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  enum: external_exports.array(external_exports.string()),
+  default: external_exports.string().optional()
 });
-var UntitledSingleSelectEnumSchemaSchema = object2({
-  type: literal("string"),
-  title: string2().optional(),
-  description: string2().optional(),
-  enum: array(string2()),
-  default: string2().optional()
-});
-var TitledSingleSelectEnumSchemaSchema = object2({
-  type: literal("string"),
-  title: string2().optional(),
-  description: string2().optional(),
-  oneOf: array(object2({
-    const: string2(),
-    title: string2()
+var TitledSingleSelectEnumSchemaSchema = external_exports.object({
+  type: external_exports.literal("string"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  oneOf: external_exports.array(external_exports.object({
+    const: external_exports.string(),
+    title: external_exports.string()
   })),
-  default: string2().optional()
+  default: external_exports.string().optional()
 });
-var LegacyTitledEnumSchemaSchema = object2({
-  type: literal("string"),
-  title: string2().optional(),
-  description: string2().optional(),
-  enum: array(string2()),
-  enumNames: array(string2()).optional(),
-  default: string2().optional()
+var LegacyTitledEnumSchemaSchema = external_exports.object({
+  type: external_exports.literal("string"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  enum: external_exports.array(external_exports.string()),
+  enumNames: external_exports.array(external_exports.string()).optional(),
+  default: external_exports.string().optional()
 });
-var SingleSelectEnumSchemaSchema = union([UntitledSingleSelectEnumSchemaSchema, TitledSingleSelectEnumSchemaSchema]);
-var UntitledMultiSelectEnumSchemaSchema = object2({
-  type: literal("array"),
-  title: string2().optional(),
-  description: string2().optional(),
-  minItems: number2().optional(),
-  maxItems: number2().optional(),
-  items: object2({
-    type: literal("string"),
-    enum: array(string2())
+var SingleSelectEnumSchemaSchema = external_exports.union([UntitledSingleSelectEnumSchemaSchema, TitledSingleSelectEnumSchemaSchema]);
+var UntitledMultiSelectEnumSchemaSchema = external_exports.object({
+  type: external_exports.literal("array"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  minItems: external_exports.number().optional(),
+  maxItems: external_exports.number().optional(),
+  items: external_exports.object({
+    type: external_exports.literal("string"),
+    enum: external_exports.array(external_exports.string())
   }),
-  default: array(string2()).optional()
+  default: external_exports.array(external_exports.string()).optional()
 });
-var TitledMultiSelectEnumSchemaSchema = object2({
-  type: literal("array"),
-  title: string2().optional(),
-  description: string2().optional(),
-  minItems: number2().optional(),
-  maxItems: number2().optional(),
-  items: object2({
-    anyOf: array(object2({
-      const: string2(),
-      title: string2()
+var TitledMultiSelectEnumSchemaSchema = external_exports.object({
+  type: external_exports.literal("array"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional(),
+  minItems: external_exports.number().optional(),
+  maxItems: external_exports.number().optional(),
+  items: external_exports.object({
+    anyOf: external_exports.array(external_exports.object({
+      const: external_exports.string(),
+      title: external_exports.string()
     }))
   }),
-  default: array(string2()).optional()
+  default: external_exports.array(external_exports.string()).optional()
 });
-var MultiSelectEnumSchemaSchema = union([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema]);
-var EnumSchemaSchema = union([LegacyTitledEnumSchemaSchema, SingleSelectEnumSchemaSchema, MultiSelectEnumSchemaSchema]);
-var PrimitiveSchemaDefinitionSchema = union([EnumSchemaSchema, BooleanSchemaSchema, StringSchemaSchema, NumberSchemaSchema]);
-var ElicitRequestFormParamsSchema = TaskAugmentedRequestParamsSchema.extend({
+var MultiSelectEnumSchemaSchema = external_exports.union([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema]);
+var EnumSchemaSchema = external_exports.union([LegacyTitledEnumSchemaSchema, SingleSelectEnumSchemaSchema, MultiSelectEnumSchemaSchema]);
+var PrimitiveSchemaDefinitionSchema = external_exports.union([EnumSchemaSchema, BooleanSchemaSchema, StringSchemaSchema, NumberSchemaSchema]);
+var ElicitRequestParamsSchema = BaseRequestParamsSchema.extend({
   /**
-   * The elicitation mode.
-   *
-   * Optional for backward compatibility. Clients MUST treat missing mode as "form".
+   * The message to present to the user.
    */
-  mode: literal("form").optional(),
-  /**
-   * The message to present to the user describing what information is being requested.
-   */
-  message: string2(),
+  message: external_exports.string(),
   /**
    * A restricted subset of JSON Schema.
    * Only top-level properties are allowed, without nesting.
    */
-  requestedSchema: object2({
-    type: literal("object"),
-    properties: record(string2(), PrimitiveSchemaDefinitionSchema),
-    required: array(string2()).optional()
+  requestedSchema: external_exports.object({
+    type: external_exports.literal("object"),
+    properties: external_exports.record(external_exports.string(), PrimitiveSchemaDefinitionSchema),
+    required: external_exports.array(external_exports.string()).optional()
   })
 });
-var ElicitRequestURLParamsSchema = TaskAugmentedRequestParamsSchema.extend({
-  /**
-   * The elicitation mode.
-   */
-  mode: literal("url"),
-  /**
-   * The message to present to the user explaining why the interaction is needed.
-   */
-  message: string2(),
-  /**
-   * The ID of the elicitation, which must be unique within the context of the server.
-   * The client MUST treat this ID as an opaque value.
-   */
-  elicitationId: string2(),
-  /**
-   * The URL that the user should navigate to.
-   */
-  url: string2().url()
-});
-var ElicitRequestParamsSchema = union([ElicitRequestFormParamsSchema, ElicitRequestURLParamsSchema]);
 var ElicitRequestSchema = RequestSchema.extend({
-  method: literal("elicitation/create"),
+  method: external_exports.literal("elicitation/create"),
   params: ElicitRequestParamsSchema
-});
-var ElicitationCompleteNotificationParamsSchema = NotificationsParamsSchema.extend({
-  /**
-   * The ID of the elicitation that completed.
-   */
-  elicitationId: string2()
-});
-var ElicitationCompleteNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/elicitation/complete"),
-  params: ElicitationCompleteNotificationParamsSchema
 });
 var ElicitResultSchema = ResultSchema.extend({
   /**
@@ -18992,110 +13863,104 @@ var ElicitResultSchema = ResultSchema.extend({
    * - "decline": User explicitly decline the action
    * - "cancel": User dismissed without making an explicit choice
    */
-  action: _enum(["accept", "decline", "cancel"]),
+  action: external_exports.enum(["accept", "decline", "cancel"]),
   /**
    * The submitted form data, only present when action is "accept".
    * Contains values matching the requested schema.
-   * Per MCP spec, content is "typically omitted" for decline/cancel actions.
-   * We normalize null to undefined for leniency while maintaining type compatibility.
    */
-  content: preprocess((val) => val === null ? void 0 : val, record(string2(), union([string2(), number2(), boolean2(), array(string2())])).optional())
+  content: external_exports.record(external_exports.union([external_exports.string(), external_exports.number(), external_exports.boolean(), external_exports.array(external_exports.string())])).optional()
 });
-var ResourceTemplateReferenceSchema = object2({
-  type: literal("ref/resource"),
+var ResourceTemplateReferenceSchema = external_exports.object({
+  type: external_exports.literal("ref/resource"),
   /**
    * The URI or URI template of the resource.
    */
-  uri: string2()
+  uri: external_exports.string()
 });
-var PromptReferenceSchema = object2({
-  type: literal("ref/prompt"),
+var PromptReferenceSchema = external_exports.object({
+  type: external_exports.literal("ref/prompt"),
   /**
    * The name of the prompt or prompt template
    */
-  name: string2()
+  name: external_exports.string()
 });
 var CompleteRequestParamsSchema = BaseRequestParamsSchema.extend({
-  ref: union([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
+  ref: external_exports.union([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
   /**
    * The argument's information
    */
-  argument: object2({
+  argument: external_exports.object({
     /**
      * The name of the argument
      */
-    name: string2(),
+    name: external_exports.string(),
     /**
      * The value of the argument to use for completion matching.
      */
-    value: string2()
+    value: external_exports.string()
   }),
-  context: object2({
+  context: external_exports.object({
     /**
      * Previously-resolved variables in a URI template or prompt.
      */
-    arguments: record(string2(), string2()).optional()
+    arguments: external_exports.record(external_exports.string(), external_exports.string()).optional()
   }).optional()
 });
 var CompleteRequestSchema = RequestSchema.extend({
-  method: literal("completion/complete"),
+  method: external_exports.literal("completion/complete"),
   params: CompleteRequestParamsSchema
 });
 function assertCompleteRequestPrompt(request) {
   if (request.params.ref.type !== "ref/prompt") {
     throw new TypeError(`Expected CompleteRequestPrompt, but got ${request.params.ref.type}`);
   }
-  void request;
 }
 function assertCompleteRequestResourceTemplate(request) {
   if (request.params.ref.type !== "ref/resource") {
     throw new TypeError(`Expected CompleteRequestResourceTemplate, but got ${request.params.ref.type}`);
   }
-  void request;
 }
 var CompleteResultSchema = ResultSchema.extend({
-  completion: looseObject({
+  completion: external_exports.object({
     /**
      * An array of completion values. Must not exceed 100 items.
      */
-    values: array(string2()).max(100),
+    values: external_exports.array(external_exports.string()).max(100),
     /**
      * The total number of completion options available. This can exceed the number of values actually sent in the response.
      */
-    total: optional(number2().int()),
+    total: external_exports.optional(external_exports.number().int()),
     /**
      * Indicates whether there are additional completion options beyond those provided in the current response, even if the exact total is unknown.
      */
-    hasMore: optional(boolean2())
-  })
+    hasMore: external_exports.optional(external_exports.boolean())
+  }).passthrough()
 });
-var RootSchema = object2({
+var RootSchema = external_exports.object({
   /**
    * The URI identifying the root. This *must* start with file:// for now.
    */
-  uri: string2().startsWith("file://"),
+  uri: external_exports.string().startsWith("file://"),
   /**
    * An optional name for the root.
    */
-  name: string2().optional(),
+  name: external_exports.string().optional(),
   /**
    * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
    * for notes on _meta usage.
    */
-  _meta: record(string2(), unknown()).optional()
+  _meta: external_exports.record(external_exports.string(), external_exports.unknown()).optional()
 });
 var ListRootsRequestSchema = RequestSchema.extend({
-  method: literal("roots/list"),
-  params: BaseRequestParamsSchema.optional()
+  method: external_exports.literal("roots/list")
 });
 var ListRootsResultSchema = ResultSchema.extend({
-  roots: array(RootSchema)
+  roots: external_exports.array(RootSchema)
 });
 var RootsListChangedNotificationSchema = NotificationSchema.extend({
-  method: literal("notifications/roots/list_changed"),
-  params: NotificationsParamsSchema.optional()
+  method: external_exports.literal("notifications/roots/list_changed")
 });
-var ClientRequestSchema = union([
+var ClientRequestSchema = external_exports.union([
   PingRequestSchema,
   InitializeRequestSchema,
   CompleteRequestSchema,
@@ -19108,51 +13973,26 @@ var ClientRequestSchema = union([
   SubscribeRequestSchema,
   UnsubscribeRequestSchema,
   CallToolRequestSchema,
-  ListToolsRequestSchema,
-  GetTaskRequestSchema,
-  GetTaskPayloadRequestSchema,
-  ListTasksRequestSchema,
-  CancelTaskRequestSchema
+  ListToolsRequestSchema
 ]);
-var ClientNotificationSchema = union([
+var ClientNotificationSchema = external_exports.union([
   CancelledNotificationSchema,
   ProgressNotificationSchema,
   InitializedNotificationSchema,
-  RootsListChangedNotificationSchema,
-  TaskStatusNotificationSchema
+  RootsListChangedNotificationSchema
 ]);
-var ClientResultSchema = union([
-  EmptyResultSchema,
-  CreateMessageResultSchema,
-  CreateMessageResultWithToolsSchema,
-  ElicitResultSchema,
-  ListRootsResultSchema,
-  GetTaskResultSchema,
-  ListTasksResultSchema,
-  CreateTaskResultSchema
-]);
-var ServerRequestSchema = union([
-  PingRequestSchema,
-  CreateMessageRequestSchema,
-  ElicitRequestSchema,
-  ListRootsRequestSchema,
-  GetTaskRequestSchema,
-  GetTaskPayloadRequestSchema,
-  ListTasksRequestSchema,
-  CancelTaskRequestSchema
-]);
-var ServerNotificationSchema = union([
+var ClientResultSchema = external_exports.union([EmptyResultSchema, CreateMessageResultSchema, ElicitResultSchema, ListRootsResultSchema]);
+var ServerRequestSchema = external_exports.union([PingRequestSchema, CreateMessageRequestSchema, ElicitRequestSchema, ListRootsRequestSchema]);
+var ServerNotificationSchema = external_exports.union([
   CancelledNotificationSchema,
   ProgressNotificationSchema,
   LoggingMessageNotificationSchema,
   ResourceUpdatedNotificationSchema,
   ResourceListChangedNotificationSchema,
   ToolListChangedNotificationSchema,
-  PromptListChangedNotificationSchema,
-  TaskStatusNotificationSchema,
-  ElicitationCompleteNotificationSchema
+  PromptListChangedNotificationSchema
 ]);
-var ServerResultSchema = union([
+var ServerResultSchema = external_exports.union([
   EmptyResultSchema,
   InitializeResultSchema,
   CompleteResultSchema,
@@ -19162,47 +14002,696 @@ var ServerResultSchema = union([
   ListResourceTemplatesResultSchema,
   ReadResourceResultSchema,
   CallToolResultSchema,
-  ListToolsResultSchema,
-  GetTaskResultSchema,
-  ListTasksResultSchema,
-  CreateTaskResultSchema
+  ListToolsResultSchema
 ]);
-var McpError = class _McpError extends Error {
+var McpError = class extends Error {
   constructor(code, message, data) {
     super(`MCP error ${code}: ${message}`);
     this.code = code;
     this.data = data;
     this.name = "McpError";
   }
-  /**
-   * Factory method to create the appropriate error type based on the error code and data
-   */
-  static fromError(code, message, data) {
-    if (code === ErrorCode.UrlElicitationRequired && data) {
-      const errorData = data;
-      if (errorData.elicitations) {
-        return new UrlElicitationRequiredError(errorData.elicitations, message);
-      }
-    }
-    return new _McpError(code, message, data);
-  }
 };
-var UrlElicitationRequiredError = class extends McpError {
-  constructor(elicitations, message = `URL elicitation${elicitations.length > 1 ? "s" : ""} required`) {
-    super(ErrorCode.UrlElicitationRequired, message, {
-      elicitations
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
+var DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4;
+var Protocol = class {
+  constructor(_options) {
+    this._options = _options;
+    this._requestMessageId = 0;
+    this._requestHandlers = /* @__PURE__ */ new Map();
+    this._requestHandlerAbortControllers = /* @__PURE__ */ new Map();
+    this._notificationHandlers = /* @__PURE__ */ new Map();
+    this._responseHandlers = /* @__PURE__ */ new Map();
+    this._progressHandlers = /* @__PURE__ */ new Map();
+    this._timeoutInfo = /* @__PURE__ */ new Map();
+    this._pendingDebouncedNotifications = /* @__PURE__ */ new Set();
+    this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
+      const controller = this._requestHandlerAbortControllers.get(notification.params.requestId);
+      controller === null || controller === void 0 ? void 0 : controller.abort(notification.params.reason);
+    });
+    this.setNotificationHandler(ProgressNotificationSchema, (notification) => {
+      this._onprogress(notification);
+    });
+    this.setRequestHandler(
+      PingRequestSchema,
+      // Automatic pong by default.
+      (_request) => ({})
+    );
+  }
+  _setupTimeout(messageId, timeout, maxTotalTimeout, onTimeout, resetTimeoutOnProgress = false) {
+    this._timeoutInfo.set(messageId, {
+      timeoutId: setTimeout(onTimeout, timeout),
+      startTime: Date.now(),
+      timeout,
+      maxTotalTimeout,
+      resetTimeoutOnProgress,
+      onTimeout
     });
   }
-  get elicitations() {
+  _resetTimeout(messageId) {
+    const info = this._timeoutInfo.get(messageId);
+    if (!info)
+      return false;
+    const totalElapsed = Date.now() - info.startTime;
+    if (info.maxTotalTimeout && totalElapsed >= info.maxTotalTimeout) {
+      this._timeoutInfo.delete(messageId);
+      throw new McpError(ErrorCode.RequestTimeout, "Maximum total timeout exceeded", {
+        maxTotalTimeout: info.maxTotalTimeout,
+        totalElapsed
+      });
+    }
+    clearTimeout(info.timeoutId);
+    info.timeoutId = setTimeout(info.onTimeout, info.timeout);
+    return true;
+  }
+  _cleanupTimeout(messageId) {
+    const info = this._timeoutInfo.get(messageId);
+    if (info) {
+      clearTimeout(info.timeoutId);
+      this._timeoutInfo.delete(messageId);
+    }
+  }
+  /**
+   * Attaches to the given transport, starts it, and starts listening for messages.
+   *
+   * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
+   */
+  async connect(transport) {
+    var _a, _b, _c;
+    this._transport = transport;
+    const _onclose = (_a = this.transport) === null || _a === void 0 ? void 0 : _a.onclose;
+    this._transport.onclose = () => {
+      _onclose === null || _onclose === void 0 ? void 0 : _onclose();
+      this._onclose();
+    };
+    const _onerror = (_b = this.transport) === null || _b === void 0 ? void 0 : _b.onerror;
+    this._transport.onerror = (error) => {
+      _onerror === null || _onerror === void 0 ? void 0 : _onerror(error);
+      this._onerror(error);
+    };
+    const _onmessage = (_c = this._transport) === null || _c === void 0 ? void 0 : _c.onmessage;
+    this._transport.onmessage = (message, extra) => {
+      _onmessage === null || _onmessage === void 0 ? void 0 : _onmessage(message, extra);
+      if (isJSONRPCResponse(message) || isJSONRPCError(message)) {
+        this._onresponse(message);
+      } else if (isJSONRPCRequest(message)) {
+        this._onrequest(message, extra);
+      } else if (isJSONRPCNotification(message)) {
+        this._onnotification(message);
+      } else {
+        this._onerror(new Error(`Unknown message type: ${JSON.stringify(message)}`));
+      }
+    };
+    await this._transport.start();
+  }
+  _onclose() {
     var _a;
-    return ((_a = this.data) == null ? void 0 : _a.elicitations) ?? [];
+    const responseHandlers = this._responseHandlers;
+    this._responseHandlers = /* @__PURE__ */ new Map();
+    this._progressHandlers.clear();
+    this._pendingDebouncedNotifications.clear();
+    this._transport = void 0;
+    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
+    const error = new McpError(ErrorCode.ConnectionClosed, "Connection closed");
+    for (const handler of responseHandlers.values()) {
+      handler(error);
+    }
+  }
+  _onerror(error) {
+    var _a;
+    (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
+  }
+  _onnotification(notification) {
+    var _a;
+    const handler = (_a = this._notificationHandlers.get(notification.method)) !== null && _a !== void 0 ? _a : this.fallbackNotificationHandler;
+    if (handler === void 0) {
+      return;
+    }
+    Promise.resolve().then(() => handler(notification)).catch((error) => this._onerror(new Error(`Uncaught error in notification handler: ${error}`)));
+  }
+  _onrequest(request, extra) {
+    var _a, _b;
+    const handler = (_a = this._requestHandlers.get(request.method)) !== null && _a !== void 0 ? _a : this.fallbackRequestHandler;
+    const capturedTransport = this._transport;
+    if (handler === void 0) {
+      capturedTransport === null || capturedTransport === void 0 ? void 0 : capturedTransport.send({
+        jsonrpc: "2.0",
+        id: request.id,
+        error: {
+          code: ErrorCode.MethodNotFound,
+          message: "Method not found"
+        }
+      }).catch((error) => this._onerror(new Error(`Failed to send an error response: ${error}`)));
+      return;
+    }
+    const abortController = new AbortController();
+    this._requestHandlerAbortControllers.set(request.id, abortController);
+    const fullExtra = {
+      signal: abortController.signal,
+      sessionId: capturedTransport === null || capturedTransport === void 0 ? void 0 : capturedTransport.sessionId,
+      _meta: (_b = request.params) === null || _b === void 0 ? void 0 : _b._meta,
+      sendNotification: (notification) => this.notification(notification, { relatedRequestId: request.id }),
+      sendRequest: (r, resultSchema, options) => this.request(r, resultSchema, { ...options, relatedRequestId: request.id }),
+      authInfo: extra === null || extra === void 0 ? void 0 : extra.authInfo,
+      requestId: request.id,
+      requestInfo: extra === null || extra === void 0 ? void 0 : extra.requestInfo
+    };
+    Promise.resolve().then(() => handler(request, fullExtra)).then((result) => {
+      if (abortController.signal.aborted) {
+        return;
+      }
+      return capturedTransport === null || capturedTransport === void 0 ? void 0 : capturedTransport.send({
+        result,
+        jsonrpc: "2.0",
+        id: request.id
+      });
+    }, (error) => {
+      var _a2;
+      if (abortController.signal.aborted) {
+        return;
+      }
+      return capturedTransport === null || capturedTransport === void 0 ? void 0 : capturedTransport.send({
+        jsonrpc: "2.0",
+        id: request.id,
+        error: {
+          code: Number.isSafeInteger(error["code"]) ? error["code"] : ErrorCode.InternalError,
+          message: (_a2 = error.message) !== null && _a2 !== void 0 ? _a2 : "Internal error"
+        }
+      });
+    }).catch((error) => this._onerror(new Error(`Failed to send response: ${error}`))).finally(() => {
+      this._requestHandlerAbortControllers.delete(request.id);
+    });
+  }
+  _onprogress(notification) {
+    const { progressToken, ...params } = notification.params;
+    const messageId = Number(progressToken);
+    const handler = this._progressHandlers.get(messageId);
+    if (!handler) {
+      this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
+      return;
+    }
+    const responseHandler = this._responseHandlers.get(messageId);
+    const timeoutInfo = this._timeoutInfo.get(messageId);
+    if (timeoutInfo && responseHandler && timeoutInfo.resetTimeoutOnProgress) {
+      try {
+        this._resetTimeout(messageId);
+      } catch (error) {
+        responseHandler(error);
+        return;
+      }
+    }
+    handler(params);
+  }
+  _onresponse(response) {
+    const messageId = Number(response.id);
+    const handler = this._responseHandlers.get(messageId);
+    if (handler === void 0) {
+      this._onerror(new Error(`Received a response for an unknown message ID: ${JSON.stringify(response)}`));
+      return;
+    }
+    this._responseHandlers.delete(messageId);
+    this._progressHandlers.delete(messageId);
+    this._cleanupTimeout(messageId);
+    if (isJSONRPCResponse(response)) {
+      handler(response);
+    } else {
+      const error = new McpError(response.error.code, response.error.message, response.error.data);
+      handler(error);
+    }
+  }
+  get transport() {
+    return this._transport;
+  }
+  /**
+   * Closes the connection.
+   */
+  async close() {
+    var _a;
+    await ((_a = this._transport) === null || _a === void 0 ? void 0 : _a.close());
+  }
+  /**
+   * Sends a request and wait for a response.
+   *
+   * Do not use this method to emit notifications! Use notification() instead.
+   */
+  request(request, resultSchema, options) {
+    const { relatedRequestId, resumptionToken, onresumptiontoken } = options !== null && options !== void 0 ? options : {};
+    return new Promise((resolve, reject) => {
+      var _a, _b, _c, _d, _e, _f;
+      if (!this._transport) {
+        reject(new Error("Not connected"));
+        return;
+      }
+      if (((_a = this._options) === null || _a === void 0 ? void 0 : _a.enforceStrictCapabilities) === true) {
+        this.assertCapabilityForMethod(request.method);
+      }
+      (_b = options === null || options === void 0 ? void 0 : options.signal) === null || _b === void 0 ? void 0 : _b.throwIfAborted();
+      const messageId = this._requestMessageId++;
+      const jsonrpcRequest = {
+        ...request,
+        jsonrpc: "2.0",
+        id: messageId
+      };
+      if (options === null || options === void 0 ? void 0 : options.onprogress) {
+        this._progressHandlers.set(messageId, options.onprogress);
+        jsonrpcRequest.params = {
+          ...request.params,
+          _meta: {
+            ...((_c = request.params) === null || _c === void 0 ? void 0 : _c._meta) || {},
+            progressToken: messageId
+          }
+        };
+      }
+      const cancel = (reason) => {
+        var _a2;
+        this._responseHandlers.delete(messageId);
+        this._progressHandlers.delete(messageId);
+        this._cleanupTimeout(messageId);
+        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
+          jsonrpc: "2.0",
+          method: "notifications/cancelled",
+          params: {
+            requestId: messageId,
+            reason: String(reason)
+          }
+        }, { relatedRequestId, resumptionToken, onresumptiontoken }).catch((error) => this._onerror(new Error(`Failed to send cancellation: ${error}`)));
+        reject(reason);
+      };
+      this._responseHandlers.set(messageId, (response) => {
+        var _a2;
+        if ((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.aborted) {
+          return;
+        }
+        if (response instanceof Error) {
+          return reject(response);
+        }
+        try {
+          const result = resultSchema.parse(response.result);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      (_d = options === null || options === void 0 ? void 0 : options.signal) === null || _d === void 0 ? void 0 : _d.addEventListener("abort", () => {
+        var _a2;
+        cancel((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.reason);
+      });
+      const timeout = (_e = options === null || options === void 0 ? void 0 : options.timeout) !== null && _e !== void 0 ? _e : DEFAULT_REQUEST_TIMEOUT_MSEC;
+      const timeoutHandler = () => cancel(new McpError(ErrorCode.RequestTimeout, "Request timed out", { timeout }));
+      this._setupTimeout(messageId, timeout, options === null || options === void 0 ? void 0 : options.maxTotalTimeout, timeoutHandler, (_f = options === null || options === void 0 ? void 0 : options.resetTimeoutOnProgress) !== null && _f !== void 0 ? _f : false);
+      this._transport.send(jsonrpcRequest, { relatedRequestId, resumptionToken, onresumptiontoken }).catch((error) => {
+        this._cleanupTimeout(messageId);
+        reject(error);
+      });
+    });
+  }
+  /**
+   * Emits a notification, which is a one-way message that does not expect a response.
+   */
+  async notification(notification, options) {
+    var _a, _b;
+    if (!this._transport) {
+      throw new Error("Not connected");
+    }
+    this.assertNotificationCapability(notification.method);
+    const debouncedMethods = (_b = (_a = this._options) === null || _a === void 0 ? void 0 : _a.debouncedNotificationMethods) !== null && _b !== void 0 ? _b : [];
+    const canDebounce = debouncedMethods.includes(notification.method) && !notification.params && !(options === null || options === void 0 ? void 0 : options.relatedRequestId);
+    if (canDebounce) {
+      if (this._pendingDebouncedNotifications.has(notification.method)) {
+        return;
+      }
+      this._pendingDebouncedNotifications.add(notification.method);
+      Promise.resolve().then(() => {
+        var _a2;
+        this._pendingDebouncedNotifications.delete(notification.method);
+        if (!this._transport) {
+          return;
+        }
+        const jsonrpcNotification2 = {
+          ...notification,
+          jsonrpc: "2.0"
+        };
+        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send(jsonrpcNotification2, options).catch((error) => this._onerror(error));
+      });
+      return;
+    }
+    const jsonrpcNotification = {
+      ...notification,
+      jsonrpc: "2.0"
+    };
+    await this._transport.send(jsonrpcNotification, options);
+  }
+  /**
+   * Registers a handler to invoke when this protocol object receives a request with the given method.
+   *
+   * Note that this will replace any previous request handler for the same method.
+   */
+  setRequestHandler(requestSchema, handler) {
+    const method = requestSchema.shape.method.value;
+    this.assertRequestHandlerCapability(method);
+    this._requestHandlers.set(method, (request, extra) => {
+      return Promise.resolve(handler(requestSchema.parse(request), extra));
+    });
+  }
+  /**
+   * Removes the request handler for the given method.
+   */
+  removeRequestHandler(method) {
+    this._requestHandlers.delete(method);
+  }
+  /**
+   * Asserts that a request handler has not already been set for the given method, in preparation for a new one being automatically installed.
+   */
+  assertCanSetRequestHandler(method) {
+    if (this._requestHandlers.has(method)) {
+      throw new Error(`A request handler for ${method} already exists, which would be overridden`);
+    }
+  }
+  /**
+   * Registers a handler to invoke when this protocol object receives a notification with the given method.
+   *
+   * Note that this will replace any previous notification handler for the same method.
+   */
+  setNotificationHandler(notificationSchema, handler) {
+    this._notificationHandlers.set(notificationSchema.shape.method.value, (notification) => Promise.resolve(handler(notificationSchema.parse(notification))));
+  }
+  /**
+   * Removes the notification handler for the given method.
+   */
+  removeNotificationHandler(method) {
+    this._notificationHandlers.delete(method);
+  }
+};
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function mergeCapabilities(base, additional) {
+  const result = { ...base };
+  for (const key in additional) {
+    const k = key;
+    const addValue = additional[k];
+    if (addValue === void 0)
+      continue;
+    const baseValue = result[k];
+    if (isPlainObject(baseValue) && isPlainObject(addValue)) {
+      result[k] = { ...baseValue, ...addValue };
+    } else {
+      result[k] = addValue;
+    }
+  }
+  return result;
+}
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/validation/ajv-provider.js
+var import_ajv = __toESM(require_ajv(), 1);
+var import_ajv_formats = __toESM(require_dist(), 1);
+function createDefaultAjvInstance() {
+  const ajv = new import_ajv.Ajv({
+    strict: false,
+    validateFormats: true,
+    validateSchema: false,
+    allErrors: true
+  });
+  const addFormats = import_ajv_formats.default;
+  addFormats(ajv);
+  return ajv;
+}
+var AjvJsonSchemaValidator = class {
+  /**
+   * Create an AJV validator
+   *
+   * @param ajv - Optional pre-configured AJV instance. If not provided, a default instance will be created.
+   *
+   * @example
+   * ```typescript
+   * // Use default configuration (recommended for most cases)
+   * import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+   * const validator = new AjvJsonSchemaValidator();
+   *
+   * // Or provide custom AJV instance for advanced configuration
+   * import { Ajv } from 'ajv';
+   * import addFormats from 'ajv-formats';
+   *
+   * const ajv = new Ajv({ validateFormats: true });
+   * addFormats(ajv);
+   * const validator = new AjvJsonSchemaValidator(ajv);
+   * ```
+   */
+  constructor(ajv) {
+    this._ajv = ajv !== null && ajv !== void 0 ? ajv : createDefaultAjvInstance();
+  }
+  /**
+   * Create a validator for the given JSON Schema
+   *
+   * The validator is compiled once and can be reused multiple times.
+   * If the schema has an $id, it will be cached by AJV automatically.
+   *
+   * @param schema - Standard JSON Schema object
+   * @returns A validator function that validates input data
+   */
+  getValidator(schema) {
+    var _a;
+    const ajvValidator = "$id" in schema && typeof schema.$id === "string" ? (_a = this._ajv.getSchema(schema.$id)) !== null && _a !== void 0 ? _a : this._ajv.compile(schema) : this._ajv.compile(schema);
+    return (input) => {
+      const valid = ajvValidator(input);
+      if (valid) {
+        return {
+          valid: true,
+          data: input,
+          errorMessage: void 0
+        };
+      } else {
+        return {
+          valid: false,
+          data: void 0,
+          errorMessage: this._ajv.errorsText(ajvValidator.errors)
+        };
+      }
+    };
   }
 };
 
-// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/interfaces.js
-function isTerminal(status) {
-  return status === "completed" || status === "failed" || status === "cancelled";
-}
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
+var Server = class extends Protocol {
+  /**
+   * Initializes this server with the given name and version information.
+   */
+  constructor(_serverInfo, options) {
+    var _a, _b;
+    super(options);
+    this._serverInfo = _serverInfo;
+    this._loggingLevels = /* @__PURE__ */ new Map();
+    this.LOG_LEVEL_SEVERITY = new Map(LoggingLevelSchema.options.map((level, index) => [level, index]));
+    this.isMessageIgnored = (level, sessionId) => {
+      const currentLevel = this._loggingLevels.get(sessionId);
+      return currentLevel ? this.LOG_LEVEL_SEVERITY.get(level) < this.LOG_LEVEL_SEVERITY.get(currentLevel) : false;
+    };
+    this._capabilities = (_a = options === null || options === void 0 ? void 0 : options.capabilities) !== null && _a !== void 0 ? _a : {};
+    this._instructions = options === null || options === void 0 ? void 0 : options.instructions;
+    this._jsonSchemaValidator = (_b = options === null || options === void 0 ? void 0 : options.jsonSchemaValidator) !== null && _b !== void 0 ? _b : new AjvJsonSchemaValidator();
+    this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
+    this.setNotificationHandler(InitializedNotificationSchema, () => {
+      var _a2;
+      return (_a2 = this.oninitialized) === null || _a2 === void 0 ? void 0 : _a2.call(this);
+    });
+    if (this._capabilities.logging) {
+      this.setRequestHandler(SetLevelRequestSchema, async (request, extra) => {
+        var _a2;
+        const transportSessionId = extra.sessionId || ((_a2 = extra.requestInfo) === null || _a2 === void 0 ? void 0 : _a2.headers["mcp-session-id"]) || void 0;
+        const { level } = request.params;
+        const parseResult = LoggingLevelSchema.safeParse(level);
+        if (parseResult.success) {
+          this._loggingLevels.set(transportSessionId, parseResult.data);
+        }
+        return {};
+      });
+    }
+  }
+  /**
+   * Registers new capabilities. This can only be called before connecting to a transport.
+   *
+   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
+   */
+  registerCapabilities(capabilities) {
+    if (this.transport) {
+      throw new Error("Cannot register capabilities after connecting to transport");
+    }
+    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
+  }
+  assertCapabilityForMethod(method) {
+    var _a, _b, _c;
+    switch (method) {
+      case "sampling/createMessage":
+        if (!((_a = this._clientCapabilities) === null || _a === void 0 ? void 0 : _a.sampling)) {
+          throw new Error(`Client does not support sampling (required for ${method})`);
+        }
+        break;
+      case "elicitation/create":
+        if (!((_b = this._clientCapabilities) === null || _b === void 0 ? void 0 : _b.elicitation)) {
+          throw new Error(`Client does not support elicitation (required for ${method})`);
+        }
+        break;
+      case "roots/list":
+        if (!((_c = this._clientCapabilities) === null || _c === void 0 ? void 0 : _c.roots)) {
+          throw new Error(`Client does not support listing roots (required for ${method})`);
+        }
+        break;
+      case "ping":
+        break;
+    }
+  }
+  assertNotificationCapability(method) {
+    switch (method) {
+      case "notifications/message":
+        if (!this._capabilities.logging) {
+          throw new Error(`Server does not support logging (required for ${method})`);
+        }
+        break;
+      case "notifications/resources/updated":
+      case "notifications/resources/list_changed":
+        if (!this._capabilities.resources) {
+          throw new Error(`Server does not support notifying about resources (required for ${method})`);
+        }
+        break;
+      case "notifications/tools/list_changed":
+        if (!this._capabilities.tools) {
+          throw new Error(`Server does not support notifying of tool list changes (required for ${method})`);
+        }
+        break;
+      case "notifications/prompts/list_changed":
+        if (!this._capabilities.prompts) {
+          throw new Error(`Server does not support notifying of prompt list changes (required for ${method})`);
+        }
+        break;
+      case "notifications/cancelled":
+        break;
+      case "notifications/progress":
+        break;
+    }
+  }
+  assertRequestHandlerCapability(method) {
+    switch (method) {
+      case "completion/complete":
+        if (!this._capabilities.completions) {
+          throw new Error(`Server does not support completions (required for ${method})`);
+        }
+        break;
+      case "logging/setLevel":
+        if (!this._capabilities.logging) {
+          throw new Error(`Server does not support logging (required for ${method})`);
+        }
+        break;
+      case "prompts/get":
+      case "prompts/list":
+        if (!this._capabilities.prompts) {
+          throw new Error(`Server does not support prompts (required for ${method})`);
+        }
+        break;
+      case "resources/list":
+      case "resources/templates/list":
+      case "resources/read":
+        if (!this._capabilities.resources) {
+          throw new Error(`Server does not support resources (required for ${method})`);
+        }
+        break;
+      case "tools/call":
+      case "tools/list":
+        if (!this._capabilities.tools) {
+          throw new Error(`Server does not support tools (required for ${method})`);
+        }
+        break;
+      case "ping":
+      case "initialize":
+        break;
+    }
+  }
+  async _oninitialize(request) {
+    const requestedVersion = request.params.protocolVersion;
+    this._clientCapabilities = request.params.capabilities;
+    this._clientVersion = request.params.clientInfo;
+    const protocolVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion) ? requestedVersion : LATEST_PROTOCOL_VERSION;
+    return {
+      protocolVersion,
+      capabilities: this.getCapabilities(),
+      serverInfo: this._serverInfo,
+      ...this._instructions && { instructions: this._instructions }
+    };
+  }
+  /**
+   * After initialization has completed, this will be populated with the client's reported capabilities.
+   */
+  getClientCapabilities() {
+    return this._clientCapabilities;
+  }
+  /**
+   * After initialization has completed, this will be populated with information about the client's name and version.
+   */
+  getClientVersion() {
+    return this._clientVersion;
+  }
+  getCapabilities() {
+    return this._capabilities;
+  }
+  async ping() {
+    return this.request({ method: "ping" }, EmptyResultSchema);
+  }
+  async createMessage(params, options) {
+    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options);
+  }
+  async elicitInput(params, options) {
+    const result = await this.request({ method: "elicitation/create", params }, ElicitResultSchema, options);
+    if (result.action === "accept" && result.content && params.requestedSchema) {
+      try {
+        const validator = this._jsonSchemaValidator.getValidator(params.requestedSchema);
+        const validationResult = validator(result.content);
+        if (!validationResult.valid) {
+          throw new McpError(ErrorCode.InvalidParams, `Elicitation response content does not match requested schema: ${validationResult.errorMessage}`);
+        }
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(ErrorCode.InternalError, `Error validating elicitation response: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    return result;
+  }
+  async listRoots(params, options) {
+    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options);
+  }
+  /**
+   * Sends a logging message to the client, if connected.
+   * Note: You only need to send the parameters object, not the entire JSON RPC message
+   * @see LoggingMessageNotification
+   * @param params
+   * @param sessionId optional for stateless and backward compatibility
+   */
+  async sendLoggingMessage(params, sessionId) {
+    if (this._capabilities.logging) {
+      if (!this.isMessageIgnored(params.level, sessionId)) {
+        return this.notification({ method: "notifications/message", params });
+      }
+    }
+  }
+  async sendResourceUpdated(params) {
+    return this.notification({
+      method: "notifications/resources/updated",
+      params
+    });
+  }
+  async sendResourceListChanged() {
+    return this.notification({
+      method: "notifications/resources/list_changed"
+    });
+  }
+  async sendToolListChanged() {
+    return this.notification({ method: "notifications/tools/list_changed" });
+  }
+  async sendPromptListChanged() {
+    return this.notification({ method: "notifications/prompts/list_changed" });
+  }
+};
 
 // node_modules/zod-to-json-schema/dist/esm/Options.js
 var ignoreOverride = /* @__PURE__ */ Symbol("Let zodToJsonSchema decide on which parser to use");
@@ -19334,38 +14823,38 @@ function parseBigintDef(def, refs) {
   };
   if (!def.checks)
     return res;
-  for (const check2 of def.checks) {
-    switch (check2.kind) {
+  for (const check of def.checks) {
+    switch (check.kind) {
       case "min":
         if (refs.target === "jsonSchema7") {
-          if (check2.inclusive) {
-            setResponseValueAndErrors(res, "minimum", check2.value, check2.message, refs);
+          if (check.inclusive) {
+            setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
           } else {
-            setResponseValueAndErrors(res, "exclusiveMinimum", check2.value, check2.message, refs);
+            setResponseValueAndErrors(res, "exclusiveMinimum", check.value, check.message, refs);
           }
         } else {
-          if (!check2.inclusive) {
+          if (!check.inclusive) {
             res.exclusiveMinimum = true;
           }
-          setResponseValueAndErrors(res, "minimum", check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
         }
         break;
       case "max":
         if (refs.target === "jsonSchema7") {
-          if (check2.inclusive) {
-            setResponseValueAndErrors(res, "maximum", check2.value, check2.message, refs);
+          if (check.inclusive) {
+            setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
           } else {
-            setResponseValueAndErrors(res, "exclusiveMaximum", check2.value, check2.message, refs);
+            setResponseValueAndErrors(res, "exclusiveMaximum", check.value, check.message, refs);
           }
         } else {
-          if (!check2.inclusive) {
+          if (!check.inclusive) {
             res.exclusiveMaximum = true;
           }
-          setResponseValueAndErrors(res, "maximum", check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
         }
         break;
       case "multipleOf":
-        setResponseValueAndErrors(res, "multipleOf", check2.value, check2.message, refs);
+        setResponseValueAndErrors(res, "multipleOf", check.value, check.message, refs);
         break;
     }
   }
@@ -19421,15 +14910,15 @@ var integerDateParser = (def, refs) => {
   if (refs.target === "openApi3") {
     return res;
   }
-  for (const check2 of def.checks) {
-    switch (check2.kind) {
+  for (const check of def.checks) {
+    switch (check.kind) {
       case "min":
         setResponseValueAndErrors(
           res,
           "minimum",
-          check2.value,
+          check.value,
           // This is in milliseconds
-          check2.message,
+          check.message,
           refs
         );
         break;
@@ -19437,9 +14926,9 @@ var integerDateParser = (def, refs) => {
         setResponseValueAndErrors(
           res,
           "maximum",
-          check2.value,
+          check.value,
           // This is in milliseconds
-          check2.message,
+          check.message,
           refs
         );
         break;
@@ -19513,20 +15002,20 @@ function parseIntersectionDef(def, refs) {
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/literal.js
 function parseLiteralDef(def, refs) {
-  const parsedType2 = typeof def.value;
-  if (parsedType2 !== "bigint" && parsedType2 !== "number" && parsedType2 !== "boolean" && parsedType2 !== "string") {
+  const parsedType = typeof def.value;
+  if (parsedType !== "bigint" && parsedType !== "number" && parsedType !== "boolean" && parsedType !== "string") {
     return {
       type: Array.isArray(def.value) ? "array" : "object"
     };
   }
   if (refs.target === "openApi3") {
     return {
-      type: parsedType2 === "bigint" ? "integer" : parsedType2,
+      type: parsedType === "bigint" ? "integer" : parsedType,
       enum: [def.value]
     };
   }
   return {
-    type: parsedType2 === "bigint" ? "integer" : parsedType2,
+    type: parsedType === "bigint" ? "integer" : parsedType,
     const: def.value
   };
 }
@@ -19585,118 +15074,118 @@ function parseStringDef(def, refs) {
     type: "string"
   };
   if (def.checks) {
-    for (const check2 of def.checks) {
-      switch (check2.kind) {
+    for (const check of def.checks) {
+      switch (check.kind) {
         case "min":
-          setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number" ? Math.max(res.minLength, check2.value) : check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number" ? Math.max(res.minLength, check.value) : check.value, check.message, refs);
           break;
         case "max":
-          setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number" ? Math.min(res.maxLength, check2.value) : check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number" ? Math.min(res.maxLength, check.value) : check.value, check.message, refs);
           break;
         case "email":
           switch (refs.emailStrategy) {
             case "format:email":
-              addFormat(res, "email", check2.message, refs);
+              addFormat(res, "email", check.message, refs);
               break;
             case "format:idn-email":
-              addFormat(res, "idn-email", check2.message, refs);
+              addFormat(res, "idn-email", check.message, refs);
               break;
             case "pattern:zod":
-              addPattern(res, zodPatterns.email, check2.message, refs);
+              addPattern(res, zodPatterns.email, check.message, refs);
               break;
           }
           break;
         case "url":
-          addFormat(res, "uri", check2.message, refs);
+          addFormat(res, "uri", check.message, refs);
           break;
         case "uuid":
-          addFormat(res, "uuid", check2.message, refs);
+          addFormat(res, "uuid", check.message, refs);
           break;
         case "regex":
-          addPattern(res, check2.regex, check2.message, refs);
+          addPattern(res, check.regex, check.message, refs);
           break;
         case "cuid":
-          addPattern(res, zodPatterns.cuid, check2.message, refs);
+          addPattern(res, zodPatterns.cuid, check.message, refs);
           break;
         case "cuid2":
-          addPattern(res, zodPatterns.cuid2, check2.message, refs);
+          addPattern(res, zodPatterns.cuid2, check.message, refs);
           break;
         case "startsWith":
-          addPattern(res, RegExp(`^${escapeLiteralCheckValue(check2.value, refs)}`), check2.message, refs);
+          addPattern(res, RegExp(`^${escapeLiteralCheckValue(check.value, refs)}`), check.message, refs);
           break;
         case "endsWith":
-          addPattern(res, RegExp(`${escapeLiteralCheckValue(check2.value, refs)}$`), check2.message, refs);
+          addPattern(res, RegExp(`${escapeLiteralCheckValue(check.value, refs)}$`), check.message, refs);
           break;
         case "datetime":
-          addFormat(res, "date-time", check2.message, refs);
+          addFormat(res, "date-time", check.message, refs);
           break;
         case "date":
-          addFormat(res, "date", check2.message, refs);
+          addFormat(res, "date", check.message, refs);
           break;
         case "time":
-          addFormat(res, "time", check2.message, refs);
+          addFormat(res, "time", check.message, refs);
           break;
         case "duration":
-          addFormat(res, "duration", check2.message, refs);
+          addFormat(res, "duration", check.message, refs);
           break;
         case "length":
-          setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number" ? Math.max(res.minLength, check2.value) : check2.value, check2.message, refs);
-          setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number" ? Math.min(res.maxLength, check2.value) : check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number" ? Math.max(res.minLength, check.value) : check.value, check.message, refs);
+          setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number" ? Math.min(res.maxLength, check.value) : check.value, check.message, refs);
           break;
         case "includes": {
-          addPattern(res, RegExp(escapeLiteralCheckValue(check2.value, refs)), check2.message, refs);
+          addPattern(res, RegExp(escapeLiteralCheckValue(check.value, refs)), check.message, refs);
           break;
         }
         case "ip": {
-          if (check2.version !== "v6") {
-            addFormat(res, "ipv4", check2.message, refs);
+          if (check.version !== "v6") {
+            addFormat(res, "ipv4", check.message, refs);
           }
-          if (check2.version !== "v4") {
-            addFormat(res, "ipv6", check2.message, refs);
+          if (check.version !== "v4") {
+            addFormat(res, "ipv6", check.message, refs);
           }
           break;
         }
         case "base64url":
-          addPattern(res, zodPatterns.base64url, check2.message, refs);
+          addPattern(res, zodPatterns.base64url, check.message, refs);
           break;
         case "jwt":
-          addPattern(res, zodPatterns.jwt, check2.message, refs);
+          addPattern(res, zodPatterns.jwt, check.message, refs);
           break;
         case "cidr": {
-          if (check2.version !== "v6") {
-            addPattern(res, zodPatterns.ipv4Cidr, check2.message, refs);
+          if (check.version !== "v6") {
+            addPattern(res, zodPatterns.ipv4Cidr, check.message, refs);
           }
-          if (check2.version !== "v4") {
-            addPattern(res, zodPatterns.ipv6Cidr, check2.message, refs);
+          if (check.version !== "v4") {
+            addPattern(res, zodPatterns.ipv6Cidr, check.message, refs);
           }
           break;
         }
         case "emoji":
-          addPattern(res, zodPatterns.emoji(), check2.message, refs);
+          addPattern(res, zodPatterns.emoji(), check.message, refs);
           break;
         case "ulid": {
-          addPattern(res, zodPatterns.ulid, check2.message, refs);
+          addPattern(res, zodPatterns.ulid, check.message, refs);
           break;
         }
         case "base64": {
           switch (refs.base64Strategy) {
             case "format:binary": {
-              addFormat(res, "binary", check2.message, refs);
+              addFormat(res, "binary", check.message, refs);
               break;
             }
             case "contentEncoding:base64": {
-              setResponseValueAndErrors(res, "contentEncoding", "base64", check2.message, refs);
+              setResponseValueAndErrors(res, "contentEncoding", "base64", check.message, refs);
               break;
             }
             case "pattern:zod": {
-              addPattern(res, zodPatterns.base64, check2.message, refs);
+              addPattern(res, zodPatterns.base64, check.message, refs);
               break;
             }
           }
           break;
         }
         case "nanoid": {
-          addPattern(res, zodPatterns.nanoid, check2.message, refs);
+          addPattern(res, zodPatterns.nanoid, check.message, refs);
         }
         case "toLowerCase":
         case "toUpperCase":
@@ -19704,14 +15193,14 @@ function parseStringDef(def, refs) {
           break;
         default:
           /* @__PURE__ */ ((_) => {
-          })(check2);
+          })(check);
       }
     }
   }
   return res;
 }
-function escapeLiteralCheckValue(literal2, refs) {
-  return refs.patternStrategy === "escape" ? escapeNonAlphaNumeric(literal2) : literal2;
+function escapeLiteralCheckValue(literal, refs) {
+  return refs.patternStrategy === "escape" ? escapeNonAlphaNumeric(literal) : literal;
 }
 var ALPHA_NUMERIC = new Set("ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvxyz0123456789");
 function escapeNonAlphaNumeric(source) {
@@ -19939,11 +15428,11 @@ function parseMapDef(def, refs) {
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
 function parseNativeEnumDef(def) {
-  const object3 = def.values;
+  const object = def.values;
   const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object3[object3[key]] !== "number";
+    return typeof object[object[key]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object3[key]);
+  const actualValues = actualKeys.map((key) => object[key]);
   const parsedTypes = Array.from(new Set(actualValues.map((values) => typeof values)));
   return {
     type: parsedTypes.length === 1 ? parsedTypes[0] === "string" ? "string" : "number" : ["string", "number"],
@@ -20078,42 +15567,42 @@ function parseNumberDef(def, refs) {
   };
   if (!def.checks)
     return res;
-  for (const check2 of def.checks) {
-    switch (check2.kind) {
+  for (const check of def.checks) {
+    switch (check.kind) {
       case "int":
         res.type = "integer";
-        addErrorMessage(res, "type", check2.message, refs);
+        addErrorMessage(res, "type", check.message, refs);
         break;
       case "min":
         if (refs.target === "jsonSchema7") {
-          if (check2.inclusive) {
-            setResponseValueAndErrors(res, "minimum", check2.value, check2.message, refs);
+          if (check.inclusive) {
+            setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
           } else {
-            setResponseValueAndErrors(res, "exclusiveMinimum", check2.value, check2.message, refs);
+            setResponseValueAndErrors(res, "exclusiveMinimum", check.value, check.message, refs);
           }
         } else {
-          if (!check2.inclusive) {
+          if (!check.inclusive) {
             res.exclusiveMinimum = true;
           }
-          setResponseValueAndErrors(res, "minimum", check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
         }
         break;
       case "max":
         if (refs.target === "jsonSchema7") {
-          if (check2.inclusive) {
-            setResponseValueAndErrors(res, "maximum", check2.value, check2.message, refs);
+          if (check.inclusive) {
+            setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
           } else {
-            setResponseValueAndErrors(res, "exclusiveMaximum", check2.value, check2.message, refs);
+            setResponseValueAndErrors(res, "exclusiveMaximum", check.value, check.message, refs);
           }
         } else {
-          if (!check2.inclusive) {
+          if (!check.inclusive) {
             res.exclusiveMaximum = true;
           }
-          setResponseValueAndErrors(res, "maximum", check2.value, check2.message, refs);
+          setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
         }
         break;
       case "multipleOf":
-        setResponseValueAndErrors(res, "multipleOf", check2.value, check2.message, refs);
+        setResponseValueAndErrors(res, "multipleOf", check.value, check.message, refs);
         break;
     }
   }
@@ -20127,7 +15616,7 @@ function parseObjectDef(def, refs) {
     type: "object",
     properties: {}
   };
-  const required2 = [];
+  const required = [];
   const shape = def.shape();
   for (const propName in shape) {
     let propDef = shape[propName];
@@ -20154,11 +15643,11 @@ function parseObjectDef(def, refs) {
     }
     result.properties[propName] = parsedDef;
     if (!propOptional) {
-      required2.push(propName);
+      required.push(propName);
     }
   }
-  if (required2.length) {
-    result.required = required2;
+  if (required.length) {
+    result.required = required;
   }
   const additionalProperties = decideAdditionalProperties(def, refs);
   if (additionalProperties !== void 0) {
@@ -20495,1744 +15984,57 @@ var zodToJsonSchema = (schema, options) => {
   return combined;
 };
 
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-json-schema-compat.js
-function mapMiniTarget(t) {
-  if (!t)
-    return "draft-7";
-  if (t === "jsonSchema7" || t === "draft-7")
-    return "draft-7";
-  if (t === "jsonSchema2019-09" || t === "draft-2020-12")
-    return "draft-2020-12";
-  return "draft-7";
-}
-function toJsonSchemaCompat(schema, opts) {
-  if (isZ4Schema(schema)) {
-    return toJSONSchema(schema, {
-      target: mapMiniTarget(opts == null ? void 0 : opts.target),
-      io: (opts == null ? void 0 : opts.pipeStrategy) ?? "input"
-    });
-  }
-  return zodToJsonSchema(schema, {
-    strictUnions: (opts == null ? void 0 : opts.strictUnions) ?? true,
-    pipeStrategy: (opts == null ? void 0 : opts.pipeStrategy) ?? "input"
-  });
-}
-function getMethodLiteral(schema) {
-  const shape = getObjectShape(schema);
-  const methodSchema = shape == null ? void 0 : shape.method;
-  if (!methodSchema) {
-    throw new Error("Schema is missing a method literal");
-  }
-  const value = getLiteralValue(methodSchema);
-  if (typeof value !== "string") {
-    throw new Error("Schema method literal must be a string");
-  }
-  return value;
-}
-function parseWithCompat(schema, data) {
-  const result = safeParse2(schema, data);
-  if (!result.success) {
-    throw result.error;
-  }
-  return result.data;
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
-var DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4;
-var Protocol = class {
-  constructor(_options) {
-    this._options = _options;
-    this._requestMessageId = 0;
-    this._requestHandlers = /* @__PURE__ */ new Map();
-    this._requestHandlerAbortControllers = /* @__PURE__ */ new Map();
-    this._notificationHandlers = /* @__PURE__ */ new Map();
-    this._responseHandlers = /* @__PURE__ */ new Map();
-    this._progressHandlers = /* @__PURE__ */ new Map();
-    this._timeoutInfo = /* @__PURE__ */ new Map();
-    this._pendingDebouncedNotifications = /* @__PURE__ */ new Set();
-    this._taskProgressTokens = /* @__PURE__ */ new Map();
-    this._requestResolvers = /* @__PURE__ */ new Map();
-    this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
-      this._oncancel(notification);
-    });
-    this.setNotificationHandler(ProgressNotificationSchema, (notification) => {
-      this._onprogress(notification);
-    });
-    this.setRequestHandler(
-      PingRequestSchema,
-      // Automatic pong by default.
-      (_request) => ({})
-    );
-    this._taskStore = _options == null ? void 0 : _options.taskStore;
-    this._taskMessageQueue = _options == null ? void 0 : _options.taskMessageQueue;
-    if (this._taskStore) {
-      this.setRequestHandler(GetTaskRequestSchema, async (request, extra) => {
-        const task = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
-        if (!task) {
-          throw new McpError(ErrorCode.InvalidParams, "Failed to retrieve task: Task not found");
-        }
-        return {
-          ...task
-        };
-      });
-      this.setRequestHandler(GetTaskPayloadRequestSchema, async (request, extra) => {
-        const handleTaskResult = async () => {
-          var _a;
-          const taskId = request.params.taskId;
-          if (this._taskMessageQueue) {
-            let queuedMessage;
-            while (queuedMessage = await this._taskMessageQueue.dequeue(taskId, extra.sessionId)) {
-              if (queuedMessage.type === "response" || queuedMessage.type === "error") {
-                const message = queuedMessage.message;
-                const requestId = message.id;
-                const resolver = this._requestResolvers.get(requestId);
-                if (resolver) {
-                  this._requestResolvers.delete(requestId);
-                  if (queuedMessage.type === "response") {
-                    resolver(message);
-                  } else {
-                    const errorMessage = message;
-                    const error2 = new McpError(errorMessage.error.code, errorMessage.error.message, errorMessage.error.data);
-                    resolver(error2);
-                  }
-                } else {
-                  const messageType = queuedMessage.type === "response" ? "Response" : "Error";
-                  this._onerror(new Error(`${messageType} handler missing for request ${requestId}`));
-                }
-                continue;
-              }
-              await ((_a = this._transport) == null ? void 0 : _a.send(queuedMessage.message, { relatedRequestId: extra.requestId }));
-            }
-          }
-          const task = await this._taskStore.getTask(taskId, extra.sessionId);
-          if (!task) {
-            throw new McpError(ErrorCode.InvalidParams, `Task not found: ${taskId}`);
-          }
-          if (!isTerminal(task.status)) {
-            await this._waitForTaskUpdate(taskId, extra.signal);
-            return await handleTaskResult();
-          }
-          if (isTerminal(task.status)) {
-            const result = await this._taskStore.getTaskResult(taskId, extra.sessionId);
-            this._clearTaskQueue(taskId);
-            return {
-              ...result,
-              _meta: {
-                ...result._meta,
-                [RELATED_TASK_META_KEY]: {
-                  taskId
-                }
-              }
-            };
-          }
-          return await handleTaskResult();
-        };
-        return await handleTaskResult();
-      });
-      this.setRequestHandler(ListTasksRequestSchema, async (request, extra) => {
-        var _a;
-        try {
-          const { tasks, nextCursor } = await this._taskStore.listTasks((_a = request.params) == null ? void 0 : _a.cursor, extra.sessionId);
-          return {
-            tasks,
-            nextCursor,
-            _meta: {}
-          };
-        } catch (error2) {
-          throw new McpError(ErrorCode.InvalidParams, `Failed to list tasks: ${error2 instanceof Error ? error2.message : String(error2)}`);
-        }
-      });
-      this.setRequestHandler(CancelTaskRequestSchema, async (request, extra) => {
-        try {
-          const task = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
-          if (!task) {
-            throw new McpError(ErrorCode.InvalidParams, `Task not found: ${request.params.taskId}`);
-          }
-          if (isTerminal(task.status)) {
-            throw new McpError(ErrorCode.InvalidParams, `Cannot cancel task in terminal status: ${task.status}`);
-          }
-          await this._taskStore.updateTaskStatus(request.params.taskId, "cancelled", "Client cancelled task execution.", extra.sessionId);
-          this._clearTaskQueue(request.params.taskId);
-          const cancelledTask = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
-          if (!cancelledTask) {
-            throw new McpError(ErrorCode.InvalidParams, `Task not found after cancellation: ${request.params.taskId}`);
-          }
-          return {
-            _meta: {},
-            ...cancelledTask
-          };
-        } catch (error2) {
-          if (error2 instanceof McpError) {
-            throw error2;
-          }
-          throw new McpError(ErrorCode.InvalidRequest, `Failed to cancel task: ${error2 instanceof Error ? error2.message : String(error2)}`);
-        }
-      });
-    }
-  }
-  async _oncancel(notification) {
-    if (!notification.params.requestId) {
-      return;
-    }
-    const controller = this._requestHandlerAbortControllers.get(notification.params.requestId);
-    controller == null ? void 0 : controller.abort(notification.params.reason);
-  }
-  _setupTimeout(messageId, timeout, maxTotalTimeout, onTimeout, resetTimeoutOnProgress = false) {
-    this._timeoutInfo.set(messageId, {
-      timeoutId: setTimeout(onTimeout, timeout),
-      startTime: Date.now(),
-      timeout,
-      maxTotalTimeout,
-      resetTimeoutOnProgress,
-      onTimeout
-    });
-  }
-  _resetTimeout(messageId) {
-    const info = this._timeoutInfo.get(messageId);
-    if (!info)
-      return false;
-    const totalElapsed = Date.now() - info.startTime;
-    if (info.maxTotalTimeout && totalElapsed >= info.maxTotalTimeout) {
-      this._timeoutInfo.delete(messageId);
-      throw McpError.fromError(ErrorCode.RequestTimeout, "Maximum total timeout exceeded", {
-        maxTotalTimeout: info.maxTotalTimeout,
-        totalElapsed
-      });
-    }
-    clearTimeout(info.timeoutId);
-    info.timeoutId = setTimeout(info.onTimeout, info.timeout);
-    return true;
-  }
-  _cleanupTimeout(messageId) {
-    const info = this._timeoutInfo.get(messageId);
-    if (info) {
-      clearTimeout(info.timeoutId);
-      this._timeoutInfo.delete(messageId);
-    }
-  }
-  /**
-   * Attaches to the given transport, starts it, and starts listening for messages.
-   *
-   * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
-   */
-  async connect(transport) {
-    var _a, _b, _c;
-    if (this._transport) {
-      throw new Error("Already connected to a transport. Call close() before connecting to a new transport, or use a separate Protocol instance per connection.");
-    }
-    this._transport = transport;
-    const _onclose = (_a = this.transport) == null ? void 0 : _a.onclose;
-    this._transport.onclose = () => {
-      _onclose == null ? void 0 : _onclose();
-      this._onclose();
-    };
-    const _onerror = (_b = this.transport) == null ? void 0 : _b.onerror;
-    this._transport.onerror = (error2) => {
-      _onerror == null ? void 0 : _onerror(error2);
-      this._onerror(error2);
-    };
-    const _onmessage = (_c = this._transport) == null ? void 0 : _c.onmessage;
-    this._transport.onmessage = (message, extra) => {
-      _onmessage == null ? void 0 : _onmessage(message, extra);
-      if (isJSONRPCResultResponse(message) || isJSONRPCErrorResponse(message)) {
-        this._onresponse(message);
-      } else if (isJSONRPCRequest(message)) {
-        this._onrequest(message, extra);
-      } else if (isJSONRPCNotification(message)) {
-        this._onnotification(message);
-      } else {
-        this._onerror(new Error(`Unknown message type: ${JSON.stringify(message)}`));
-      }
-    };
-    await this._transport.start();
-  }
-  _onclose() {
-    var _a;
-    const responseHandlers = this._responseHandlers;
-    this._responseHandlers = /* @__PURE__ */ new Map();
-    this._progressHandlers.clear();
-    this._taskProgressTokens.clear();
-    this._pendingDebouncedNotifications.clear();
-    for (const info of this._timeoutInfo.values()) {
-      clearTimeout(info.timeoutId);
-    }
-    this._timeoutInfo.clear();
-    for (const controller of this._requestHandlerAbortControllers.values()) {
-      controller.abort();
-    }
-    this._requestHandlerAbortControllers.clear();
-    const error2 = McpError.fromError(ErrorCode.ConnectionClosed, "Connection closed");
-    this._transport = void 0;
-    (_a = this.onclose) == null ? void 0 : _a.call(this);
-    for (const handler of responseHandlers.values()) {
-      handler(error2);
-    }
-  }
-  _onerror(error2) {
-    var _a;
-    (_a = this.onerror) == null ? void 0 : _a.call(this, error2);
-  }
-  _onnotification(notification) {
-    const handler = this._notificationHandlers.get(notification.method) ?? this.fallbackNotificationHandler;
-    if (handler === void 0) {
-      return;
-    }
-    Promise.resolve().then(() => handler(notification)).catch((error2) => this._onerror(new Error(`Uncaught error in notification handler: ${error2}`)));
-  }
-  _onrequest(request, extra) {
-    var _a, _b, _c, _d;
-    const handler = this._requestHandlers.get(request.method) ?? this.fallbackRequestHandler;
-    const capturedTransport = this._transport;
-    const relatedTaskId = (_c = (_b = (_a = request.params) == null ? void 0 : _a._meta) == null ? void 0 : _b[RELATED_TASK_META_KEY]) == null ? void 0 : _c.taskId;
-    if (handler === void 0) {
-      const errorResponse = {
-        jsonrpc: "2.0",
-        id: request.id,
-        error: {
-          code: ErrorCode.MethodNotFound,
-          message: "Method not found"
-        }
-      };
-      if (relatedTaskId && this._taskMessageQueue) {
-        this._enqueueTaskMessage(relatedTaskId, {
-          type: "error",
-          message: errorResponse,
-          timestamp: Date.now()
-        }, capturedTransport == null ? void 0 : capturedTransport.sessionId).catch((error2) => this._onerror(new Error(`Failed to enqueue error response: ${error2}`)));
-      } else {
-        capturedTransport == null ? void 0 : capturedTransport.send(errorResponse).catch((error2) => this._onerror(new Error(`Failed to send an error response: ${error2}`)));
-      }
-      return;
-    }
-    const abortController = new AbortController();
-    this._requestHandlerAbortControllers.set(request.id, abortController);
-    const taskCreationParams = isTaskAugmentedRequestParams(request.params) ? request.params.task : void 0;
-    const taskStore = this._taskStore ? this.requestTaskStore(request, capturedTransport == null ? void 0 : capturedTransport.sessionId) : void 0;
-    const fullExtra = {
-      signal: abortController.signal,
-      sessionId: capturedTransport == null ? void 0 : capturedTransport.sessionId,
-      _meta: (_d = request.params) == null ? void 0 : _d._meta,
-      sendNotification: async (notification) => {
-        if (abortController.signal.aborted)
-          return;
-        const notificationOptions = { relatedRequestId: request.id };
-        if (relatedTaskId) {
-          notificationOptions.relatedTask = { taskId: relatedTaskId };
-        }
-        await this.notification(notification, notificationOptions);
-      },
-      sendRequest: async (r, resultSchema, options) => {
-        var _a2;
-        if (abortController.signal.aborted) {
-          throw new McpError(ErrorCode.ConnectionClosed, "Request was cancelled");
-        }
-        const requestOptions = { ...options, relatedRequestId: request.id };
-        if (relatedTaskId && !requestOptions.relatedTask) {
-          requestOptions.relatedTask = { taskId: relatedTaskId };
-        }
-        const effectiveTaskId = ((_a2 = requestOptions.relatedTask) == null ? void 0 : _a2.taskId) ?? relatedTaskId;
-        if (effectiveTaskId && taskStore) {
-          await taskStore.updateTaskStatus(effectiveTaskId, "input_required");
-        }
-        return await this.request(r, resultSchema, requestOptions);
-      },
-      authInfo: extra == null ? void 0 : extra.authInfo,
-      requestId: request.id,
-      requestInfo: extra == null ? void 0 : extra.requestInfo,
-      taskId: relatedTaskId,
-      taskStore,
-      taskRequestedTtl: taskCreationParams == null ? void 0 : taskCreationParams.ttl,
-      closeSSEStream: extra == null ? void 0 : extra.closeSSEStream,
-      closeStandaloneSSEStream: extra == null ? void 0 : extra.closeStandaloneSSEStream
-    };
-    Promise.resolve().then(() => {
-      if (taskCreationParams) {
-        this.assertTaskHandlerCapability(request.method);
-      }
-    }).then(() => handler(request, fullExtra)).then(async (result) => {
-      if (abortController.signal.aborted) {
-        return;
-      }
-      const response = {
-        result,
-        jsonrpc: "2.0",
-        id: request.id
-      };
-      if (relatedTaskId && this._taskMessageQueue) {
-        await this._enqueueTaskMessage(relatedTaskId, {
-          type: "response",
-          message: response,
-          timestamp: Date.now()
-        }, capturedTransport == null ? void 0 : capturedTransport.sessionId);
-      } else {
-        await (capturedTransport == null ? void 0 : capturedTransport.send(response));
-      }
-    }, async (error2) => {
-      if (abortController.signal.aborted) {
-        return;
-      }
-      const errorResponse = {
-        jsonrpc: "2.0",
-        id: request.id,
-        error: {
-          code: Number.isSafeInteger(error2["code"]) ? error2["code"] : ErrorCode.InternalError,
-          message: error2.message ?? "Internal error",
-          ...error2["data"] !== void 0 && { data: error2["data"] }
-        }
-      };
-      if (relatedTaskId && this._taskMessageQueue) {
-        await this._enqueueTaskMessage(relatedTaskId, {
-          type: "error",
-          message: errorResponse,
-          timestamp: Date.now()
-        }, capturedTransport == null ? void 0 : capturedTransport.sessionId);
-      } else {
-        await (capturedTransport == null ? void 0 : capturedTransport.send(errorResponse));
-      }
-    }).catch((error2) => this._onerror(new Error(`Failed to send response: ${error2}`))).finally(() => {
-      if (this._requestHandlerAbortControllers.get(request.id) === abortController) {
-        this._requestHandlerAbortControllers.delete(request.id);
-      }
-    });
-  }
-  _onprogress(notification) {
-    const { progressToken, ...params } = notification.params;
-    const messageId = Number(progressToken);
-    const handler = this._progressHandlers.get(messageId);
-    if (!handler) {
-      this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
-      return;
-    }
-    const responseHandler = this._responseHandlers.get(messageId);
-    const timeoutInfo = this._timeoutInfo.get(messageId);
-    if (timeoutInfo && responseHandler && timeoutInfo.resetTimeoutOnProgress) {
-      try {
-        this._resetTimeout(messageId);
-      } catch (error2) {
-        this._responseHandlers.delete(messageId);
-        this._progressHandlers.delete(messageId);
-        this._cleanupTimeout(messageId);
-        responseHandler(error2);
-        return;
-      }
-    }
-    handler(params);
-  }
-  _onresponse(response) {
-    const messageId = Number(response.id);
-    const resolver = this._requestResolvers.get(messageId);
-    if (resolver) {
-      this._requestResolvers.delete(messageId);
-      if (isJSONRPCResultResponse(response)) {
-        resolver(response);
-      } else {
-        const error2 = new McpError(response.error.code, response.error.message, response.error.data);
-        resolver(error2);
-      }
-      return;
-    }
-    const handler = this._responseHandlers.get(messageId);
-    if (handler === void 0) {
-      this._onerror(new Error(`Received a response for an unknown message ID: ${JSON.stringify(response)}`));
-      return;
-    }
-    this._responseHandlers.delete(messageId);
-    this._cleanupTimeout(messageId);
-    let isTaskResponse = false;
-    if (isJSONRPCResultResponse(response) && response.result && typeof response.result === "object") {
-      const result = response.result;
-      if (result.task && typeof result.task === "object") {
-        const task = result.task;
-        if (typeof task.taskId === "string") {
-          isTaskResponse = true;
-          this._taskProgressTokens.set(task.taskId, messageId);
-        }
-      }
-    }
-    if (!isTaskResponse) {
-      this._progressHandlers.delete(messageId);
-    }
-    if (isJSONRPCResultResponse(response)) {
-      handler(response);
-    } else {
-      const error2 = McpError.fromError(response.error.code, response.error.message, response.error.data);
-      handler(error2);
-    }
-  }
-  get transport() {
-    return this._transport;
-  }
-  /**
-   * Closes the connection.
-   */
-  async close() {
-    var _a;
-    await ((_a = this._transport) == null ? void 0 : _a.close());
-  }
-  /**
-   * Sends a request and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * @example
-   * ```typescript
-   * const stream = protocol.requestStream(request, resultSchema, options);
-   * for await (const message of stream) {
-   *   switch (message.type) {
-   *     case 'taskCreated':
-   *       console.log('Task created:', message.task.taskId);
-   *       break;
-   *     case 'taskStatus':
-   *       console.log('Task status:', message.task.status);
-   *       break;
-   *     case 'result':
-   *       console.log('Final result:', message.result);
-   *       break;
-   *     case 'error':
-   *       console.error('Error:', message.error);
-   *       break;
-   *   }
-   * }
-   * ```
-   *
-   * @experimental Use `client.experimental.tasks.requestStream()` to access this method.
-   */
-  async *requestStream(request, resultSchema, options) {
-    var _a, _b;
-    const { task } = options ?? {};
-    if (!task) {
-      try {
-        const result = await this.request(request, resultSchema, options);
-        yield { type: "result", result };
-      } catch (error2) {
-        yield {
-          type: "error",
-          error: error2 instanceof McpError ? error2 : new McpError(ErrorCode.InternalError, String(error2))
-        };
-      }
-      return;
-    }
-    let taskId;
-    try {
-      const createResult = await this.request(request, CreateTaskResultSchema, options);
-      if (createResult.task) {
-        taskId = createResult.task.taskId;
-        yield { type: "taskCreated", task: createResult.task };
-      } else {
-        throw new McpError(ErrorCode.InternalError, "Task creation did not return a task");
-      }
-      while (true) {
-        const task2 = await this.getTask({ taskId }, options);
-        yield { type: "taskStatus", task: task2 };
-        if (isTerminal(task2.status)) {
-          if (task2.status === "completed") {
-            const result = await this.getTaskResult({ taskId }, resultSchema, options);
-            yield { type: "result", result };
-          } else if (task2.status === "failed") {
-            yield {
-              type: "error",
-              error: new McpError(ErrorCode.InternalError, `Task ${taskId} failed`)
-            };
-          } else if (task2.status === "cancelled") {
-            yield {
-              type: "error",
-              error: new McpError(ErrorCode.InternalError, `Task ${taskId} was cancelled`)
-            };
-          }
-          return;
-        }
-        if (task2.status === "input_required") {
-          const result = await this.getTaskResult({ taskId }, resultSchema, options);
-          yield { type: "result", result };
-          return;
-        }
-        const pollInterval = task2.pollInterval ?? ((_a = this._options) == null ? void 0 : _a.defaultTaskPollInterval) ?? 1e3;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        (_b = options == null ? void 0 : options.signal) == null ? void 0 : _b.throwIfAborted();
-      }
-    } catch (error2) {
-      yield {
-        type: "error",
-        error: error2 instanceof McpError ? error2 : new McpError(ErrorCode.InternalError, String(error2))
-      };
-    }
-  }
-  /**
-   * Sends a request and waits for a response.
-   *
-   * Do not use this method to emit notifications! Use notification() instead.
-   */
-  request(request, resultSchema, options) {
-    const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve, reject) => {
-      var _a, _b, _c, _d, _e;
-      const earlyReject = (error2) => {
-        reject(error2);
-      };
-      if (!this._transport) {
-        earlyReject(new Error("Not connected"));
-        return;
-      }
-      if (((_a = this._options) == null ? void 0 : _a.enforceStrictCapabilities) === true) {
-        try {
-          this.assertCapabilityForMethod(request.method);
-          if (task) {
-            this.assertTaskCapability(request.method);
-          }
-        } catch (e) {
-          earlyReject(e);
-          return;
-        }
-      }
-      (_b = options == null ? void 0 : options.signal) == null ? void 0 : _b.throwIfAborted();
-      const messageId = this._requestMessageId++;
-      const jsonrpcRequest = {
-        ...request,
-        jsonrpc: "2.0",
-        id: messageId
-      };
-      if (options == null ? void 0 : options.onprogress) {
-        this._progressHandlers.set(messageId, options.onprogress);
-        jsonrpcRequest.params = {
-          ...request.params,
-          _meta: {
-            ...((_c = request.params) == null ? void 0 : _c._meta) || {},
-            progressToken: messageId
-          }
-        };
-      }
-      if (task) {
-        jsonrpcRequest.params = {
-          ...jsonrpcRequest.params,
-          task
-        };
-      }
-      if (relatedTask) {
-        jsonrpcRequest.params = {
-          ...jsonrpcRequest.params,
-          _meta: {
-            ...((_d = jsonrpcRequest.params) == null ? void 0 : _d._meta) || {},
-            [RELATED_TASK_META_KEY]: relatedTask
-          }
-        };
-      }
-      const cancel = (reason) => {
-        var _a2;
-        this._responseHandlers.delete(messageId);
-        this._progressHandlers.delete(messageId);
-        this._cleanupTimeout(messageId);
-        (_a2 = this._transport) == null ? void 0 : _a2.send({
-          jsonrpc: "2.0",
-          method: "notifications/cancelled",
-          params: {
-            requestId: messageId,
-            reason: String(reason)
-          }
-        }, { relatedRequestId, resumptionToken, onresumptiontoken }).catch((error3) => this._onerror(new Error(`Failed to send cancellation: ${error3}`)));
-        const error2 = reason instanceof McpError ? reason : new McpError(ErrorCode.RequestTimeout, String(reason));
-        reject(error2);
-      };
-      this._responseHandlers.set(messageId, (response) => {
-        var _a2;
-        if ((_a2 = options == null ? void 0 : options.signal) == null ? void 0 : _a2.aborted) {
-          return;
-        }
-        if (response instanceof Error) {
-          return reject(response);
-        }
-        try {
-          const parseResult = safeParse2(resultSchema, response.result);
-          if (!parseResult.success) {
-            reject(parseResult.error);
-          } else {
-            resolve(parseResult.data);
-          }
-        } catch (error2) {
-          reject(error2);
-        }
-      });
-      (_e = options == null ? void 0 : options.signal) == null ? void 0 : _e.addEventListener("abort", () => {
-        var _a2;
-        cancel((_a2 = options == null ? void 0 : options.signal) == null ? void 0 : _a2.reason);
-      });
-      const timeout = (options == null ? void 0 : options.timeout) ?? DEFAULT_REQUEST_TIMEOUT_MSEC;
-      const timeoutHandler = () => cancel(McpError.fromError(ErrorCode.RequestTimeout, "Request timed out", { timeout }));
-      this._setupTimeout(messageId, timeout, options == null ? void 0 : options.maxTotalTimeout, timeoutHandler, (options == null ? void 0 : options.resetTimeoutOnProgress) ?? false);
-      const relatedTaskId = relatedTask == null ? void 0 : relatedTask.taskId;
-      if (relatedTaskId) {
-        const responseResolver = (response) => {
-          const handler = this._responseHandlers.get(messageId);
-          if (handler) {
-            handler(response);
-          } else {
-            this._onerror(new Error(`Response handler missing for side-channeled request ${messageId}`));
-          }
-        };
-        this._requestResolvers.set(messageId, responseResolver);
-        this._enqueueTaskMessage(relatedTaskId, {
-          type: "request",
-          message: jsonrpcRequest,
-          timestamp: Date.now()
-        }).catch((error2) => {
-          this._cleanupTimeout(messageId);
-          reject(error2);
-        });
-      } else {
-        this._transport.send(jsonrpcRequest, { relatedRequestId, resumptionToken, onresumptiontoken }).catch((error2) => {
-          this._cleanupTimeout(messageId);
-          reject(error2);
-        });
-      }
-    });
-  }
-  /**
-   * Gets the current status of a task.
-   *
-   * @experimental Use `client.experimental.tasks.getTask()` to access this method.
-   */
-  async getTask(params, options) {
-    return this.request({ method: "tasks/get", params }, GetTaskResultSchema, options);
-  }
-  /**
-   * Retrieves the result of a completed task.
-   *
-   * @experimental Use `client.experimental.tasks.getTaskResult()` to access this method.
-   */
-  async getTaskResult(params, resultSchema, options) {
-    return this.request({ method: "tasks/result", params }, resultSchema, options);
-  }
-  /**
-   * Lists tasks, optionally starting from a pagination cursor.
-   *
-   * @experimental Use `client.experimental.tasks.listTasks()` to access this method.
-   */
-  async listTasks(params, options) {
-    return this.request({ method: "tasks/list", params }, ListTasksResultSchema, options);
-  }
-  /**
-   * Cancels a specific task.
-   *
-   * @experimental Use `client.experimental.tasks.cancelTask()` to access this method.
-   */
-  async cancelTask(params, options) {
-    return this.request({ method: "tasks/cancel", params }, CancelTaskResultSchema, options);
-  }
-  /**
-   * Emits a notification, which is a one-way message that does not expect a response.
-   */
-  async notification(notification, options) {
-    var _a, _b, _c, _d;
-    if (!this._transport) {
-      throw new Error("Not connected");
-    }
-    this.assertNotificationCapability(notification.method);
-    const relatedTaskId = (_a = options == null ? void 0 : options.relatedTask) == null ? void 0 : _a.taskId;
-    if (relatedTaskId) {
-      const jsonrpcNotification2 = {
-        ...notification,
-        jsonrpc: "2.0",
-        params: {
-          ...notification.params,
-          _meta: {
-            ...((_b = notification.params) == null ? void 0 : _b._meta) || {},
-            [RELATED_TASK_META_KEY]: options.relatedTask
-          }
-        }
-      };
-      await this._enqueueTaskMessage(relatedTaskId, {
-        type: "notification",
-        message: jsonrpcNotification2,
-        timestamp: Date.now()
-      });
-      return;
-    }
-    const debouncedMethods = ((_c = this._options) == null ? void 0 : _c.debouncedNotificationMethods) ?? [];
-    const canDebounce = debouncedMethods.includes(notification.method) && !notification.params && !(options == null ? void 0 : options.relatedRequestId) && !(options == null ? void 0 : options.relatedTask);
-    if (canDebounce) {
-      if (this._pendingDebouncedNotifications.has(notification.method)) {
-        return;
-      }
-      this._pendingDebouncedNotifications.add(notification.method);
-      Promise.resolve().then(() => {
-        var _a2, _b2;
-        this._pendingDebouncedNotifications.delete(notification.method);
-        if (!this._transport) {
-          return;
-        }
-        let jsonrpcNotification2 = {
-          ...notification,
-          jsonrpc: "2.0"
-        };
-        if (options == null ? void 0 : options.relatedTask) {
-          jsonrpcNotification2 = {
-            ...jsonrpcNotification2,
-            params: {
-              ...jsonrpcNotification2.params,
-              _meta: {
-                ...((_a2 = jsonrpcNotification2.params) == null ? void 0 : _a2._meta) || {},
-                [RELATED_TASK_META_KEY]: options.relatedTask
-              }
-            }
-          };
-        }
-        (_b2 = this._transport) == null ? void 0 : _b2.send(jsonrpcNotification2, options).catch((error2) => this._onerror(error2));
-      });
-      return;
-    }
-    let jsonrpcNotification = {
-      ...notification,
-      jsonrpc: "2.0"
-    };
-    if (options == null ? void 0 : options.relatedTask) {
-      jsonrpcNotification = {
-        ...jsonrpcNotification,
-        params: {
-          ...jsonrpcNotification.params,
-          _meta: {
-            ...((_d = jsonrpcNotification.params) == null ? void 0 : _d._meta) || {},
-            [RELATED_TASK_META_KEY]: options.relatedTask
-          }
-        }
-      };
-    }
-    await this._transport.send(jsonrpcNotification, options);
-  }
-  /**
-   * Registers a handler to invoke when this protocol object receives a request with the given method.
-   *
-   * Note that this will replace any previous request handler for the same method.
-   */
-  setRequestHandler(requestSchema, handler) {
-    const method = getMethodLiteral(requestSchema);
-    this.assertRequestHandlerCapability(method);
-    this._requestHandlers.set(method, (request, extra) => {
-      const parsed = parseWithCompat(requestSchema, request);
-      return Promise.resolve(handler(parsed, extra));
-    });
-  }
-  /**
-   * Removes the request handler for the given method.
-   */
-  removeRequestHandler(method) {
-    this._requestHandlers.delete(method);
-  }
-  /**
-   * Asserts that a request handler has not already been set for the given method, in preparation for a new one being automatically installed.
-   */
-  assertCanSetRequestHandler(method) {
-    if (this._requestHandlers.has(method)) {
-      throw new Error(`A request handler for ${method} already exists, which would be overridden`);
-    }
-  }
-  /**
-   * Registers a handler to invoke when this protocol object receives a notification with the given method.
-   *
-   * Note that this will replace any previous notification handler for the same method.
-   */
-  setNotificationHandler(notificationSchema, handler) {
-    const method = getMethodLiteral(notificationSchema);
-    this._notificationHandlers.set(method, (notification) => {
-      const parsed = parseWithCompat(notificationSchema, notification);
-      return Promise.resolve(handler(parsed));
-    });
-  }
-  /**
-   * Removes the notification handler for the given method.
-   */
-  removeNotificationHandler(method) {
-    this._notificationHandlers.delete(method);
-  }
-  /**
-   * Cleans up the progress handler associated with a task.
-   * This should be called when a task reaches a terminal status.
-   */
-  _cleanupTaskProgressHandler(taskId) {
-    const progressToken = this._taskProgressTokens.get(taskId);
-    if (progressToken !== void 0) {
-      this._progressHandlers.delete(progressToken);
-      this._taskProgressTokens.delete(taskId);
-    }
-  }
-  /**
-   * Enqueues a task-related message for side-channel delivery via tasks/result.
-   * @param taskId The task ID to associate the message with
-   * @param message The message to enqueue
-   * @param sessionId Optional session ID for binding the operation to a specific session
-   * @throws Error if taskStore is not configured or if enqueue fails (e.g., queue overflow)
-   *
-   * Note: If enqueue fails, it's the TaskMessageQueue implementation's responsibility to handle
-   * the error appropriately (e.g., by failing the task, logging, etc.). The Protocol layer
-   * simply propagates the error.
-   */
-  async _enqueueTaskMessage(taskId, message, sessionId) {
-    var _a;
-    if (!this._taskStore || !this._taskMessageQueue) {
-      throw new Error("Cannot enqueue task message: taskStore and taskMessageQueue are not configured");
-    }
-    const maxQueueSize = (_a = this._options) == null ? void 0 : _a.maxTaskQueueSize;
-    await this._taskMessageQueue.enqueue(taskId, message, sessionId, maxQueueSize);
-  }
-  /**
-   * Clears the message queue for a task and rejects any pending request resolvers.
-   * @param taskId The task ID whose queue should be cleared
-   * @param sessionId Optional session ID for binding the operation to a specific session
-   */
-  async _clearTaskQueue(taskId, sessionId) {
-    if (this._taskMessageQueue) {
-      const messages = await this._taskMessageQueue.dequeueAll(taskId, sessionId);
-      for (const message of messages) {
-        if (message.type === "request" && isJSONRPCRequest(message.message)) {
-          const requestId = message.message.id;
-          const resolver = this._requestResolvers.get(requestId);
-          if (resolver) {
-            resolver(new McpError(ErrorCode.InternalError, "Task cancelled or completed"));
-            this._requestResolvers.delete(requestId);
-          } else {
-            this._onerror(new Error(`Resolver missing for request ${requestId} during task ${taskId} cleanup`));
-          }
-        }
-      }
-    }
-  }
-  /**
-   * Waits for a task update (new messages or status change) with abort signal support.
-   * Uses polling to check for updates at the task's configured poll interval.
-   * @param taskId The task ID to wait for
-   * @param signal Abort signal to cancel the wait
-   * @returns Promise that resolves when an update occurs or rejects if aborted
-   */
-  async _waitForTaskUpdate(taskId, signal) {
-    var _a, _b;
-    let interval = ((_a = this._options) == null ? void 0 : _a.defaultTaskPollInterval) ?? 1e3;
-    try {
-      const task = await ((_b = this._taskStore) == null ? void 0 : _b.getTask(taskId));
-      if (task == null ? void 0 : task.pollInterval) {
-        interval = task.pollInterval;
-      }
-    } catch {
-    }
-    return new Promise((resolve, reject) => {
-      if (signal.aborted) {
-        reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
-        return;
-      }
-      const timeoutId = setTimeout(resolve, interval);
-      signal.addEventListener("abort", () => {
-        clearTimeout(timeoutId);
-        reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
-      }, { once: true });
-    });
-  }
-  requestTaskStore(request, sessionId) {
-    const taskStore = this._taskStore;
-    if (!taskStore) {
-      throw new Error("No task store configured");
-    }
-    return {
-      createTask: async (taskParams) => {
-        if (!request) {
-          throw new Error("No request provided");
-        }
-        return await taskStore.createTask(taskParams, request.id, {
-          method: request.method,
-          params: request.params
-        }, sessionId);
-      },
-      getTask: async (taskId) => {
-        const task = await taskStore.getTask(taskId, sessionId);
-        if (!task) {
-          throw new McpError(ErrorCode.InvalidParams, "Failed to retrieve task: Task not found");
-        }
-        return task;
-      },
-      storeTaskResult: async (taskId, status, result) => {
-        await taskStore.storeTaskResult(taskId, status, result, sessionId);
-        const task = await taskStore.getTask(taskId, sessionId);
-        if (task) {
-          const notification = TaskStatusNotificationSchema.parse({
-            method: "notifications/tasks/status",
-            params: task
-          });
-          await this.notification(notification);
-          if (isTerminal(task.status)) {
-            this._cleanupTaskProgressHandler(taskId);
-          }
-        }
-      },
-      getTaskResult: (taskId) => {
-        return taskStore.getTaskResult(taskId, sessionId);
-      },
-      updateTaskStatus: async (taskId, status, statusMessage) => {
-        const task = await taskStore.getTask(taskId, sessionId);
-        if (!task) {
-          throw new McpError(ErrorCode.InvalidParams, `Task "${taskId}" not found - it may have been cleaned up`);
-        }
-        if (isTerminal(task.status)) {
-          throw new McpError(ErrorCode.InvalidParams, `Cannot update task "${taskId}" from terminal status "${task.status}" to "${status}". Terminal states (completed, failed, cancelled) cannot transition to other states.`);
-        }
-        await taskStore.updateTaskStatus(taskId, status, statusMessage, sessionId);
-        const updatedTask = await taskStore.getTask(taskId, sessionId);
-        if (updatedTask) {
-          const notification = TaskStatusNotificationSchema.parse({
-            method: "notifications/tasks/status",
-            params: updatedTask
-          });
-          await this.notification(notification);
-          if (isTerminal(updatedTask.status)) {
-            this._cleanupTaskProgressHandler(taskId);
-          }
-        }
-      },
-      listTasks: (cursor) => {
-        return taskStore.listTasks(cursor, sessionId);
-      }
-    };
-  }
-};
-function isPlainObject2(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-function mergeCapabilities(base, additional) {
-  const result = { ...base };
-  for (const key in additional) {
-    const k = key;
-    const addValue = additional[k];
-    if (addValue === void 0)
-      continue;
-    const baseValue = result[k];
-    if (isPlainObject2(baseValue) && isPlainObject2(addValue)) {
-      result[k] = { ...baseValue, ...addValue };
-    } else {
-      result[k] = addValue;
-    }
-  }
-  return result;
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/validation/ajv-provider.js
-var import_ajv = __toESM(require_ajv(), 1);
-var import_ajv_formats = __toESM(require_dist(), 1);
-function createDefaultAjvInstance() {
-  const ajv = new import_ajv.default({
-    strict: false,
-    validateFormats: true,
-    validateSchema: false,
-    allErrors: true
-  });
-  const addFormats = import_ajv_formats.default;
-  addFormats(ajv);
-  return ajv;
-}
-var AjvJsonSchemaValidator = class {
-  /**
-   * Create an AJV validator
-   *
-   * @param ajv - Optional pre-configured AJV instance. If not provided, a default instance will be created.
-   *
-   * @example
-   * ```typescript
-   * // Use default configuration (recommended for most cases)
-   * import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-   * const validator = new AjvJsonSchemaValidator();
-   *
-   * // Or provide custom AJV instance for advanced configuration
-   * import { Ajv } from 'ajv';
-   * import addFormats from 'ajv-formats';
-   *
-   * const ajv = new Ajv({ validateFormats: true });
-   * addFormats(ajv);
-   * const validator = new AjvJsonSchemaValidator(ajv);
-   * ```
-   */
-  constructor(ajv) {
-    this._ajv = ajv ?? createDefaultAjvInstance();
-  }
-  /**
-   * Create a validator for the given JSON Schema
-   *
-   * The validator is compiled once and can be reused multiple times.
-   * If the schema has an $id, it will be cached by AJV automatically.
-   *
-   * @param schema - Standard JSON Schema object
-   * @returns A validator function that validates input data
-   */
-  getValidator(schema) {
-    const ajvValidator = "$id" in schema && typeof schema.$id === "string" ? this._ajv.getSchema(schema.$id) ?? this._ajv.compile(schema) : this._ajv.compile(schema);
-    return (input) => {
-      const valid = ajvValidator(input);
-      if (valid) {
-        return {
-          valid: true,
-          data: input,
-          errorMessage: void 0
-        };
-      } else {
-        return {
-          valid: false,
-          data: void 0,
-          errorMessage: this._ajv.errorsText(ajvValidator.errors)
-        };
-      }
-    };
-  }
-};
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/server.js
-var ExperimentalServerTasks = class {
-  constructor(_server) {
-    this._server = _server;
-  }
-  /**
-   * Sends a request and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * This method provides streaming access to request processing, allowing you to
-   * observe intermediate task status updates for task-augmented requests.
-   *
-   * @param request - The request to send
-   * @param resultSchema - Zod schema for validating the result
-   * @param options - Optional request options (timeout, signal, task creation params, etc.)
-   * @returns AsyncGenerator that yields ResponseMessage objects
-   *
-   * @experimental
-   */
-  requestStream(request, resultSchema, options) {
-    return this._server.requestStream(request, resultSchema, options);
-  }
-  /**
-   * Sends a sampling request and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * For task-augmented requests, yields 'taskCreated' and 'taskStatus' messages
-   * before the final result.
-   *
-   * @example
-   * ```typescript
-   * const stream = server.experimental.tasks.createMessageStream({
-   *     messages: [{ role: 'user', content: { type: 'text', text: 'Hello' } }],
-   *     maxTokens: 100
-   * }, {
-   *     onprogress: (progress) => {
-   *         // Handle streaming tokens via progress notifications
-   *         console.log('Progress:', progress.message);
-   *     }
-   * });
-   *
-   * for await (const message of stream) {
-   *     switch (message.type) {
-   *         case 'taskCreated':
-   *             console.log('Task created:', message.task.taskId);
-   *             break;
-   *         case 'taskStatus':
-   *             console.log('Task status:', message.task.status);
-   *             break;
-   *         case 'result':
-   *             console.log('Final result:', message.result);
-   *             break;
-   *         case 'error':
-   *             console.error('Error:', message.error);
-   *             break;
-   *     }
-   * }
-   * ```
-   *
-   * @param params - The sampling request parameters
-   * @param options - Optional request options (timeout, signal, task creation params, onprogress, etc.)
-   * @returns AsyncGenerator that yields ResponseMessage objects
-   *
-   * @experimental
-   */
-  createMessageStream(params, options) {
-    var _a;
-    const clientCapabilities = this._server.getClientCapabilities();
-    if ((params.tools || params.toolChoice) && !((_a = clientCapabilities == null ? void 0 : clientCapabilities.sampling) == null ? void 0 : _a.tools)) {
-      throw new Error("Client does not support sampling tools capability.");
-    }
-    if (params.messages.length > 0) {
-      const lastMessage = params.messages[params.messages.length - 1];
-      const lastContent = Array.isArray(lastMessage.content) ? lastMessage.content : [lastMessage.content];
-      const hasToolResults = lastContent.some((c) => c.type === "tool_result");
-      const previousMessage = params.messages.length > 1 ? params.messages[params.messages.length - 2] : void 0;
-      const previousContent = previousMessage ? Array.isArray(previousMessage.content) ? previousMessage.content : [previousMessage.content] : [];
-      const hasPreviousToolUse = previousContent.some((c) => c.type === "tool_use");
-      if (hasToolResults) {
-        if (lastContent.some((c) => c.type !== "tool_result")) {
-          throw new Error("The last message must contain only tool_result content if any is present");
-        }
-        if (!hasPreviousToolUse) {
-          throw new Error("tool_result blocks are not matching any tool_use from the previous message");
-        }
-      }
-      if (hasPreviousToolUse) {
-        const toolUseIds = new Set(previousContent.filter((c) => c.type === "tool_use").map((c) => c.id));
-        const toolResultIds = new Set(lastContent.filter((c) => c.type === "tool_result").map((c) => c.toolUseId));
-        if (toolUseIds.size !== toolResultIds.size || ![...toolUseIds].every((id) => toolResultIds.has(id))) {
-          throw new Error("ids of tool_result blocks and tool_use blocks from previous message do not match");
-        }
-      }
-    }
-    return this.requestStream({
-      method: "sampling/createMessage",
-      params
-    }, CreateMessageResultSchema, options);
-  }
-  /**
-   * Sends an elicitation request and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * For task-augmented requests (especially URL-based elicitation), yields 'taskCreated'
-   * and 'taskStatus' messages before the final result.
-   *
-   * @example
-   * ```typescript
-   * const stream = server.experimental.tasks.elicitInputStream({
-   *     mode: 'url',
-   *     message: 'Please authenticate',
-   *     elicitationId: 'auth-123',
-   *     url: 'https://example.com/auth'
-   * }, {
-   *     task: { ttl: 300000 } // Task-augmented for long-running auth flow
-   * });
-   *
-   * for await (const message of stream) {
-   *     switch (message.type) {
-   *         case 'taskCreated':
-   *             console.log('Task created:', message.task.taskId);
-   *             break;
-   *         case 'taskStatus':
-   *             console.log('Task status:', message.task.status);
-   *             break;
-   *         case 'result':
-   *             console.log('User action:', message.result.action);
-   *             break;
-   *         case 'error':
-   *             console.error('Error:', message.error);
-   *             break;
-   *     }
-   * }
-   * ```
-   *
-   * @param params - The elicitation request parameters
-   * @param options - Optional request options (timeout, signal, task creation params, etc.)
-   * @returns AsyncGenerator that yields ResponseMessage objects
-   *
-   * @experimental
-   */
-  elicitInputStream(params, options) {
-    var _a, _b;
-    const clientCapabilities = this._server.getClientCapabilities();
-    const mode = params.mode ?? "form";
-    switch (mode) {
-      case "url": {
-        if (!((_a = clientCapabilities == null ? void 0 : clientCapabilities.elicitation) == null ? void 0 : _a.url)) {
-          throw new Error("Client does not support url elicitation.");
-        }
-        break;
-      }
-      case "form": {
-        if (!((_b = clientCapabilities == null ? void 0 : clientCapabilities.elicitation) == null ? void 0 : _b.form)) {
-          throw new Error("Client does not support form elicitation.");
-        }
-        break;
-      }
-    }
-    const normalizedParams = mode === "form" && params.mode === void 0 ? { ...params, mode: "form" } : params;
-    return this.requestStream({
-      method: "elicitation/create",
-      params: normalizedParams
-    }, ElicitResultSchema, options);
-  }
-  /**
-   * Gets the current status of a task.
-   *
-   * @param taskId - The task identifier
-   * @param options - Optional request options
-   * @returns The task status
-   *
-   * @experimental
-   */
-  async getTask(taskId, options) {
-    return this._server.getTask({ taskId }, options);
-  }
-  /**
-   * Retrieves the result of a completed task.
-   *
-   * @param taskId - The task identifier
-   * @param resultSchema - Zod schema for validating the result
-   * @param options - Optional request options
-   * @returns The task result
-   *
-   * @experimental
-   */
-  async getTaskResult(taskId, resultSchema, options) {
-    return this._server.getTaskResult({ taskId }, resultSchema, options);
-  }
-  /**
-   * Lists tasks with optional pagination.
-   *
-   * @param cursor - Optional pagination cursor
-   * @param options - Optional request options
-   * @returns List of tasks with optional next cursor
-   *
-   * @experimental
-   */
-  async listTasks(cursor, options) {
-    return this._server.listTasks(cursor ? { cursor } : void 0, options);
-  }
-  /**
-   * Cancels a running task.
-   *
-   * @param taskId - The task identifier
-   * @param options - Optional request options
-   *
-   * @experimental
-   */
-  async cancelTask(taskId, options) {
-    return this._server.cancelTask({ taskId }, options);
-  }
-};
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/helpers.js
-function assertToolsCallTaskCapability(requests, method, entityName) {
-  var _a;
-  if (!requests) {
-    throw new Error(`${entityName} does not support task creation (required for ${method})`);
-  }
-  switch (method) {
-    case "tools/call":
-      if (!((_a = requests.tools) == null ? void 0 : _a.call)) {
-        throw new Error(`${entityName} does not support task creation for tools/call (required for ${method})`);
-      }
-      break;
-    default:
-      break;
-  }
-}
-function assertClientRequestTaskCapability(requests, method, entityName) {
-  var _a, _b;
-  if (!requests) {
-    throw new Error(`${entityName} does not support task creation (required for ${method})`);
-  }
-  switch (method) {
-    case "sampling/createMessage":
-      if (!((_a = requests.sampling) == null ? void 0 : _a.createMessage)) {
-        throw new Error(`${entityName} does not support task creation for sampling/createMessage (required for ${method})`);
-      }
-      break;
-    case "elicitation/create":
-      if (!((_b = requests.elicitation) == null ? void 0 : _b.create)) {
-        throw new Error(`${entityName} does not support task creation for elicitation/create (required for ${method})`);
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
-var Server = class extends Protocol {
-  /**
-   * Initializes this server with the given name and version information.
-   */
-  constructor(_serverInfo, options) {
-    super(options);
-    this._serverInfo = _serverInfo;
-    this._loggingLevels = /* @__PURE__ */ new Map();
-    this.LOG_LEVEL_SEVERITY = new Map(LoggingLevelSchema.options.map((level, index) => [level, index]));
-    this.isMessageIgnored = (level, sessionId) => {
-      const currentLevel = this._loggingLevels.get(sessionId);
-      return currentLevel ? this.LOG_LEVEL_SEVERITY.get(level) < this.LOG_LEVEL_SEVERITY.get(currentLevel) : false;
-    };
-    this._capabilities = (options == null ? void 0 : options.capabilities) ?? {};
-    this._instructions = options == null ? void 0 : options.instructions;
-    this._jsonSchemaValidator = (options == null ? void 0 : options.jsonSchemaValidator) ?? new AjvJsonSchemaValidator();
-    this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
-    this.setNotificationHandler(InitializedNotificationSchema, () => {
-      var _a;
-      return (_a = this.oninitialized) == null ? void 0 : _a.call(this);
-    });
-    if (this._capabilities.logging) {
-      this.setRequestHandler(SetLevelRequestSchema, async (request, extra) => {
-        var _a;
-        const transportSessionId = extra.sessionId || ((_a = extra.requestInfo) == null ? void 0 : _a.headers["mcp-session-id"]) || void 0;
-        const { level } = request.params;
-        const parseResult = LoggingLevelSchema.safeParse(level);
-        if (parseResult.success) {
-          this._loggingLevels.set(transportSessionId, parseResult.data);
-        }
-        return {};
-      });
-    }
-  }
-  /**
-   * Access experimental features.
-   *
-   * WARNING: These APIs are experimental and may change without notice.
-   *
-   * @experimental
-   */
-  get experimental() {
-    if (!this._experimental) {
-      this._experimental = {
-        tasks: new ExperimentalServerTasks(this)
-      };
-    }
-    return this._experimental;
-  }
-  /**
-   * Registers new capabilities. This can only be called before connecting to a transport.
-   *
-   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
-   */
-  registerCapabilities(capabilities) {
-    if (this.transport) {
-      throw new Error("Cannot register capabilities after connecting to transport");
-    }
-    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
-  }
-  /**
-   * Override request handler registration to enforce server-side validation for tools/call.
-   */
-  setRequestHandler(requestSchema, handler) {
-    var _a;
-    const shape = getObjectShape(requestSchema);
-    const methodSchema = shape == null ? void 0 : shape.method;
-    if (!methodSchema) {
-      throw new Error("Schema is missing a method literal");
-    }
-    let methodValue;
-    if (isZ4Schema(methodSchema)) {
-      const v4Schema = methodSchema;
-      const v4Def = (_a = v4Schema._zod) == null ? void 0 : _a.def;
-      methodValue = (v4Def == null ? void 0 : v4Def.value) ?? v4Schema.value;
-    } else {
-      const v3Schema = methodSchema;
-      const legacyDef = v3Schema._def;
-      methodValue = (legacyDef == null ? void 0 : legacyDef.value) ?? v3Schema.value;
-    }
-    if (typeof methodValue !== "string") {
-      throw new Error("Schema method literal must be a string");
-    }
-    const method = methodValue;
-    if (method === "tools/call") {
-      const wrappedHandler = async (request, extra) => {
-        const validatedRequest = safeParse2(CallToolRequestSchema, request);
-        if (!validatedRequest.success) {
-          const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage}`);
-        }
-        const { params } = validatedRequest.data;
-        const result = await Promise.resolve(handler(request, extra));
-        if (params.task) {
-          const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
-          if (!taskValidationResult.success) {
-            const errorMessage = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
-            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage}`);
-          }
-          return taskValidationResult.data;
-        }
-        const validationResult = safeParse2(CallToolResultSchema, result);
-        if (!validationResult.success) {
-          const errorMessage = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call result: ${errorMessage}`);
-        }
-        return validationResult.data;
-      };
-      return super.setRequestHandler(requestSchema, wrappedHandler);
-    }
-    return super.setRequestHandler(requestSchema, handler);
-  }
-  assertCapabilityForMethod(method) {
-    var _a, _b, _c;
-    switch (method) {
-      case "sampling/createMessage":
-        if (!((_a = this._clientCapabilities) == null ? void 0 : _a.sampling)) {
-          throw new Error(`Client does not support sampling (required for ${method})`);
-        }
-        break;
-      case "elicitation/create":
-        if (!((_b = this._clientCapabilities) == null ? void 0 : _b.elicitation)) {
-          throw new Error(`Client does not support elicitation (required for ${method})`);
-        }
-        break;
-      case "roots/list":
-        if (!((_c = this._clientCapabilities) == null ? void 0 : _c.roots)) {
-          throw new Error(`Client does not support listing roots (required for ${method})`);
-        }
-        break;
-      case "ping":
-        break;
-    }
-  }
-  assertNotificationCapability(method) {
-    var _a, _b;
-    switch (method) {
-      case "notifications/message":
-        if (!this._capabilities.logging) {
-          throw new Error(`Server does not support logging (required for ${method})`);
-        }
-        break;
-      case "notifications/resources/updated":
-      case "notifications/resources/list_changed":
-        if (!this._capabilities.resources) {
-          throw new Error(`Server does not support notifying about resources (required for ${method})`);
-        }
-        break;
-      case "notifications/tools/list_changed":
-        if (!this._capabilities.tools) {
-          throw new Error(`Server does not support notifying of tool list changes (required for ${method})`);
-        }
-        break;
-      case "notifications/prompts/list_changed":
-        if (!this._capabilities.prompts) {
-          throw new Error(`Server does not support notifying of prompt list changes (required for ${method})`);
-        }
-        break;
-      case "notifications/elicitation/complete":
-        if (!((_b = (_a = this._clientCapabilities) == null ? void 0 : _a.elicitation) == null ? void 0 : _b.url)) {
-          throw new Error(`Client does not support URL elicitation (required for ${method})`);
-        }
-        break;
-      case "notifications/cancelled":
-        break;
-      case "notifications/progress":
-        break;
-    }
-  }
-  assertRequestHandlerCapability(method) {
-    if (!this._capabilities) {
-      return;
-    }
-    switch (method) {
-      case "completion/complete":
-        if (!this._capabilities.completions) {
-          throw new Error(`Server does not support completions (required for ${method})`);
-        }
-        break;
-      case "logging/setLevel":
-        if (!this._capabilities.logging) {
-          throw new Error(`Server does not support logging (required for ${method})`);
-        }
-        break;
-      case "prompts/get":
-      case "prompts/list":
-        if (!this._capabilities.prompts) {
-          throw new Error(`Server does not support prompts (required for ${method})`);
-        }
-        break;
-      case "resources/list":
-      case "resources/templates/list":
-      case "resources/read":
-        if (!this._capabilities.resources) {
-          throw new Error(`Server does not support resources (required for ${method})`);
-        }
-        break;
-      case "tools/call":
-      case "tools/list":
-        if (!this._capabilities.tools) {
-          throw new Error(`Server does not support tools (required for ${method})`);
-        }
-        break;
-      case "tasks/get":
-      case "tasks/list":
-      case "tasks/result":
-      case "tasks/cancel":
-        if (!this._capabilities.tasks) {
-          throw new Error(`Server does not support tasks capability (required for ${method})`);
-        }
-        break;
-      case "ping":
-      case "initialize":
-        break;
-    }
-  }
-  assertTaskCapability(method) {
-    var _a, _b;
-    assertClientRequestTaskCapability((_b = (_a = this._clientCapabilities) == null ? void 0 : _a.tasks) == null ? void 0 : _b.requests, method, "Client");
-  }
-  assertTaskHandlerCapability(method) {
-    var _a;
-    if (!this._capabilities) {
-      return;
-    }
-    assertToolsCallTaskCapability((_a = this._capabilities.tasks) == null ? void 0 : _a.requests, method, "Server");
-  }
-  async _oninitialize(request) {
-    const requestedVersion = request.params.protocolVersion;
-    this._clientCapabilities = request.params.capabilities;
-    this._clientVersion = request.params.clientInfo;
-    const protocolVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion) ? requestedVersion : LATEST_PROTOCOL_VERSION;
-    return {
-      protocolVersion,
-      capabilities: this.getCapabilities(),
-      serverInfo: this._serverInfo,
-      ...this._instructions && { instructions: this._instructions }
-    };
-  }
-  /**
-   * After initialization has completed, this will be populated with the client's reported capabilities.
-   */
-  getClientCapabilities() {
-    return this._clientCapabilities;
-  }
-  /**
-   * After initialization has completed, this will be populated with information about the client's name and version.
-   */
-  getClientVersion() {
-    return this._clientVersion;
-  }
-  getCapabilities() {
-    return this._capabilities;
-  }
-  async ping() {
-    return this.request({ method: "ping" }, EmptyResultSchema);
-  }
-  // Implementation
-  async createMessage(params, options) {
-    var _a, _b;
-    if (params.tools || params.toolChoice) {
-      if (!((_b = (_a = this._clientCapabilities) == null ? void 0 : _a.sampling) == null ? void 0 : _b.tools)) {
-        throw new Error("Client does not support sampling tools capability.");
-      }
-    }
-    if (params.messages.length > 0) {
-      const lastMessage = params.messages[params.messages.length - 1];
-      const lastContent = Array.isArray(lastMessage.content) ? lastMessage.content : [lastMessage.content];
-      const hasToolResults = lastContent.some((c) => c.type === "tool_result");
-      const previousMessage = params.messages.length > 1 ? params.messages[params.messages.length - 2] : void 0;
-      const previousContent = previousMessage ? Array.isArray(previousMessage.content) ? previousMessage.content : [previousMessage.content] : [];
-      const hasPreviousToolUse = previousContent.some((c) => c.type === "tool_use");
-      if (hasToolResults) {
-        if (lastContent.some((c) => c.type !== "tool_result")) {
-          throw new Error("The last message must contain only tool_result content if any is present");
-        }
-        if (!hasPreviousToolUse) {
-          throw new Error("tool_result blocks are not matching any tool_use from the previous message");
-        }
-      }
-      if (hasPreviousToolUse) {
-        const toolUseIds = new Set(previousContent.filter((c) => c.type === "tool_use").map((c) => c.id));
-        const toolResultIds = new Set(lastContent.filter((c) => c.type === "tool_result").map((c) => c.toolUseId));
-        if (toolUseIds.size !== toolResultIds.size || ![...toolUseIds].every((id) => toolResultIds.has(id))) {
-          throw new Error("ids of tool_result blocks and tool_use blocks from previous message do not match");
-        }
-      }
-    }
-    if (params.tools) {
-      return this.request({ method: "sampling/createMessage", params }, CreateMessageResultWithToolsSchema, options);
-    }
-    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options);
-  }
-  /**
-   * Creates an elicitation request for the given parameters.
-   * For backwards compatibility, `mode` may be omitted for form requests and will default to `'form'`.
-   * @param params The parameters for the elicitation request.
-   * @param options Optional request options.
-   * @returns The result of the elicitation request.
-   */
-  async elicitInput(params, options) {
-    var _a, _b, _c, _d;
-    const mode = params.mode ?? "form";
-    switch (mode) {
-      case "url": {
-        if (!((_b = (_a = this._clientCapabilities) == null ? void 0 : _a.elicitation) == null ? void 0 : _b.url)) {
-          throw new Error("Client does not support url elicitation.");
-        }
-        const urlParams = params;
-        return this.request({ method: "elicitation/create", params: urlParams }, ElicitResultSchema, options);
-      }
-      case "form": {
-        if (!((_d = (_c = this._clientCapabilities) == null ? void 0 : _c.elicitation) == null ? void 0 : _d.form)) {
-          throw new Error("Client does not support form elicitation.");
-        }
-        const formParams = params.mode === "form" ? params : { ...params, mode: "form" };
-        const result = await this.request({ method: "elicitation/create", params: formParams }, ElicitResultSchema, options);
-        if (result.action === "accept" && result.content && formParams.requestedSchema) {
-          try {
-            const validator = this._jsonSchemaValidator.getValidator(formParams.requestedSchema);
-            const validationResult = validator(result.content);
-            if (!validationResult.valid) {
-              throw new McpError(ErrorCode.InvalidParams, `Elicitation response content does not match requested schema: ${validationResult.errorMessage}`);
-            }
-          } catch (error2) {
-            if (error2 instanceof McpError) {
-              throw error2;
-            }
-            throw new McpError(ErrorCode.InternalError, `Error validating elicitation response: ${error2 instanceof Error ? error2.message : String(error2)}`);
-          }
-        }
-        return result;
-      }
-    }
-  }
-  /**
-   * Creates a reusable callback that, when invoked, will send a `notifications/elicitation/complete`
-   * notification for the specified elicitation ID.
-   *
-   * @param elicitationId The ID of the elicitation to mark as complete.
-   * @param options Optional notification options. Useful when the completion notification should be related to a prior request.
-   * @returns A function that emits the completion notification when awaited.
-   */
-  createElicitationCompletionNotifier(elicitationId, options) {
-    var _a, _b;
-    if (!((_b = (_a = this._clientCapabilities) == null ? void 0 : _a.elicitation) == null ? void 0 : _b.url)) {
-      throw new Error("Client does not support URL elicitation (required for notifications/elicitation/complete)");
-    }
-    return () => this.notification({
-      method: "notifications/elicitation/complete",
-      params: {
-        elicitationId
-      }
-    }, options);
-  }
-  async listRoots(params, options) {
-    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options);
-  }
-  /**
-   * Sends a logging message to the client, if connected.
-   * Note: You only need to send the parameters object, not the entire JSON RPC message
-   * @see LoggingMessageNotification
-   * @param params
-   * @param sessionId optional for stateless and backward compatibility
-   */
-  async sendLoggingMessage(params, sessionId) {
-    if (this._capabilities.logging) {
-      if (!this.isMessageIgnored(params.level, sessionId)) {
-        return this.notification({ method: "notifications/message", params });
-      }
-    }
-  }
-  async sendResourceUpdated(params) {
-    return this.notification({
-      method: "notifications/resources/updated",
-      params
-    });
-  }
-  async sendResourceListChanged() {
-    return this.notification({
-      method: "notifications/resources/list_changed"
-    });
-  }
-  async sendToolListChanged() {
-    return this.notification({ method: "notifications/tools/list_changed" });
-  }
-  async sendPromptListChanged() {
-    return this.notification({ method: "notifications/prompts/list_changed" });
-  }
-};
-
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/completable.js
-var COMPLETABLE_SYMBOL = /* @__PURE__ */ Symbol.for("mcp.completable");
-function isCompletable(schema) {
-  return !!schema && typeof schema === "object" && COMPLETABLE_SYMBOL in schema;
-}
-function getCompleter(schema) {
-  const meta = schema[COMPLETABLE_SYMBOL];
-  return meta == null ? void 0 : meta.complete;
-}
 var McpZodTypeKind;
 (function(McpZodTypeKind2) {
   McpZodTypeKind2["Completable"] = "McpCompletable";
 })(McpZodTypeKind || (McpZodTypeKind = {}));
+var Completable = class extends ZodType {
+  _parse(input) {
+    const { ctx } = this._processInputParams(input);
+    const data = ctx.data;
+    return this._def.type._parse({
+      data,
+      path: ctx.path,
+      parent: ctx
+    });
+  }
+  unwrap() {
+    return this._def.type;
+  }
+};
+Completable.create = (type, params) => {
+  return new Completable({
+    type,
+    typeName: McpZodTypeKind.Completable,
+    complete: params.complete,
+    ...processCreateParams2(params)
+  });
+};
+function processCreateParams2(params) {
+  if (!params)
+    return {};
+  const { errorMap: errorMap2, invalid_type_error, required_error, description } = params;
+  if (errorMap2 && (invalid_type_error || required_error)) {
+    throw new Error(`Can't use "invalid_type_error" or "required_error" in conjunction with custom error map.`);
+  }
+  if (errorMap2)
+    return { errorMap: errorMap2, description };
+  const customMap = (iss, ctx) => {
+    var _a, _b;
+    const { message } = params;
+    if (iss.code === "invalid_enum_value") {
+      return { message: message !== null && message !== void 0 ? message : ctx.defaultError };
+    }
+    if (typeof ctx.data === "undefined") {
+      return { message: (_a = message !== null && message !== void 0 ? message : required_error) !== null && _a !== void 0 ? _a : ctx.defaultError };
+    }
+    if (iss.code !== "invalid_type")
+      return { message: ctx.defaultError };
+    return { message: (_b = message !== null && message !== void 0 ? message : invalid_type_error) !== null && _b !== void 0 ? _b : ctx.defaultError };
+  };
+  return { errorMap: customMap, description };
+}
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/shared/toolNameValidation.js
 var TOOL_NAME_REGEX = /^[A-Za-z0-9._-]{1,128}$/;
@@ -22292,21 +16094,6 @@ function validateAndWarnToolName(name) {
   return result.isValid;
 }
 
-// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/mcp-server.js
-var ExperimentalMcpServerTasks = class {
-  constructor(_mcpServer) {
-    this._mcpServer = _mcpServer;
-  }
-  registerToolTask(name, config2, handler) {
-    const execution = { taskSupport: "required", ...config2.execution };
-    if (execution.taskSupport === "forbidden") {
-      throw new Error(`Cannot register task-based tool '${name}' with taskSupport 'forbidden'. Use registerTool() instead.`);
-    }
-    const mcpServerInternal = this._mcpServer;
-    return mcpServerInternal._createRegisteredTool(name, config2.title, config2.description, config2.inputSchema, config2.outputSchema, config2.annotations, execution, config2._meta, handler);
-  }
-};
-
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js
 var McpServer = class {
   constructor(serverInfo, options) {
@@ -22319,21 +16106,6 @@ var McpServer = class {
     this._resourceHandlersInitialized = false;
     this._promptHandlersInitialized = false;
     this.server = new Server(serverInfo, options);
-  }
-  /**
-   * Access experimental features.
-   *
-   * WARNING: These APIs are experimental and may change without notice.
-   *
-   * @experimental
-   */
-  get experimental() {
-    if (!this._experimental) {
-      this._experimental = {
-        tasks: new ExperimentalMcpServerTasks(this)
-      };
-    }
-    return this._experimental;
   }
   /**
    * Attaches to the given transport, starts it, and starts listening for messages.
@@ -22353,8 +16125,8 @@ var McpServer = class {
     if (this._toolHandlersInitialized) {
       return;
     }
-    this.server.assertCanSetRequestHandler(getMethodValue(ListToolsRequestSchema));
-    this.server.assertCanSetRequestHandler(getMethodValue(CallToolRequestSchema));
+    this.server.assertCanSetRequestHandler(ListToolsRequestSchema.shape.method.value);
+    this.server.assertCanSetRequestHandler(CallToolRequestSchema.shape.method.value);
     this.server.registerCapabilities({
       tools: {
         listChanged: true
@@ -22366,66 +16138,57 @@ var McpServer = class {
           name,
           title: tool.title,
           description: tool.description,
-          inputSchema: (() => {
-            const obj = normalizeObjectSchema(tool.inputSchema);
-            return obj ? toJsonSchemaCompat(obj, {
-              strictUnions: true,
-              pipeStrategy: "input"
-            }) : EMPTY_OBJECT_JSON_SCHEMA;
-          })(),
+          inputSchema: tool.inputSchema ? zodToJsonSchema(tool.inputSchema, {
+            strictUnions: true,
+            pipeStrategy: "input"
+          }) : EMPTY_OBJECT_JSON_SCHEMA,
           annotations: tool.annotations,
-          execution: tool.execution,
           _meta: tool._meta
         };
         if (tool.outputSchema) {
-          const obj = normalizeObjectSchema(tool.outputSchema);
-          if (obj) {
-            toolDefinition.outputSchema = toJsonSchemaCompat(obj, {
-              strictUnions: true,
-              pipeStrategy: "output"
-            });
-          }
+          toolDefinition.outputSchema = zodToJsonSchema(tool.outputSchema, {
+            strictUnions: true,
+            pipeStrategy: "output"
+          });
         }
         return toolDefinition;
       })
     }));
     this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
-      var _a;
+      const tool = this._registeredTools[request.params.name];
+      let result;
       try {
-        const tool = this._registeredTools[request.params.name];
         if (!tool) {
           throw new McpError(ErrorCode.InvalidParams, `Tool ${request.params.name} not found`);
         }
         if (!tool.enabled) {
           throw new McpError(ErrorCode.InvalidParams, `Tool ${request.params.name} disabled`);
         }
-        const isTaskRequest = !!request.params.task;
-        const taskSupport = (_a = tool.execution) == null ? void 0 : _a.taskSupport;
-        const isTaskHandler = "createTask" in tool.handler;
-        if ((taskSupport === "required" || taskSupport === "optional") && !isTaskHandler) {
-          throw new McpError(ErrorCode.InternalError, `Tool ${request.params.name} has taskSupport '${taskSupport}' but was not registered with registerToolTask`);
+        if (tool.inputSchema) {
+          const cb = tool.callback;
+          const parseResult = await tool.inputSchema.safeParseAsync(request.params.arguments);
+          if (!parseResult.success) {
+            throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${request.params.name}: ${parseResult.error.message}`);
+          }
+          const args = parseResult.data;
+          result = await Promise.resolve(cb(args, extra));
+        } else {
+          const cb = tool.callback;
+          result = await Promise.resolve(cb(extra));
         }
-        if (taskSupport === "required" && !isTaskRequest) {
-          throw new McpError(ErrorCode.MethodNotFound, `Tool ${request.params.name} requires task augmentation (taskSupport: 'required')`);
-        }
-        if (taskSupport === "optional" && !isTaskRequest && isTaskHandler) {
-          return await this.handleAutomaticTaskPolling(tool, request, extra);
-        }
-        const args = await this.validateToolInput(tool, request.params.arguments, request.params.name);
-        const result = await this.executeToolHandler(tool, args, extra);
-        if (isTaskRequest) {
-          return result;
-        }
-        await this.validateToolOutput(tool, result, request.params.name);
-        return result;
-      } catch (error2) {
-        if (error2 instanceof McpError) {
-          if (error2.code === ErrorCode.UrlElicitationRequired) {
-            throw error2;
+        if (tool.outputSchema && !result.isError) {
+          if (!result.structuredContent) {
+            throw new McpError(ErrorCode.InvalidParams, `Output validation error: Tool ${request.params.name} has an output schema but no structured content was provided`);
+          }
+          const parseResult = await tool.outputSchema.safeParseAsync(result.structuredContent);
+          if (!parseResult.success) {
+            throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${request.params.name}: ${parseResult.error.message}`);
           }
         }
-        return this.createToolError(error2 instanceof Error ? error2.message : String(error2));
+      } catch (error) {
+        return this.createToolError(error instanceof Error ? error.message : String(error));
       }
+      return result;
     });
     this._toolHandlersInitialized = true;
   }
@@ -22446,106 +16209,11 @@ var McpServer = class {
       isError: true
     };
   }
-  /**
-   * Validates tool input arguments against the tool's input schema.
-   */
-  async validateToolInput(tool, args, toolName) {
-    if (!tool.inputSchema) {
-      return void 0;
-    }
-    const inputObj = normalizeObjectSchema(tool.inputSchema);
-    const schemaToParse = inputObj ?? tool.inputSchema;
-    const parseResult = await safeParseAsync2(schemaToParse, args);
-    if (!parseResult.success) {
-      const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${toolName}: ${errorMessage}`);
-    }
-    return parseResult.data;
-  }
-  /**
-   * Validates tool output against the tool's output schema.
-   */
-  async validateToolOutput(tool, result, toolName) {
-    if (!tool.outputSchema) {
-      return;
-    }
-    if (!("content" in result)) {
-      return;
-    }
-    if (result.isError) {
-      return;
-    }
-    if (!result.structuredContent) {
-      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Tool ${toolName} has an output schema but no structured content was provided`);
-    }
-    const outputObj = normalizeObjectSchema(tool.outputSchema);
-    const parseResult = await safeParseAsync2(outputObj, result.structuredContent);
-    if (!parseResult.success) {
-      const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${toolName}: ${errorMessage}`);
-    }
-  }
-  /**
-   * Executes a tool handler (either regular or task-based).
-   */
-  async executeToolHandler(tool, args, extra) {
-    const handler = tool.handler;
-    const isTaskHandler = "createTask" in handler;
-    if (isTaskHandler) {
-      if (!extra.taskStore) {
-        throw new Error("No task store provided.");
-      }
-      const taskExtra = { ...extra, taskStore: extra.taskStore };
-      if (tool.inputSchema) {
-        const typedHandler = handler;
-        return await Promise.resolve(typedHandler.createTask(args, taskExtra));
-      } else {
-        const typedHandler = handler;
-        return await Promise.resolve(typedHandler.createTask(taskExtra));
-      }
-    }
-    if (tool.inputSchema) {
-      const typedHandler = handler;
-      return await Promise.resolve(typedHandler(args, extra));
-    } else {
-      const typedHandler = handler;
-      return await Promise.resolve(typedHandler(extra));
-    }
-  }
-  /**
-   * Handles automatic task polling for tools with taskSupport 'optional'.
-   */
-  async handleAutomaticTaskPolling(tool, request, extra) {
-    if (!extra.taskStore) {
-      throw new Error("No task store provided for task-capable tool.");
-    }
-    const args = await this.validateToolInput(tool, request.params.arguments, request.params.name);
-    const handler = tool.handler;
-    const taskExtra = { ...extra, taskStore: extra.taskStore };
-    const createTaskResult = args ? await Promise.resolve(handler.createTask(args, taskExtra)) : (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await Promise.resolve(handler.createTask(taskExtra))
-    );
-    const taskId = createTaskResult.task.taskId;
-    let task = createTaskResult.task;
-    const pollInterval = task.pollInterval ?? 5e3;
-    while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
-      const updatedTask = await extra.taskStore.getTask(taskId);
-      if (!updatedTask) {
-        throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
-      }
-      task = updatedTask;
-    }
-    return await extra.taskStore.getTaskResult(taskId);
-  }
   setCompletionRequestHandler() {
     if (this._completionHandlerInitialized) {
       return;
     }
-    this.server.assertCanSetRequestHandler(getMethodValue(CompleteRequestSchema));
+    this.server.assertCanSetRequestHandler(CompleteRequestSchema.shape.method.value);
     this.server.registerCapabilities({
       completions: {}
     });
@@ -22574,16 +16242,12 @@ var McpServer = class {
     if (!prompt.argsSchema) {
       return EMPTY_COMPLETION_RESULT;
     }
-    const promptShape = getObjectShape(prompt.argsSchema);
-    const field = promptShape == null ? void 0 : promptShape[request.params.argument.name];
-    if (!isCompletable(field)) {
+    const field = prompt.argsSchema.shape[request.params.argument.name];
+    if (!(field instanceof Completable)) {
       return EMPTY_COMPLETION_RESULT;
     }
-    const completer = getCompleter(field);
-    if (!completer) {
-      return EMPTY_COMPLETION_RESULT;
-    }
-    const suggestions = await completer(request.params.argument.value, request.params.context);
+    const def = field._def;
+    const suggestions = await def.complete(request.params.argument.value, request.params.context);
     return createCompletionResult(suggestions);
   }
   async handleResourceCompletion(request, ref) {
@@ -22605,9 +16269,9 @@ var McpServer = class {
     if (this._resourceHandlersInitialized) {
       return;
     }
-    this.server.assertCanSetRequestHandler(getMethodValue(ListResourcesRequestSchema));
-    this.server.assertCanSetRequestHandler(getMethodValue(ListResourceTemplatesRequestSchema));
-    this.server.assertCanSetRequestHandler(getMethodValue(ReadResourceRequestSchema));
+    this.server.assertCanSetRequestHandler(ListResourcesRequestSchema.shape.method.value);
+    this.server.assertCanSetRequestHandler(ListResourceTemplatesRequestSchema.shape.method.value);
+    this.server.assertCanSetRequestHandler(ReadResourceRequestSchema.shape.method.value);
     this.server.registerCapabilities({
       resources: {
         listChanged: true
@@ -22660,14 +16324,15 @@ var McpServer = class {
       }
       throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`);
     });
+    this.setCompletionRequestHandler();
     this._resourceHandlersInitialized = true;
   }
   setPromptRequestHandlers() {
     if (this._promptHandlersInitialized) {
       return;
     }
-    this.server.assertCanSetRequestHandler(getMethodValue(ListPromptsRequestSchema));
-    this.server.assertCanSetRequestHandler(getMethodValue(GetPromptRequestSchema));
+    this.server.assertCanSetRequestHandler(ListPromptsRequestSchema.shape.method.value);
+    this.server.assertCanSetRequestHandler(GetPromptRequestSchema.shape.method.value);
     this.server.registerCapabilities({
       prompts: {
         listChanged: true
@@ -22692,12 +16357,9 @@ var McpServer = class {
         throw new McpError(ErrorCode.InvalidParams, `Prompt ${request.params.name} disabled`);
       }
       if (prompt.argsSchema) {
-        const argsObj = normalizeObjectSchema(prompt.argsSchema);
-        const parseResult = await safeParseAsync2(argsObj, request.params.arguments);
+        const parseResult = await prompt.argsSchema.safeParseAsync(request.params.arguments);
         if (!parseResult.success) {
-          const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-          const errorMessage = getParseErrorMessage(error2);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage}`);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${parseResult.error.message}`);
         }
         const args = parseResult.data;
         const cb = prompt.callback;
@@ -22707,6 +16369,7 @@ var McpServer = class {
         return await Promise.resolve(cb(extra));
       }
     });
+    this.setCompletionRequestHandler();
     this._promptHandlersInitialized = true;
   }
   resource(name, uriOrTemplate, ...rest) {
@@ -22733,12 +16396,12 @@ var McpServer = class {
       return registeredResourceTemplate;
     }
   }
-  registerResource(name, uriOrTemplate, config2, readCallback) {
+  registerResource(name, uriOrTemplate, config, readCallback) {
     if (typeof uriOrTemplate === "string") {
       if (this._registeredResources[uriOrTemplate]) {
         throw new Error(`Resource ${uriOrTemplate} is already registered`);
       }
-      const registeredResource = this._createRegisteredResource(name, config2.title, uriOrTemplate, config2, readCallback);
+      const registeredResource = this._createRegisteredResource(name, config.title, uriOrTemplate, config, readCallback);
       this.setResourceRequestHandlers();
       this.sendResourceListChanged();
       return registeredResource;
@@ -22746,7 +16409,7 @@ var McpServer = class {
       if (this._registeredResourceTemplates[name]) {
         throw new Error(`Resource template ${name} is already registered`);
       }
-      const registeredResourceTemplate = this._createRegisteredResourceTemplate(name, config2.title, uriOrTemplate, config2, readCallback);
+      const registeredResourceTemplate = this._createRegisteredResourceTemplate(name, config.title, uriOrTemplate, config, readCallback);
       this.setResourceRequestHandlers();
       this.sendResourceListChanged();
       return registeredResourceTemplate;
@@ -22814,18 +16477,13 @@ var McpServer = class {
       }
     };
     this._registeredResourceTemplates[name] = registeredResourceTemplate;
-    const variableNames = template.uriTemplate.variableNames;
-    const hasCompleter = Array.isArray(variableNames) && variableNames.some((v) => !!template.completeCallback(v));
-    if (hasCompleter) {
-      this.setCompletionRequestHandler();
-    }
     return registeredResourceTemplate;
   }
   _createRegisteredPrompt(name, title, description, argsSchema, callback) {
     const registeredPrompt = {
       title,
       description,
-      argsSchema: argsSchema === void 0 ? void 0 : objectFromShape(argsSchema),
+      argsSchema: argsSchema === void 0 ? void 0 : external_exports.object(argsSchema),
       callback,
       enabled: true,
       disable: () => registeredPrompt.update({ enabled: false }),
@@ -22842,7 +16500,7 @@ var McpServer = class {
         if (typeof updates.description !== "undefined")
           registeredPrompt.description = updates.description;
         if (typeof updates.argsSchema !== "undefined")
-          registeredPrompt.argsSchema = objectFromShape(updates.argsSchema);
+          registeredPrompt.argsSchema = external_exports.object(updates.argsSchema);
         if (typeof updates.callback !== "undefined")
           registeredPrompt.callback = updates.callback;
         if (typeof updates.enabled !== "undefined")
@@ -22851,19 +16509,9 @@ var McpServer = class {
       }
     };
     this._registeredPrompts[name] = registeredPrompt;
-    if (argsSchema) {
-      const hasCompletable = Object.values(argsSchema).some((field) => {
-        var _a;
-        const inner = field instanceof ZodOptional ? (_a = field._def) == null ? void 0 : _a.innerType : field;
-        return isCompletable(inner);
-      });
-      if (hasCompletable) {
-        this.setCompletionRequestHandler();
-      }
-    }
     return registeredPrompt;
   }
-  _createRegisteredTool(name, title, description, inputSchema, outputSchema, annotations, execution, _meta, handler) {
+  _createRegisteredTool(name, title, description, inputSchema, outputSchema, annotations, _meta, callback) {
     validateAndWarnToolName(name);
     const registeredTool = {
       title,
@@ -22871,9 +16519,8 @@ var McpServer = class {
       inputSchema: getZodSchemaObject(inputSchema),
       outputSchema: getZodSchemaObject(outputSchema),
       annotations,
-      execution,
       _meta,
-      handler,
+      callback,
       enabled: true,
       disable: () => registeredTool.update({ enabled: false }),
       enable: () => registeredTool.update({ enabled: true }),
@@ -22892,11 +16539,9 @@ var McpServer = class {
         if (typeof updates.description !== "undefined")
           registeredTool.description = updates.description;
         if (typeof updates.paramsSchema !== "undefined")
-          registeredTool.inputSchema = objectFromShape(updates.paramsSchema);
-        if (typeof updates.outputSchema !== "undefined")
-          registeredTool.outputSchema = objectFromShape(updates.outputSchema);
+          registeredTool.inputSchema = external_exports.object(updates.paramsSchema);
         if (typeof updates.callback !== "undefined")
-          registeredTool.handler = updates.callback;
+          registeredTool.callback = updates.callback;
         if (typeof updates.annotations !== "undefined")
           registeredTool.annotations = updates.annotations;
         if (typeof updates._meta !== "undefined")
@@ -22927,30 +16572,27 @@ var McpServer = class {
     }
     if (rest.length > 1) {
       const firstArg = rest[0];
-      if (isZodRawShapeCompat(firstArg)) {
+      if (isZodRawShape(firstArg)) {
         inputSchema = rest.shift();
-        if (rest.length > 1 && typeof rest[0] === "object" && rest[0] !== null && !isZodRawShapeCompat(rest[0])) {
+        if (rest.length > 1 && typeof rest[0] === "object" && rest[0] !== null && !isZodRawShape(rest[0])) {
           annotations = rest.shift();
         }
       } else if (typeof firstArg === "object" && firstArg !== null) {
-        if (Object.values(firstArg).some((v) => typeof v === "object" && v !== null)) {
-          throw new Error(`Tool ${name} expected a Zod schema or ToolAnnotations, but received an unrecognized object`);
-        }
         annotations = rest.shift();
       }
     }
     const callback = rest[0];
-    return this._createRegisteredTool(name, void 0, description, inputSchema, outputSchema, annotations, { taskSupport: "forbidden" }, void 0, callback);
+    return this._createRegisteredTool(name, void 0, description, inputSchema, outputSchema, annotations, void 0, callback);
   }
   /**
    * Registers a tool with a config object and callback.
    */
-  registerTool(name, config2, cb) {
+  registerTool(name, config, cb) {
     if (this._registeredTools[name]) {
       throw new Error(`Tool ${name} is already registered`);
     }
-    const { title, description, inputSchema, outputSchema, annotations, _meta } = config2;
-    return this._createRegisteredTool(name, title, description, inputSchema, outputSchema, annotations, { taskSupport: "forbidden" }, _meta, cb);
+    const { title, description, inputSchema, outputSchema, annotations, _meta } = config;
+    return this._createRegisteredTool(name, title, description, inputSchema, outputSchema, annotations, _meta, cb);
   }
   prompt(name, ...rest) {
     if (this._registeredPrompts[name]) {
@@ -22973,11 +16615,11 @@ var McpServer = class {
   /**
    * Registers a prompt with a config object and callback.
    */
-  registerPrompt(name, config2, cb) {
+  registerPrompt(name, config, cb) {
     if (this._registeredPrompts[name]) {
       throw new Error(`Prompt ${name} is already registered`);
     }
-    const { title, description, argsSchema } = config2;
+    const { title, description, argsSchema } = config;
     const registeredPrompt = this._createRegisteredPrompt(name, title, description, argsSchema, cb);
     this.setPromptRequestHandlers();
     this.sendPromptListChanged();
@@ -23029,61 +16671,30 @@ var EMPTY_OBJECT_JSON_SCHEMA = {
   type: "object",
   properties: {}
 };
+function isZodRawShape(obj) {
+  if (typeof obj !== "object" || obj === null)
+    return false;
+  const isEmptyObject = Object.keys(obj).length === 0;
+  return isEmptyObject || Object.values(obj).some(isZodTypeLike);
+}
 function isZodTypeLike(value) {
   return value !== null && typeof value === "object" && "parse" in value && typeof value.parse === "function" && "safeParse" in value && typeof value.safeParse === "function";
-}
-function isZodSchemaInstance(obj) {
-  return "_def" in obj || "_zod" in obj || isZodTypeLike(obj);
-}
-function isZodRawShapeCompat(obj) {
-  if (typeof obj !== "object" || obj === null) {
-    return false;
-  }
-  if (isZodSchemaInstance(obj)) {
-    return false;
-  }
-  if (Object.keys(obj).length === 0) {
-    return true;
-  }
-  return Object.values(obj).some(isZodTypeLike);
 }
 function getZodSchemaObject(schema) {
   if (!schema) {
     return void 0;
   }
-  if (isZodRawShapeCompat(schema)) {
-    return objectFromShape(schema);
-  }
-  if (!isZodSchemaInstance(schema)) {
-    throw new Error("inputSchema must be a Zod schema or raw shape, received an unrecognized object");
+  if (isZodRawShape(schema)) {
+    return external_exports.object(schema);
   }
   return schema;
 }
 function promptArgumentsFromSchema(schema) {
-  const shape = getObjectShape(schema);
-  if (!shape)
-    return [];
-  return Object.entries(shape).map(([name, field]) => {
-    const description = getSchemaDescription(field);
-    const isOptional = isSchemaOptional(field);
-    return {
-      name,
-      description,
-      required: !isOptional
-    };
-  });
-}
-function getMethodValue(schema) {
-  const shape = getObjectShape(schema);
-  const methodSchema = shape == null ? void 0 : shape.method;
-  if (!methodSchema) {
-    throw new Error("Schema is missing a method literal");
-  }
-  const value = getLiteralValue(methodSchema);
-  if (typeof value === "string") {
-    return value;
-  }
-  throw new Error("Schema method literal must be a string");
+  return Object.entries(schema.shape).map(([name, field]) => ({
+    name,
+    description: field.description,
+    required: !field.isOptional()
+  }));
 }
 function createCompletionResult(suggestions) {
   return {
@@ -23143,9 +16754,9 @@ var StdioServerTransport = class {
       this._readBuffer.append(chunk);
       this.processReadBuffer();
     };
-    this._onerror = (error2) => {
+    this._onerror = (error) => {
       var _a;
-      (_a = this.onerror) == null ? void 0 : _a.call(this, error2);
+      (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
     };
   }
   /**
@@ -23167,9 +16778,9 @@ var StdioServerTransport = class {
         if (message === null) {
           break;
         }
-        (_a = this.onmessage) == null ? void 0 : _a.call(this, message);
-      } catch (error2) {
-        (_b = this.onerror) == null ? void 0 : _b.call(this, error2);
+        (_a = this.onmessage) === null || _a === void 0 ? void 0 : _a.call(this, message);
+      } catch (error) {
+        (_b = this.onerror) === null || _b === void 0 ? void 0 : _b.call(this, error);
       }
     }
   }
@@ -23182,7 +16793,7 @@ var StdioServerTransport = class {
       this._stdin.pause();
     }
     this._readBuffer.clear();
-    (_a = this.onclose) == null ? void 0 : _a.call(this);
+    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
   }
   send(message) {
     return new Promise((resolve) => {
@@ -23197,362 +16808,2777 @@ var StdioServerTransport = class {
 };
 
 // src/mcp-server.ts
-var import_child_process = require("child_process");
-var fs = __toESM(require_lib());
-var path = __toESM(require("path"));
+var import_child_process2 = require("child_process");
+var fs10 = __toESM(require_lib());
+var path10 = __toESM(require("path"));
+
+// src/generators/context.ts
+var import_fs_extra = __toESM(require_lib());
+var import_path = __toESM(require("path"));
+var import_crypto = __toESM(require("crypto"));
+var FRAMEWORKS = ["express", "elysia"];
+var DATABASES = ["mongodb", "postgres"];
+var FIELD_TYPES = ["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"];
+var GeneratorError = class extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+    this.name = "GeneratorError";
+  }
+};
+var assertValidName = (value, pattern, what) => {
+  if (!pattern.test(value)) {
+    throw new GeneratorError("INVALID_INPUT", `Invalid ${what}: "${value}" (must match ${pattern})`);
+  }
+};
+var capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+var toCamelCase = (str) => str.charAt(0).toLowerCase() + str.slice(1);
+var jsQuoted = (raw) => `'${raw.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+var toKebabCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var toUpperSnakeCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+var generateSecret = (bytes = 64) => import_crypto.default.randomBytes(bytes).toString("hex");
+var packageRoot = () => {
+  const candidates = [import_path.default.join(__dirname, ".."), import_path.default.join(__dirname, "..", "..")];
+  for (const c of candidates) {
+    if (import_fs_extra.default.existsSync(import_path.default.join(c, "templates"))) return c;
+  }
+  throw new GeneratorError("IO_ERROR", "Could not locate koti package root (no templates/ directory found)");
+};
+var templatesDir = () => import_path.default.join(packageRoot(), "templates");
 var getVersion = () => {
   const candidates = [
-    path.join(__dirname, "..", "version.json"),
-    path.join(__dirname, "..", "package.json")
+    import_path.default.join(__dirname, "..", "version.json"),
+    import_path.default.join(__dirname, "..", "package.json"),
+    import_path.default.join(__dirname, "..", "..", "version.json"),
+    import_path.default.join(__dirname, "..", "..", "package.json")
   ];
-  for (const c of candidates) {
+  for (const candidate of candidates) {
     try {
-      const data = JSON.parse(fs.readFileSync(c, "utf8"));
+      const data = JSON.parse(import_fs_extra.default.readFileSync(candidate, "utf8"));
       if (data.version) return data.version;
     } catch {
     }
   }
   return "0.0.0-unknown";
 };
-var runKotiCommand = (args, cwd, input) => {
-  return new Promise((resolve) => {
-    const kotiPath = path.join(__dirname, "..", "dist", "cli.js");
-    const child = (0, import_child_process.spawn)("node", [kotiPath, ...args], {
-      cwd: cwd || process.cwd(),
-      env: { ...process.env, FORCE_COLOR: "0" },
-      stdio: ["pipe", "pipe", "pipe"]
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (d) => stdout += d.toString());
-    child.stderr.on("data", (d) => stderr += d.toString());
-    if (input) {
-      child.stdin.write(input);
-      child.stdin.end();
+var resolveProject = async (root) => {
+  const warnings = [];
+  const pkgPath = import_path.default.join(root, "package.json");
+  if (!await import_fs_extra.default.pathExists(pkgPath)) {
+    throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no package.json)`);
+  }
+  const configPath = import_path.default.join(root, "koti.config.json");
+  if (await import_fs_extra.default.pathExists(configPath)) {
+    try {
+      const config = await import_fs_extra.default.readJson(configPath);
+      let framework = "express";
+      if (config.framework === "express" || config.framework === "elysia") {
+        framework = config.framework;
+      } else {
+        warnings.push(`Unknown framework "${config.framework}" in koti.config.json \u2014 defaulting to express`);
+      }
+      let database2;
+      if (config.database === void 0) {
+        database2 = "mongodb";
+        warnings.push('koti.config.json has no "database" key (pre-3.2 project) \u2014 assuming mongodb. Run koti db:switch or add the key to silence this.');
+      } else if (!DATABASES.includes(config.database)) {
+        throw new GeneratorError("UNSUPPORTED_DATABASE", `Unknown database "${config.database}" in koti.config.json. Supported: ${DATABASES.join(", ")}`);
+      } else {
+        database2 = config.database;
+      }
+      return { root, framework, database: database2, warnings };
+    } catch (err) {
+      if (err instanceof GeneratorError) throw err;
+      warnings.push("Unreadable koti.config.json \u2014 falling back to dependency detection");
     }
-    child.on("close", (code) => {
-      resolve({ stdout, stderr, exitCode: code ?? 1 });
-    });
-  });
+  }
+  let deps = {};
+  try {
+    const pkg = await import_fs_extra.default.readJson(pkgPath);
+    deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  } catch {
+    throw new GeneratorError("NOT_KOTI_PROJECT", `${root} has an unreadable package.json`);
+  }
+  const database = deps["drizzle-orm"] || deps.pg ? "postgres" : "mongodb";
+  if (deps.elysia) {
+    warnings.push('No koti.config.json \u2014 framework "elysia" inferred from dependencies');
+    return { root, framework: "elysia", database, warnings };
+  }
+  if (deps.express || deps.mongoose || deps.pg || deps["drizzle-orm"]) {
+    warnings.push('No koti.config.json \u2014 framework "express" inferred from dependencies');
+    return { root, framework: "express", database, warnings };
+  }
+  throw new GeneratorError("NOT_KOTI_PROJECT", `${root} is not a Koti project (no koti.config.json and no express/elysia/mongoose/drizzle-orm/pg dependency)`);
 };
-var stripAnsi = (text) => text.replace(/\x1b\[[0-9;]*m/g, "");
+var BUILTIN_MODELS = ["User", "Role", "AuditLog", "Document", "TinyUrl"];
+var readModelManifest = async (root) => {
+  try {
+    const config = await import_fs_extra.default.readJson(import_path.default.join(root, "koti.config.json"));
+    const models = config == null ? void 0 : config.models;
+    return models && typeof models === "object" ? models : {};
+  } catch {
+    return {};
+  }
+};
+var upsertModelManifest = async (root, name, entry) => {
+  const configPath = import_path.default.join(root, "koti.config.json");
+  let config = {};
+  try {
+    config = await import_fs_extra.default.readJson(configPath);
+  } catch {
+    throw new GeneratorError("IO_ERROR", `Could not read ${configPath} to record the models manifest`);
+  }
+  const models = config.models && typeof config.models === "object" ? config.models : {};
+  models[name] = entry;
+  config.models = models;
+  await import_fs_extra.default.writeFile(configPath, JSON.stringify(config, null, 2));
+};
+var updateIndexExport = async (dirPath, exportLine) => {
+  const indexPath = import_path.default.join(dirPath, "index.ts");
+  try {
+    let content = "";
+    if (await import_fs_extra.default.pathExists(indexPath)) {
+      content = await import_fs_extra.default.readFile(indexPath, "utf-8");
+    }
+    if (content.includes(exportLine)) return;
+    const separator = content.length > 0 && !content.endsWith("\n") ? "\n" : "";
+    await import_fs_extra.default.writeFile(indexPath, content + separator + exportLine + "\n");
+  } catch {
+  }
+};
+
+// src/generators/project.ts
+var import_fs_extra2 = __toESM(require_lib());
+var import_path2 = __toESM(require("path"));
+var import_child_process = require("child_process");
+var noop = (_msg) => {
+};
+var runInstall = (cwd, cmd, timeoutMs, log) => new Promise((resolve) => {
+  log == null ? void 0 : log(`Running: ${cmd} install`);
+  const child = (0, import_child_process.spawn)(cmd, ["install"], { cwd, stdio: "ignore", shell: process.platform === "win32" });
+  const timer = setTimeout(() => {
+    child.kill("SIGKILL");
+    resolve(false);
+  }, timeoutMs);
+  child.on("error", () => {
+    clearTimeout(timer);
+    resolve(false);
+  });
+  child.on("close", (code) => {
+    clearTimeout(timer);
+    resolve(code === 0);
+  });
+});
+var replaceInDir = async (dirPath, projectName) => {
+  const entries = await import_fs_extra2.default.readdir(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = import_path2.default.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      await replaceInDir(fullPath, projectName);
+    } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".json")) {
+      let content = await import_fs_extra2.default.readFile(fullPath, "utf-8");
+      if (content.includes("{{PROJECT_NAME}}")) {
+        content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+        await import_fs_extra2.default.writeFile(fullPath, content);
+      }
+    }
+  }
+};
+var applyEnvFragment = (envContent, fragment) => {
+  const line = fragment.trim();
+  const lines = envContent.split("\n");
+  const existing = lines.findIndex((l) => /^\s*(MONGODB_URI|DATABASE_URL)\s*=/.test(l));
+  if (existing >= 0) {
+    lines[existing] = line;
+    return lines.join("\n");
+  }
+  const header = lines.findIndex((l) => /^#\s*Database/i.test(l));
+  if (header >= 0) {
+    lines.splice(header + 1, 0, line);
+    return lines.join("\n");
+  }
+  const port = lines.findIndex((l) => /^\s*PORT\s*=/.test(l));
+  if (port >= 0) {
+    lines.splice(port + 1, 0, "", "# Database", line);
+    return lines.join("\n");
+  }
+  return `${envContent.replace(/\n*$/, "")}
+
+# Database
+${line}
+`;
+};
+var loadEnvFragment = async (database, projectName) => {
+  const fragmentPath = import_path2.default.join(templatesDir(), "db", database, "env.fragment");
+  if (!await import_fs_extra2.default.pathExists(fragmentPath)) return "";
+  return (await import_fs_extra2.default.readFile(fragmentPath, "utf-8")).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+};
+var applyDbFragments = async (projectPath, database, framework, projectName) => {
+  const dbDir = import_path2.default.join(templatesDir(), "db", database);
+  const depsPath = import_path2.default.join(dbDir, "package.deps.json");
+  if (await import_fs_extra2.default.pathExists(depsPath)) {
+    const fragment2 = await import_fs_extra2.default.readJson(depsPath);
+    const pkgPath = import_path2.default.join(projectPath, "package.json");
+    if (await import_fs_extra2.default.pathExists(pkgPath)) {
+      const pkg = await import_fs_extra2.default.readJson(pkgPath);
+      for (const section of ["dependencies", "devDependencies"]) {
+        if (!fragment2[section]) continue;
+        pkg[section] = { ...pkg[section] ?? {}, ...fragment2[section] };
+      }
+      if (fragment2.scripts) {
+        pkg.scripts = pkg.scripts ?? {};
+        for (const [name, value] of Object.entries(fragment2.scripts)) {
+          pkg.scripts[name] = typeof value === "object" && value !== null ? value[framework] : value;
+          if (pkg.scripts[name] === void 0) delete pkg.scripts[name];
+        }
+      }
+      await import_fs_extra2.default.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+    }
+  }
+  const fragment = await loadEnvFragment(database, projectName);
+  if (fragment) {
+    for (const fileName of [".env", ".env.example"]) {
+      const envPath = import_path2.default.join(projectPath, fileName);
+      if (!await import_fs_extra2.default.pathExists(envPath)) continue;
+      const content = await import_fs_extra2.default.readFile(envPath, "utf-8");
+      await import_fs_extra2.default.writeFile(envPath, applyEnvFragment(content, fragment));
+    }
+  }
+  const readmeFragmentPath = import_path2.default.join(dbDir, "readme.fragment.md");
+  const readmePath = import_path2.default.join(projectPath, "README.md");
+  if (await import_fs_extra2.default.pathExists(readmeFragmentPath) && await import_fs_extra2.default.pathExists(readmePath)) {
+    const prose = (await import_fs_extra2.default.readFile(readmeFragmentPath, "utf-8")).replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+    const readme = await import_fs_extra2.default.readFile(readmePath, "utf-8");
+    if (readme.includes("<!-- DB_SETUP -->")) {
+      await import_fs_extra2.default.writeFile(readmePath, readme.replace("<!-- DB_SETUP -->", prose.trimEnd()));
+    }
+  }
+};
+var indexRouteContent = (projectName, database) => `import { Router, Request, Response } from 'express';
+import { ApiResponse } from '../types/api';
+
+const router = Router();
+
+/**
+ * @swagger
+ * /api/:
+ *   get:
+ *     summary: API welcome message
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Welcome message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ */
+router.get('/', (req: Request, res: Response) => {
+  const response: ApiResponse = {
+    success: true,
+    message: 'Welcome to ${projectName} API',
+    data: {
+      version: '${getVersion()}',
+      description: 'TypeScript API built with Bun, Express, and ${database === "postgres" ? "PostgreSQL" : "MongoDB"}',
+      documentation: '/api-docs'
+    }
+  };
+  res.json(response);
+});
+
+/**
+ * @swagger
+ * /api/status:
+ *   get:
+ *     summary: API status information
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: API status
+ */
+router.get('/status', (req: Request, res: Response) => {
+  const response: ApiResponse = {
+    success: true,
+    message: 'API is running',
+    data: {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    }
+  };
+  res.json(response);
+});
+
+export default router;`;
+var authRouteContent = `import { Router } from 'express';
+import authController from '../controllers/authController';
+import { auth } from '../middleware/auth';
+
+const router = Router();
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Validation error
+ */
+router.post('/register', authController.register);
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+router.post('/login', authController.login);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset instructions sent
+ *       404:
+ *         description: User not found
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid token or password
+ */
+router.post('/reset-password', authController.resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid refresh token
+ */
+router.post('/refresh-token', authController.refreshToken);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', authController.logout);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/profile', auth, authController.getProfile);
+
+export default router;`;
+var createProject = async (opts) => {
+  const log = opts.log ?? noop;
+  const files = [];
+  const warnings = [];
+  assertValidName(opts.name, /^[a-z0-9-]+$/, "project name");
+  const framework = opts.framework ?? "express";
+  if (!FRAMEWORKS.includes(framework)) {
+    throw new GeneratorError("UNSUPPORTED_FRAMEWORK", `Unsupported framework: "${framework}" (must be one of ${FRAMEWORKS.join(", ")})`);
+  }
+  const database = opts.database ?? "mongodb";
+  if (!DATABASES.includes(database)) {
+    throw new GeneratorError("UNSUPPORTED_DATABASE", `Unsupported database: "${database}" (must be one of ${DATABASES.join(", ")})`);
+  }
+  const directory = opts.directory ?? process.cwd();
+  const dirStat = await import_fs_extra2.default.stat(directory).catch(() => null);
+  if (!dirStat || !dirStat.isDirectory()) {
+    throw new GeneratorError("INVALID_INPUT", `Directory does not exist or is not a directory: "${directory}"`);
+  }
+  const projectPath = import_path2.default.join(directory, opts.name);
+  if (await import_fs_extra2.default.pathExists(projectPath)) {
+    const targetStat = await import_fs_extra2.default.stat(projectPath);
+    const isNonEmptyDir = targetStat.isDirectory() && (await import_fs_extra2.default.readdir(projectPath)).length > 0;
+    if (!targetStat.isDirectory() || isNonEmptyDir) {
+      throw new GeneratorError("DUPLICATE", `Target already exists: "${projectPath}"`);
+    }
+  }
+  log(`\u{1F680} Creating TypeScript Bun API project: ${opts.name}`);
+  log(`\u{1F4C1} Project directory: ${projectPath}`);
+  await import_fs_extra2.default.ensureDir(projectPath);
+  log(`\u{1F9E9} Framework: ${framework}`);
+  log(`\u{1F5C4}\uFE0F  Database: ${database}`);
+  const templatePath = import_path2.default.join(templatesDir(), framework);
+  const sharedTemplatePath = import_path2.default.join(templatesDir(), "shared");
+  const srcPath = import_path2.default.join(projectPath, "src");
+  const directories = [
+    "config",
+    "controllers",
+    "middleware",
+    "models",
+    "routes",
+    "types",
+    "utils",
+    "services",
+    "schemas",
+    "enums",
+    "validators",
+    "seeds"
+  ];
+  for (const dir of directories) {
+    await import_fs_extra2.default.ensureDir(import_path2.default.join(srcPath, dir));
+    log(`\u2705 Created directory: src/${dir}/`);
+  }
+  const packageJsonPath = import_path2.default.join(templatePath, "package.json");
+  const readmePath = import_path2.default.join(templatePath, "README.md");
+  if (await import_fs_extra2.default.pathExists(packageJsonPath)) {
+    let content = await import_fs_extra2.default.readFile(packageJsonPath, "utf-8");
+    content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+    const dest = import_path2.default.join(projectPath, "package.json");
+    await import_fs_extra2.default.writeFile(dest, content);
+    files.push(dest);
+    log("\u2705 Created file: package.json");
+  }
+  if (await import_fs_extra2.default.pathExists(readmePath)) {
+    let content = await import_fs_extra2.default.readFile(readmePath, "utf-8");
+    content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+    const dest = import_path2.default.join(projectPath, "README.md");
+    await import_fs_extra2.default.writeFile(dest, content);
+    files.push(dest);
+    log("\u2705 Created file: README.md");
+  }
+  const templateSrcPath = import_path2.default.join(templatePath, "src");
+  const projectSrcPath = srcPath;
+  if (await import_fs_extra2.default.pathExists(templateSrcPath)) {
+    await import_fs_extra2.default.copy(templateSrcPath, projectSrcPath);
+    log("\u2705 Copied framework source files");
+  }
+  const sharedSrcPath = import_path2.default.join(sharedTemplatePath, "src");
+  if (await import_fs_extra2.default.pathExists(sharedSrcPath)) {
+    await import_fs_extra2.default.copy(sharedSrcPath, projectSrcPath);
+    log("\u2705 Copied shared source files");
+  }
+  const dbTemplateDir = import_path2.default.join(templatesDir(), "db", database);
+  const dbTemplateSrc = import_path2.default.join(dbTemplateDir, "src");
+  if (await import_fs_extra2.default.pathExists(dbTemplateSrc)) {
+    await import_fs_extra2.default.copy(dbTemplateSrc, projectSrcPath);
+    log(`\u2705 Copied ${database} source files`);
+  }
+  const FRAGMENTS = /* @__PURE__ */ new Set(["src", "package.deps.json", "env.fragment", "readme.fragment.md"]);
+  for (const entry of await import_fs_extra2.default.readdir(dbTemplateDir).catch(() => [])) {
+    if (FRAGMENTS.has(entry)) continue;
+    const dest = import_path2.default.join(projectPath, entry);
+    await import_fs_extra2.default.copy(import_path2.default.join(dbTemplateDir, entry), dest);
+    files.push(dest);
+    log(`\u2705 Created ${database} file: ${entry}`);
+  }
+  if (await import_fs_extra2.default.pathExists(projectSrcPath)) {
+    await replaceInDir(projectSrcPath, opts.name);
+  }
+  const additionalFiles = ["tsconfig.json", ".env", ".env.example", ".gitignore"];
+  for (const fileName of additionalFiles) {
+    const templateFilePath = import_path2.default.join(templatePath, fileName);
+    const projectFilePath = import_path2.default.join(projectPath, fileName);
+    if (await import_fs_extra2.default.pathExists(templateFilePath)) {
+      let content = await import_fs_extra2.default.readFile(templateFilePath, "utf-8");
+      content = content.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+      await import_fs_extra2.default.writeFile(projectFilePath, content);
+      files.push(projectFilePath);
+      log(`\u2705 Created file: ${fileName}`);
+    }
+  }
+  await applyDbFragments(projectPath, database, framework, opts.name);
+  if (framework === "express") {
+    const indexPath = import_path2.default.join(srcPath, "routes", "index.ts");
+    const authPath = import_path2.default.join(srcPath, "routes", "auth.ts");
+    await import_fs_extra2.default.writeFile(indexPath, indexRouteContent(opts.name, database));
+    await import_fs_extra2.default.writeFile(authPath, authRouteContent);
+    files.push(indexPath, authPath);
+    log("\u2705 Created file: src/routes/index.ts");
+    log("\u2705 Created file: src/routes/auth.ts");
+  }
+  const jwtSecret = generateSecret(64);
+  const jwtRefreshSecret = generateSecret(64);
+  const envFilePath = import_path2.default.join(projectPath, ".env");
+  let envContent;
+  if (await import_fs_extra2.default.pathExists(envFilePath)) {
+    envContent = await import_fs_extra2.default.readFile(envFilePath, "utf-8");
+    envContent = envContent.replace(/\{\{PROJECT_NAME\}\}/g, opts.name);
+  } else {
+    envContent = `# Environment Configuration
+NODE_ENV=development
+PORT=8000
+
+# Database
+
+# JWT Configuration (auto-generated secure secrets)
+JWT_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
+JWT_REFRESH_SECRET=REPLACE_WITH_AUTO_GENERATED_SECRET
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Frontend URL (for CORS)
+FRONTEND_URL=http://localhost:5000
+
+# API Configuration
+API_URL=http://localhost:8000
+
+# Pagination Configuration
+DEFAULT_PAGE_LIMIT=10
+MAX_PAGE_LIMIT=100`;
+    const fallbackFragment = await loadEnvFragment(database, opts.name);
+    if (fallbackFragment) envContent = applyEnvFragment(envContent, fallbackFragment);
+  }
+  envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtSecret);
+  envContent = envContent.replace(/REPLACE_WITH_AUTO_GENERATED_SECRET/, jwtRefreshSecret);
+  await import_fs_extra2.default.writeFile(envFilePath, envContent);
+  if (!files.includes(envFilePath)) files.push(envFilePath);
+  log("\u2705 Created file: .env (with auto-generated JWT secrets)");
+  const kotiConfig = {
+    framework,
+    database,
+    kotiVersion: getVersion(),
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    models: {}
+  };
+  const configPath = import_path2.default.join(projectPath, "koti.config.json");
+  await import_fs_extra2.default.writeFile(configPath, JSON.stringify(kotiConfig, null, 2));
+  files.push(configPath);
+  log("\u2705 Created file: koti.config.json");
+  log("\n\u{1F389} TypeScript project created successfully!");
+  if (!opts.skipInstall) {
+    log("\n\u{1F4E6} Installing dependencies...");
+    let installed = await runInstall(projectPath, "bun", 15e4, log);
+    if (!installed) {
+      log("\u26A0\uFE0F  Bun install failed or timed out, trying npm install...");
+      installed = await runInstall(projectPath, "npm", 15e4, log);
+    }
+    if (installed) {
+      log("\u2705 Dependencies installed successfully!");
+    } else {
+      warnings.push('Dependencies not installed \u2014 run "bun install" (or npm install) inside the project');
+    }
+  }
+  return { projectPath, files: [projectPath, ...files], warnings };
+};
+
+// src/generators/model.ts
+var import_fs_extra4 = __toESM(require_lib());
+var import_path4 = __toESM(require("path"));
+
+// src/generators/task.ts
+var import_fs_extra3 = __toESM(require_lib());
+var import_path3 = __toESM(require("path"));
+var addTaskToEnum = async (projectRoot, taskKey, description) => {
+  const enumPath = import_path3.default.join(projectRoot, "src", "enums", "Task.ts");
+  if (!await import_fs_extra3.default.pathExists(enumPath)) {
+    return false;
+  }
+  let content = await import_fs_extra3.default.readFile(enumPath, "utf-8");
+  if (content.includes(`${taskKey} =`) || content.includes(`${taskKey}=`)) {
+    return false;
+  }
+  const enumClosingMatch = content.match(/([ \t]*\w+\s*=\s*'[^']*',?\s*\n)(}\s*\n)/);
+  if (!enumClosingMatch) {
+    return false;
+  }
+  const lastEntry = enumClosingMatch[1];
+  const closingBrace = enumClosingMatch[2];
+  const lastEntryWithComma = lastEntry.trimEnd().endsWith(",") ? lastEntry : lastEntry.replace(/(\S)\s*$/, "$1,\n");
+  const newEnumEntry = `
+  /** ${description} */
+  ${taskKey} = '${taskKey}',
+`;
+  content = content.replace(
+    lastEntry + closingBrace,
+    lastEntryWithComma + newEnumEntry + closingBrace
+  );
+  const descClosingMatch = content.match(/([ \t]*\[Task\.\w+\]:\s*'[^']*',?\s*\n)(};\s*\n?)/);
+  if (descClosingMatch) {
+    const lastDescEntry = descClosingMatch[1];
+    const descClosing = descClosingMatch[2];
+    const lastDescWithComma = lastDescEntry.trimEnd().endsWith(",") ? lastDescEntry : lastDescEntry.replace(/(\S)\s*$/, "$1,\n");
+    const newDescEntry = `  [Task.${taskKey}]: '${description.replace(/'/g, "\\'")}',
+`;
+    content = content.replace(
+      lastDescEntry + descClosing,
+      lastDescWithComma + newDescEntry + descClosing
+    );
+  }
+  await import_fs_extra3.default.writeFile(enumPath, content);
+  return true;
+};
+var createTask = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][A-Z0-9_]*$/, "task name (UPPER_SNAKE_CASE)");
+  if (!opts.description.trim()) {
+    throw new GeneratorError("INVALID_INPUT", "Task description is required");
+  }
+  if (/[\r\n]/.test(opts.description)) {
+    throw new GeneratorError("INVALID_INPUT", "Task description must be a single line");
+  }
+  const ctx = await resolveProject(opts.projectRoot);
+  const enumPath = import_path3.default.join(ctx.root, "src", "enums", "Task.ts");
+  if (!await import_fs_extra3.default.pathExists(enumPath)) {
+    throw new GeneratorError("IO_ERROR", `src/enums/Task.ts not found \u2014 run this inside a Koti project (koti new creates it)`);
+  }
+  const content = await import_fs_extra3.default.readFile(enumPath, "utf-8");
+  if (content.includes(`${opts.name} =`) || content.includes(`${opts.name}=`)) {
+    throw new GeneratorError("DUPLICATE", `Task ${opts.name} already exists in Task.ts`);
+  }
+  const added = await addTaskToEnum(ctx.root, opts.name, opts.description);
+  if (!added) {
+    throw new GeneratorError("IO_ERROR", "Could not parse src/enums/Task.ts \u2014 unexpected enum format");
+  }
+  return { files: [enumPath], warnings: ctx.warnings };
+};
+
+// src/generators/crud/mongoose/modelFile.ts
+var generateTypeScriptModel = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const fieldsCode = fields.map((field) => {
+    const options = [];
+    if (field.required) options.push("required: true");
+    if (field.unique) options.push("unique: true");
+    if (field.index) options.push("index: true");
+    if (field.default) options.push(`default: ${field.type === "String" ? jsQuoted(field.default) : field.default}`);
+    const optionsString = options.length > 0 ? `,  ${options.join(", ")}` : "";
+    if (field.type === "Array") {
+      return `  ${field.name}: [{ type: Schema.Types.Mixed${optionsString} }]`;
+    }
+    const mongooseType = field.type === "Mixed" || field.type === "JSON" ? "Schema.Types.Mixed" : field.type === "ObjectId" ? "Schema.Types.ObjectId" : field.type;
+    return `  ${field.name}: { type: ${mongooseType}${optionsString} }`;
+  }).join(",\n");
+  return `import { Schema, model, Document, Types } from 'mongoose';
+
+export interface I${capitalizedName} extends Document {
+${fields.map((field) => {
+    const tsType = field.type === "ObjectId" ? "Types.ObjectId" : field.type === "String" ? "string" : field.type === "Number" ? "number" : field.type === "Boolean" ? "boolean" : field.type === "Date" ? "Date" : field.type === "Array" ? "any[]" : "any";
+    return `  ${field.name}: ${tsType};`;
+  }).join("\n")}
+}
+
+const ${capitalizedName}Schema = new Schema<I${capitalizedName}>({
+${fieldsCode}
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+export const ${capitalizedName} = model<I${capitalizedName}>('${capitalizedName}', ${capitalizedName}Schema);
+export default ${capitalizedName};
+`;
+};
+
+// src/generators/crud/mongoose/service.ts
+var generateCRUDService = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  return `import { AppError } from '../utils/AppError';
+import ${capitalizedName} from '../models/${capitalizedName}';
+import { PaginationResult, QueryOptions } from '../types/api';
+
+export class ${capitalizedName}Service {
+  /**
+   * Get all ${capitalizedName}s with pagination and search
+   */
+  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
+    try {
+      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+      const skip = (page - 1) * limit;
+
+      // Build search query
+      let query: any = {};
+      if (search) {
+        const searchFields = [${fields.filter((f) => f.type === "String").map((f) => `'${f.name}'`).join(", ")}];
+        if (searchFields.length > 0) {
+          query.$or = searchFields.map(field => ({
+            [field]: { $regex: search, $options: 'i' }
+          }));
+        }
+      }
+
+      // Execute queries
+      const [data, total] = await Promise.all([
+        ${capitalizedName}.find(query)
+          .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ${capitalizedName}.countDocuments(query)
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Get ${capitalizedName} by ID
+   */
+  public async getById(id: string): Promise<any> {
+    try {
+      const ${camelCaseName} = await ${capitalizedName}.findById(id).lean();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Create new ${capitalizedName}
+   */
+  public async create(data: any): Promise<any> {
+    try {
+      const ${camelCaseName} = new ${capitalizedName}(data);
+      await ${camelCaseName}.save();
+      return ${camelCaseName}.toObject();
+    } catch (error) {
+      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Update ${capitalizedName} by ID
+   */
+  public async update(id: string, data: any): Promise<any> {
+    try {
+      const ${camelCaseName} = await ${capitalizedName}.findByIdAndUpdate(
+        id,
+        { ...data, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      ).lean();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Delete ${capitalizedName} by ID
+   */
+  public async delete(id: string): Promise<boolean> {
+    try {
+      const result = await ${capitalizedName}.findByIdAndDelete(id);
+      return !!result;
+    } catch (error) {
+      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+}
+
+export default new ${capitalizedName}Service();`;
+};
+
+// src/generators/crud/drizzle/modelFile.ts
+var toSnakeCase = (str) => str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+var pluralize = (word) => {
+  if (/[^aeiou]y$/.test(word)) return `${word.slice(0, -1)}ies`;
+  if (/(s|x|z|ch|sh)$/.test(word)) return `${word}es`;
+  return `${word}s`;
+};
+var tableNameFor = (modelName) => pluralize(toSnakeCase(modelName));
+var tableConstFor = (modelName) => pluralize(toCamelCase(modelName));
+var COLUMN_BUILDER = {
+  String: "text",
+  Number: "doublePrecision",
+  Date: "timestamp",
+  Boolean: "boolean",
+  ObjectId: "uuid",
+  Array: "jsonb",
+  Mixed: "jsonb",
+  JSON: "jsonb"
+};
+var columnFor = (field) => {
+  const col = toSnakeCase(field.name);
+  switch (field.type) {
+    case "Date":
+      return `timestamp('${col}', { withTimezone: true })`;
+    case "Array":
+      return `jsonb('${col}').$type<any[]>()`;
+    default:
+      return `${COLUMN_BUILDER[field.type]}('${col}')`;
+  }
+};
+var sqlInTemplate = (raw) => raw.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${").replace(/'/g, "''");
+var defaultFor = (field, warnings) => {
+  const raw = field.default;
+  if (raw === void 0 || raw === "") return "";
+  const skip = (why) => {
+    warnings.push(`Field "${field.name}": default ${JSON.stringify(raw)} ${why} \u2014 emitted without a default`);
+    return "";
+  };
+  switch (field.type) {
+    case "String":
+      return `.default(${jsQuoted(raw)})`;
+    case "Number": {
+      const n = Number(raw);
+      return Number.isFinite(n) ? `.default(${n})` : skip("is not a number");
+    }
+    case "Boolean":
+      if (raw === "true" || raw === "false") return `.default(${raw})`;
+      return skip("is not a boolean");
+    case "Date":
+      if (/^(Date\.now\(?\)?|now)$/.test(raw)) return ".defaultNow()";
+      return skip("is not Date.now");
+    case "Array":
+    case "Mixed":
+    case "JSON":
+      try {
+        JSON.parse(raw);
+      } catch {
+        return skip("is not valid JSON");
+      }
+      return `.default(sql\`'${sqlInTemplate(raw)}'::jsonb\`)`;
+    default:
+      return skip("has no postgres equivalent");
+  }
+};
+var generateDrizzleModel = (modelName, fields, warnings = []) => {
+  const capitalizedName = capitalize(modelName);
+  const table = tableNameFor(modelName);
+  const tableConst = tableConstFor(modelName);
+  const columns = fields.map((field) => {
+    const chain = [columnFor(field)];
+    if (field.required) chain.push(".notNull()");
+    if (field.unique) chain.push(".unique()");
+    chain.push(defaultFor(field, warnings));
+    return `  ${field.name}: ${chain.join("")},`;
+  });
+  const indexed = fields.filter((f) => f.index);
+  const tableExtras = indexed.length > 0 ? `, (t) => [
+${indexed.map((f) => `  index('${table}_${toSnakeCase(f.name)}_idx').on(t.${f.name}),`).join("\n")}
+]` : "";
+  const builders = /* @__PURE__ */ new Set(["pgTable", "uuid", "timestamp"]);
+  for (const f of fields) builders.add(COLUMN_BUILDER[f.type]);
+  if (indexed.length > 0) builders.add("index");
+  const IMPORT_ORDER = ["pgTable", "uuid", "text", "doublePrecision", "boolean", "timestamp", "jsonb", "index"];
+  const imports = IMPORT_ORDER.filter((b) => builders.has(b)).join(", ");
+  return `import { ${imports} } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+export const ${tableConst} = pgTable('${table}', {
+  id: uuid('id').primaryKey().default(sql\`gen_random_uuid()\`),
+${columns.join("\n")}
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+}${tableExtras});
+
+export type ${capitalizedName} = typeof ${tableConst}.$inferSelect;
+export type New${capitalizedName} = typeof ${tableConst}.$inferInsert;
+`;
+};
+
+// src/generators/crud/drizzle/service.ts
+var generateDrizzleCRUDService = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  const table = tableConstFor(modelName);
+  const stringFields = fields.filter((f) => f.type === "String");
+  const searchBlock = stringFields.length > 0 ? `
+      // Build search query (ILIKE is the postgres equivalent of mongo's $regex)
+      let where;
+      if (search) {
+        const like = \`%\${search}%\`;
+        where = or(${stringFields.map((f) => `ilike(${table}.${f.name}, like)`).join(", ")});
+      }
+` : `
+      const where = undefined;   // no String fields to search
+`;
+  const sortable = ["createdAt", "updatedAt", ...fields.map((f) => f.name)].map((name) => `  ${name}: ${table}.${name},`).join("\n");
+  return `import { count, asc, desc, eq, ilike, or } from 'drizzle-orm';
+import { AppError } from '../utils/AppError';
+import { db } from '../config/database';
+import { ${table} } from '../models/${capitalizedName}';
+import { PaginationResult, QueryOptions } from '../types/api';
+
+const SORTABLE = {
+${sortable}
+} as const;
+
+export class ${capitalizedName}Service {
+  /**
+   * Get all ${capitalizedName}s with pagination and search
+   */
+  public async getAll(options: QueryOptions): Promise<{ data: any[]; pagination: PaginationResult }> {
+    try {
+      const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+      const offset = (page - 1) * limit;
+${searchBlock}
+      const sortColumn = SORTABLE[sortBy as keyof typeof SORTABLE] ?? ${table}.createdAt;
+
+      // Execute queries
+      const [data, totals] = await Promise.all([
+        db.select().from(${table}).where(where)
+          .orderBy(sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn))
+          .limit(limit)
+          .offset(offset),
+        db.select({ value: count() }).from(${table}).where(where)
+      ]);
+
+      const total = totals[0]?.value ?? 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}s: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Get ${capitalizedName} by ID
+   */
+  public async getById(id: string): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.select().from(${table}).where(eq(${table}.id, id)).limit(1);
+      return ${camelCaseName} ?? null;
+    } catch (error) {
+      throw new AppError(\`Error fetching ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Create new ${capitalizedName}
+   */
+  public async create(data: any): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.insert(${table}).values(data).returning();
+      return ${camelCaseName};
+    } catch (error) {
+      throw new AppError(\`Error creating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Update ${capitalizedName} by ID
+   */
+  public async update(id: string, data: any): Promise<any> {
+    try {
+      const [${camelCaseName}] = await db.update(${table})
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(${table}.id, id))
+        .returning();
+      return ${camelCaseName} ?? null;
+    } catch (error) {
+      throw new AppError(\`Error updating ${capitalizedName}: \${error}\`, 400);
+    }
+  }
+
+  /**
+   * Delete ${capitalizedName} by ID
+   */
+  public async delete(id: string): Promise<boolean> {
+    try {
+      const deleted = await db.delete(${table}).where(eq(${table}.id, id)).returning({ id: ${table}.id });
+      return deleted.length > 0;
+    } catch (error) {
+      throw new AppError(\`Error deleting ${capitalizedName}: \${error}\`, 500);
+    }
+  }
+}
+
+export default new ${capitalizedName}Service();`;
+};
+
+// src/generators/crud/express.ts
+var generateCRUDController = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  return `import { Request, Response, NextFunction } from 'express';
+import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types/api';
+import { AppError } from '../utils/AppError';
+import ${capitalizedName}Service from '../services/${camelCaseName}Service';
+
+export class ${capitalizedName}Controller {
+  /**
+   * Get all ${capitalizedName}s with pagination
+   * @route GET /api/${camelCaseName}
+   */
+  public async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || parseInt(process.env.DEFAULT_PAGE_LIMIT || '10');
+      const search = req.query.search as string;
+      const sortBy = req.query.sortBy as string || 'createdAt';
+      const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'desc';
+
+      const result = await ${capitalizedName}Service.getAll({
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder
+      });
+
+      const response: PaginatedResponse = {
+        success: true,
+        message: '${capitalizedName}s retrieved successfully',
+        data: result.data,
+        pagination: result.pagination
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error fetching ${capitalizedName}s\`, 500));
+    }
+  }
+
+  /**
+   * Get single ${capitalizedName} by ID
+   * @route GET /api/${camelCaseName}/:id
+   */
+  public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const ${camelCaseName} = await ${capitalizedName}Service.getById(id);
+
+      if (!${camelCaseName}) {
+        return next(new AppError('${capitalizedName} not found', 404));
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} retrieved successfully',
+        data: ${camelCaseName}
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error fetching ${capitalizedName}\`, 500));
+    }
+  }
+
+  /**
+   * Create new ${capitalizedName}
+   * @route POST /api/${camelCaseName}
+   */
+  public async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ${camelCaseName} = await ${capitalizedName}Service.create(req.body);
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} created successfully',
+        data: ${camelCaseName}
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      next(new AppError(\`Error creating ${capitalizedName}\`, 400));
+    }
+  }
+
+  /**
+   * Update ${capitalizedName} by ID
+   * @route PUT /api/${camelCaseName}/:id
+   */
+  public async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const ${camelCaseName} = await ${capitalizedName}Service.update(id, req.body);
+
+      if (!${camelCaseName}) {
+        return next(new AppError('${capitalizedName} not found', 404));
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} updated successfully',
+        data: ${camelCaseName}
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error updating ${capitalizedName}\`, 400));
+    }
+  }
+
+  /**
+   * Delete ${capitalizedName} by ID
+   * @route DELETE /api/${camelCaseName}/:id
+   */
+  public async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const deleted = await ${capitalizedName}Service.delete(id);
+
+      if (!deleted) {
+        return next(new AppError('${capitalizedName} not found', 404));
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} deleted successfully',
+        data: null
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error deleting ${capitalizedName}\`, 500));
+    }
+  }
+}
+
+export default new ${capitalizedName}Controller();`;
+};
+var generateJoiValidation = (modelName, fields, database = "mongodb") => {
+  const capitalizedName = capitalize(modelName);
+  const objectIdType = database === "postgres" ? "Joi.string().uuid()" : "Joi.string()";
+  const joiFields = fields.map((field) => {
+    let joiType = "Joi.string()";
+    switch (field.type) {
+      case "String":
+        joiType = "Joi.string()";
+        break;
+      case "Number":
+        joiType = "Joi.number()";
+        break;
+      case "Boolean":
+        joiType = "Joi.boolean()";
+        break;
+      case "Date":
+        joiType = "Joi.date()";
+        break;
+      case "Array":
+        joiType = "Joi.array()";
+        break;
+      case "ObjectId":
+        joiType = objectIdType;
+        break;
+      default:
+        joiType = "Joi.any()";
+        break;
+    }
+    const chain = [joiType];
+    if (field.required) chain.push(".required()");
+    else chain.push(".optional()");
+    return `  ${field.name}: ${chain.join("")}`;
+  }).join(",\n");
+  return `import Joi from 'joi';
+
+export const create${capitalizedName}Schema = Joi.object({
+${joiFields}
+});
+
+export const update${capitalizedName}Schema = Joi.object({
+${fields.map((field) => {
+    let joiType = "Joi.string()";
+    switch (field.type) {
+      case "String":
+        joiType = "Joi.string()";
+        break;
+      case "Number":
+        joiType = "Joi.number()";
+        break;
+      case "Boolean":
+        joiType = "Joi.boolean()";
+        break;
+      case "Date":
+        joiType = "Joi.date()";
+        break;
+      case "Array":
+        joiType = "Joi.array()";
+        break;
+      case "ObjectId":
+        joiType = objectIdType;
+        break;
+      default:
+        joiType = "Joi.any()";
+        break;
+    }
+    return `  ${field.name}: ${joiType}.optional()`;
+  }).join(",\n")}
+}).min(1);
+`;
+};
+var generateCRUDRoutes = (modelName, fields = [], withTasks = false) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  const upperSnakeName = toUpperSnakeCase(modelName);
+  const hasValidation = fields.length > 0;
+  const validationImport = hasValidation ? `
+import { validate } from '../middleware/validation';
+import { create${capitalizedName}Schema, update${capitalizedName}Schema } from '../validators/${camelCaseName}';` : "";
+  const permissionImport = withTasks ? `
+import { checkPermission } from '../middleware/checkPermission';
+import { Task } from '../enums/Task';` : "";
+  const viewPerm = withTasks ? `checkPermission(Task.VIEW_${upperSnakeName}), ` : "";
+  const createPerm = withTasks ? `checkPermission(Task.CREATE_${upperSnakeName}), ` : "";
+  const updatePerm = withTasks ? `checkPermission(Task.UPDATE_${upperSnakeName}), ` : "";
+  const deletePerm = withTasks ? `checkPermission(Task.DELETE_${upperSnakeName}), ` : "";
+  return `import { Router } from 'express';
+import ${camelCaseName}Controller from '../controllers/${camelCaseName}Controller';
+import { auth } from '../middleware/auth';${validationImport}${permissionImport}
+
+const router = Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ${capitalizedName}:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The auto-generated id of the ${camelCaseName}
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ */
+
+/**
+ * @swagger
+ * /api/${camelCaseName}:
+ *   get:
+ *     summary: Get all ${camelCaseName}s with pagination
+ *     tags: [${capitalizedName}]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *     responses:
+ *       200:
+ *         description: List of ${camelCaseName}s
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedResponse'
+ */
+router.get('/', auth, ${viewPerm}${camelCaseName}Controller.getAll);
+
+/**
+ * @swagger
+ * /api/${camelCaseName}/{id}:
+ *   get:
+ *     summary: Get ${camelCaseName} by ID
+ *     tags: [${capitalizedName}]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ${capitalizedName} ID
+ *     responses:
+ *       200:
+ *         description: ${capitalizedName} details
+ *       404:
+ *         description: ${capitalizedName} not found
+ */
+router.get('/:id', auth, ${viewPerm}${camelCaseName}Controller.getById);
+
+/**
+ * @swagger
+ * /api/${camelCaseName}:
+ *   post:
+ *     summary: Create new ${camelCaseName}
+ *     tags: [${capitalizedName}]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/${capitalizedName}'
+ *     responses:
+ *       201:
+ *         description: ${capitalizedName} created successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/', auth, ${createPerm}${hasValidation ? `validate(create${capitalizedName}Schema), ` : ""}${camelCaseName}Controller.create);
+
+/**
+ * @swagger
+ * /api/${camelCaseName}/{id}:
+ *   put:
+ *     summary: Update ${camelCaseName} by ID
+ *     tags: [${capitalizedName}]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ${capitalizedName} ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/${capitalizedName}'
+ *     responses:
+ *       200:
+ *         description: ${capitalizedName} updated successfully
+ *       404:
+ *         description: ${capitalizedName} not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.put('/:id', auth, ${updatePerm}${hasValidation ? `validate(update${capitalizedName}Schema), ` : ""}${camelCaseName}Controller.update);
+
+/**
+ * @swagger
+ * /api/${camelCaseName}/{id}:
+ *   delete:
+ *     summary: Delete ${camelCaseName} by ID
+ *     tags: [${capitalizedName}]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ${capitalizedName} ID
+ *     responses:
+ *       200:
+ *         description: ${capitalizedName} deleted successfully
+ *       404:
+ *         description: ${capitalizedName} not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete('/:id', auth, ${deletePerm}${camelCaseName}Controller.delete);
+
+export default router;`;
+};
+
+// src/generators/crud/elysia.ts
+var generateElysiaCrudController = (modelName, fields) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  return `import ${capitalizedName}Service from '../services/${camelCaseName}Service';
+import { AppError } from '../utils/AppError';
+import { success, paginated } from '../utils/respond';
+
+export const ${camelCaseName}Controller = {
+  /** List ${camelCaseName}s with pagination, search and sorting */
+  async getAll({ query }: any) {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || parseInt(process.env.DEFAULT_PAGE_LIMIT || '10');
+    const search = query.search as string | undefined;
+    const sortBy = (query.sortBy as string) || 'createdAt';
+    const sortOrder = ((query.sortOrder as string) === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
+    const result = await ${capitalizedName}Service.getAll({ page, limit, search, sortBy, sortOrder });
+    return paginated('${capitalizedName}s retrieved successfully', result.data, result.pagination);
+  },
+
+  /** Get one ${camelCaseName} by id */
+  async getById({ params }: any) {
+    const item = await ${capitalizedName}Service.getById(params.id);
+    if (!item) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} retrieved successfully', item);
+  },
+
+  /** Create a ${camelCaseName} */
+  async create({ body, set }: any) {
+    const item = await ${capitalizedName}Service.create(body);
+    set.status = 201;
+    return success('${capitalizedName} created successfully', item);
+  },
+
+  /** Update a ${camelCaseName} */
+  async update({ params, body }: any) {
+    const item = await ${capitalizedName}Service.update(params.id, body);
+    if (!item) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} updated successfully', item);
+  },
+
+  /** Delete a ${camelCaseName} */
+  async delete({ params }: any) {
+    const deleted = await ${capitalizedName}Service.delete(params.id);
+    if (!deleted) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} deleted successfully');
+  }
+};
+
+export default ${camelCaseName}Controller;
+`;
+};
+var typeBoxFor = (field, database) => {
+  switch (field.type) {
+    case "String":
+      return "t.String()";
+    case "Number":
+      return "t.Number()";
+    case "Boolean":
+      return "t.Boolean()";
+    case "Date":
+      return `t.String({ format: 'date-time' })`;
+    case "ObjectId":
+      return database === "postgres" ? `t.String({ format: 'uuid' })` : "t.String()";
+    case "Array":
+      return "t.Array(t.Any())";
+    default:
+      return "t.Any()";
+  }
+};
+var generateTypeBoxValidator = (modelName, fields, database = "mongodb") => {
+  const capitalizedName = capitalize(modelName);
+  const props = fields.map((field) => {
+    const base = typeBoxFor(field, database);
+    const value = field.required ? base : `t.Optional(${base})`;
+    return `  ${field.name}: ${value}`;
+  }).join(",\n");
+  return `import { t } from 'elysia';
+
+export const create${capitalizedName}Body = t.Object({
+${props}
+});
+
+export const update${capitalizedName}Body = t.Partial(create${capitalizedName}Body);
+`;
+};
+var generateElysiaCrudRoutes = (modelName, fields, withTasks = false) => {
+  const capitalizedName = capitalize(modelName);
+  const camelCaseName = toCamelCase(modelName);
+  const upperSnakeName = toUpperSnakeCase(modelName);
+  const taskImport = withTasks ? `
+import { Task } from '../enums/Task';` : "";
+  const authFor = (op) => withTasks ? `[Task.${op}_${upperSnakeName}]` : "true";
+  return `import { Elysia, t } from 'elysia';
+import { ${camelCaseName}Controller } from '../controllers/${camelCaseName}Controller';
+import { authPlugin } from '../middleware/auth';${taskImport}
+import { create${capitalizedName}Body, update${capitalizedName}Body } from '../validators/${camelCaseName}';
+
+const tag = ['${capitalizedName}s'];
+const secured = { security: [{ bearerAuth: [] }] };
+const idParam = t.Object({ id: t.String() });
+
+export const ${camelCaseName}Routes = new Elysia({ prefix: '/${camelCaseName}' })
+  .use(authPlugin)
+  .get('/', ${camelCaseName}Controller.getAll, {
+    auth: ${authFor("VIEW")},
+    query: t.Object({
+      page: t.Optional(t.String()),
+      limit: t.Optional(t.String()),
+      search: t.Optional(t.String()),
+      sortBy: t.Optional(t.String()),
+      sortOrder: t.Optional(t.String())
+    }),
+    detail: { tags: tag, summary: 'List ${capitalizedName}s', ...secured }
+  })
+  .get('/:id', ${camelCaseName}Controller.getById, {
+    auth: ${authFor("VIEW")},
+    params: idParam,
+    detail: { tags: tag, summary: 'Get ${capitalizedName} by ID', ...secured }
+  })
+  .post('/', ${camelCaseName}Controller.create, {
+    auth: ${authFor("CREATE")},
+    body: create${capitalizedName}Body,
+    detail: { tags: tag, summary: 'Create a ${capitalizedName}', ...secured }
+  })
+  .put('/:id', ${camelCaseName}Controller.update, {
+    auth: ${authFor("UPDATE")},
+    params: idParam,
+    body: update${capitalizedName}Body,
+    detail: { tags: tag, summary: 'Update a ${capitalizedName}', ...secured }
+  })
+  .delete('/:id', ${camelCaseName}Controller.delete, {
+    auth: ${authFor("DELETE")},
+    params: idParam,
+    detail: { tags: tag, summary: 'Delete a ${capitalizedName}', ...secured }
+  });
+
+export default ${camelCaseName}Routes;
+`;
+};
+
+// src/generators/model.ts
+var RESERVED_FIELD_NAMES = ["id", "_id", "createdAt", "updatedAt"];
+var validateFields = (fields) => {
+  if (fields.length === 0) throw new GeneratorError("INVALID_INPUT", "At least one field is required");
+  for (const f of fields) {
+    assertValidName(f.name, /^[a-zA-Z_][a-zA-Z0-9_]*$/, "field name");
+    if (RESERVED_FIELD_NAMES.includes(f.name)) {
+      throw new GeneratorError(
+        "INVALID_INPUT",
+        `Field name "${f.name}" is reserved \u2014 every model already gets ${RESERVED_FIELD_NAMES.join(", ")} from the generator`
+      );
+    }
+    if (!FIELD_TYPES.includes(f.type)) {
+      throw new GeneratorError("INVALID_INPUT", `Unknown field type "${f.type}" (valid: ${FIELD_TYPES.join(", ")})`);
+    }
+    if (f.default !== void 0 && /[\r\n]/.test(f.default)) {
+      throw new GeneratorError("INVALID_INPUT", `Default value for ${f.name} must be a single line`);
+    }
+  }
+};
+var registerRouteInIndex = async (projectRoot, framework, camelName) => {
+  const indexPath = import_path4.default.join(projectRoot, "src", "routes", "index.ts");
+  let content;
+  try {
+    content = await import_fs_extra4.default.readFile(indexPath, "utf-8");
+  } catch {
+    return false;
+  }
+  if (framework === "express") {
+    const importStatement2 = `import ${camelName}Routes from './${camelName}';`;
+    const routeUsage = `router.use('/${camelName}', ${camelName}Routes);`;
+    if (content.includes(importStatement2)) return true;
+    const lines2 = content.split("\n");
+    let lastImportIndex2 = -1;
+    let routerUseIndex = -1;
+    for (let i = 0; i < lines2.length; i++) {
+      if (lines2[i].startsWith("import") && lines2[i].includes("from")) lastImportIndex2 = i;
+      if (lines2[i].includes("router.use") && lines2[i].includes("Routes")) routerUseIndex = i;
+    }
+    if (lastImportIndex2 < 0 || routerUseIndex < 0) return false;
+    lines2.splice(lastImportIndex2 + 1, 0, importStatement2);
+    lines2.splice(routerUseIndex + 2, 0, routeUsage);
+    await import_fs_extra4.default.writeFile(indexPath, lines2.join("\n"));
+    return true;
+  }
+  const importStatement = `import { ${camelName}Routes } from './${camelName}';`;
+  if (content.includes(importStatement)) return true;
+  const lines = content.split("\n");
+  let lastImportIndex = -1;
+  let lastUseIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith("import") && lines[i].includes("from")) lastImportIndex = i;
+    if (/^\s*\.use\(\w+Routes\);?\s*$/.test(lines[i])) lastUseIndex = i;
+  }
+  if (lastImportIndex < 0 || lastUseIndex < 0) return false;
+  lines.splice(lastImportIndex + 1, 0, importStatement);
+  lastUseIndex += 1;
+  if (lines[lastUseIndex].trimEnd().endsWith(";")) {
+    lines[lastUseIndex] = lines[lastUseIndex].replace(/;\s*$/, "");
+    lines.splice(lastUseIndex + 1, 0, `  .use(${camelName}Routes);`);
+  } else {
+    lines.splice(lastUseIndex + 1, 0, `  .use(${camelName}Routes)`);
+  }
+  await import_fs_extra4.default.writeFile(indexPath, lines.join("\n"));
+  return true;
+};
+var createModel = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "model name (PascalCase)");
+  validateFields(opts.fields);
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const camelName = toCamelCase(opts.name);
+  const upperSnakeName = toUpperSnakeCase(opts.name);
+  const files = [];
+  const warnings = [...ctx.warnings];
+  const modelPath = import_path4.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  if (await import_fs_extra4.default.pathExists(modelPath)) {
+    throw new GeneratorError("DUPLICATE", `Model already exists: ${modelPath}`);
+  }
+  const isPg = ctx.database === "postgres";
+  await import_fs_extra4.default.ensureDir(import_path4.default.dirname(modelPath));
+  await import_fs_extra4.default.writeFile(modelPath, isPg ? generateDrizzleModel(opts.name, opts.fields, warnings) : generateTypeScriptModel(opts.name, opts.fields));
+  files.push(modelPath);
+  await updateIndexExport(
+    import_path4.default.join(ctx.root, "src", "models"),
+    isPg ? `export * from './${capitalizedName}';` : `export { default as ${capitalizedName}, I${capitalizedName} } from './${capitalizedName}';`
+  );
+  if (!opts.crud) {
+    await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: false, rbacTasks: false });
+    return { files, warnings };
+  }
+  let withTasks = !!opts.tasks;
+  if (withTasks) {
+    const taskEntries = [
+      { key: `VIEW_${upperSnakeName}`, desc: `View the list of ${camelName}s and ${camelName} details` },
+      { key: `CREATE_${upperSnakeName}`, desc: `Create new ${camelName} records` },
+      { key: `UPDATE_${upperSnakeName}`, desc: `Update existing ${camelName} records` },
+      { key: `DELETE_${upperSnakeName}`, desc: `Delete ${camelName} records` }
+    ];
+    let added = 0;
+    for (const entry of taskEntries) {
+      if (await addTaskToEnum(ctx.root, entry.key, entry.desc)) added++;
+    }
+    if (added > 0) {
+      files.push(import_path4.default.join(ctx.root, "src", "enums", "Task.ts"));
+    } else {
+      withTasks = false;
+      warnings.push("No RBAC tasks were added (Task.ts missing or entries already exist) \u2014 routes generated without permission middleware");
+    }
+  }
+  const isElysia = ctx.framework === "elysia";
+  const writes = [
+    {
+      file: import_path4.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`),
+      content: isElysia ? generateElysiaCrudController(opts.name, opts.fields) : generateCRUDController(opts.name, opts.fields),
+      barrelDir: import_path4.default.join(ctx.root, "src", "controllers"),
+      barrelLine: `export { default as ${camelName}Controller } from './${camelName}Controller';`
+    },
+    {
+      file: import_path4.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
+      content: isPg ? generateDrizzleCRUDService(opts.name, opts.fields) : generateCRUDService(opts.name, opts.fields),
+      barrelDir: import_path4.default.join(ctx.root, "src", "services"),
+      barrelLine: `export * from './${camelName}Service';`
+    },
+    {
+      file: import_path4.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
+      content: isElysia ? generateTypeBoxValidator(opts.name, opts.fields, ctx.database) : generateJoiValidation(opts.name, opts.fields, ctx.database)
+    },
+    {
+      file: import_path4.default.join(ctx.root, "src", "routes", `${camelName}.ts`),
+      content: isElysia ? generateElysiaCrudRoutes(opts.name, opts.fields, withTasks) : generateCRUDRoutes(opts.name, opts.fields, withTasks)
+    }
+  ];
+  for (const w of writes) {
+    await import_fs_extra4.default.ensureDir(import_path4.default.dirname(w.file));
+    await import_fs_extra4.default.writeFile(w.file, w.content);
+    files.push(w.file);
+    if (w.barrelDir && w.barrelLine) await updateIndexExport(w.barrelDir, w.barrelLine);
+  }
+  const registered = await registerRouteInIndex(ctx.root, ctx.framework, camelName);
+  if (!registered) {
+    warnings.push(
+      ctx.framework === "express" ? `Could not update src/routes/index.ts \u2014 add manually: router.use('/${camelName}', ${camelName}Routes);` : `Could not update src/routes/index.ts \u2014 add manually: .use(${camelName}Routes)`
+    );
+  }
+  await upsertModelManifest(ctx.root, capitalizedName, { fields: opts.fields, crud: true, rbacTasks: withTasks });
+  return { files, warnings };
+};
+var sniffModelFlags = async (projectRoot, camelName) => {
+  const routePath = import_path4.default.join(projectRoot, "src", "routes", `${camelName}.ts`);
+  if (!await import_fs_extra4.default.pathExists(routePath)) return { crud: false, rbacTasks: false };
+  const routes = await import_fs_extra4.default.readFile(routePath, "utf-8");
+  return { crud: true, rbacTasks: routes.includes("checkPermission(") || routes.includes("auth: [Task.") };
+};
+var importManifestFromSource = async (root) => {
+  const imported = [];
+  const warnings = [];
+  const modelsDir = import_path4.default.join(root, "src", "models");
+  if (!await import_fs_extra4.default.pathExists(modelsDir)) return { imported, warnings };
+  const entries = (await import_fs_extra4.default.readdir(modelsDir)).filter((f) => f.endsWith(".ts")).sort();
+  for (const file of entries) {
+    const name = import_path4.default.basename(file, ".ts");
+    if (name === "index") continue;
+    if (BUILTIN_MODELS.includes(name)) continue;
+    try {
+      const fields = await parseExistingModel(root, name);
+      if (fields.length === 0) {
+        warnings.push(`Could not import ${file} into the models manifest \u2014 no fields parsed; declare it manually in koti.config.json if it is a Koti model`);
+        continue;
+      }
+      const flags = await sniffModelFlags(root, toCamelCase(name));
+      await upsertModelManifest(root, name, { fields, ...flags });
+      imported.push(name);
+    } catch (error) {
+      warnings.push(`Could not import ${file} into the models manifest (${error.message}) \u2014 declare it manually in koti.config.json if it is a Koti model`);
+    }
+  }
+  return { imported, warnings };
+};
+var parseExistingModel = async (projectRoot, name) => {
+  const modelPath = import_path4.default.join(projectRoot, "src", "models", `${capitalize(name)}.ts`);
+  if (!await import_fs_extra4.default.pathExists(modelPath)) {
+    throw new GeneratorError("IO_ERROR", `Model not found: ${modelPath}`);
+  }
+  const content = await import_fs_extra4.default.readFile(modelPath, "utf-8");
+  const fields = [];
+  const schemaMatch = content.match(/const\s+\w+Schema\s*=\s*new\s+Schema<.*?>\(\{([\s\S]*?)\},\s*\{/);
+  if (!schemaMatch) {
+    throw new GeneratorError("IO_ERROR", `Could not parse schema in ${modelPath}`);
+  }
+  const schemaContent = schemaMatch[1];
+  const fieldMatches = schemaContent.match(/(\w+):\s*(\[)?\{[^}]+\}(\])?/g);
+  if (fieldMatches) {
+    fieldMatches.forEach((fieldMatch) => {
+      const nameMatch = fieldMatch.match(/(\w+):/);
+      const isArrayForm = /^\w+:\s*\[/.test(fieldMatch);
+      const typeMatch = fieldMatch.match(/type:\s*(\w+)/);
+      const requiredMatch = fieldMatch.match(/required:\s*(true|false)/);
+      const uniqueMatch = fieldMatch.match(/unique:\s*(true|false)/);
+      const indexMatch = fieldMatch.match(/index:\s*(true|false)/);
+      const defaultMatch = fieldMatch.match(/default:\s*(['"].*?['"]|\d+|true|false)/);
+      if (nameMatch && (isArrayForm || typeMatch)) {
+        fields.push({
+          name: nameMatch[1],
+          type: isArrayForm ? "Array" : typeMatch[1],
+          required: requiredMatch ? requiredMatch[1] === "true" : false,
+          unique: uniqueMatch ? uniqueMatch[1] === "true" : false,
+          index: indexMatch ? indexMatch[1] === "true" : false,
+          default: defaultMatch ? defaultMatch[1].replace(/['"]/g, "") : void 0
+        });
+      }
+    });
+  }
+  return fields;
+};
+var editModel = async (opts) => {
+  var _a;
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "model name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const camelName = toCamelCase(opts.name);
+  const files = [];
+  const warnings = [...ctx.warnings];
+  const manifest = await readModelManifest(ctx.root);
+  let entry = manifest[capitalizedName];
+  if (!entry) {
+    if (ctx.database === "postgres") {
+      throw new GeneratorError(
+        "IO_ERROR",
+        `${capitalizedName} is not in the models manifest, and Drizzle sources are never parsed. Restore its entry under "models" in koti.config.json before editing it.`
+      );
+    }
+    const parsed = await parseExistingModel(ctx.root, opts.name);
+    entry = { fields: parsed, ...await sniffModelFlags(ctx.root, camelName) };
+    await upsertModelManifest(ctx.root, capitalizedName, entry);
+  }
+  let updatedFields = entry.fields;
+  for (const removeName of opts.removeFields ?? []) {
+    if (!updatedFields.some((f) => f.name === removeName)) {
+      throw new GeneratorError("INVALID_INPUT", `Field "${removeName}" does not exist on ${capitalizedName}`);
+    }
+    updatedFields = updatedFields.filter((f) => f.name !== removeName);
+  }
+  if ((_a = opts.addFields) == null ? void 0 : _a.length) {
+    validateFields(opts.addFields);
+    for (const f of opts.addFields) {
+      if (updatedFields.some((existing) => existing.name === f.name)) {
+        throw new GeneratorError("INVALID_INPUT", `Field "${f.name}" already exists on ${capitalizedName}`);
+      }
+    }
+    updatedFields = [...updatedFields, ...opts.addFields];
+  }
+  if (updatedFields.length === 0) {
+    throw new GeneratorError("INVALID_INPUT", "Cannot remove all fields from a model");
+  }
+  const modelPath = import_path4.default.join(ctx.root, "src", "models", `${capitalizedName}.ts`);
+  if (await import_fs_extra4.default.pathExists(modelPath)) {
+    const previousModel = await import_fs_extra4.default.readFile(modelPath, "utf-8");
+    await import_fs_extra4.default.writeFile(modelPath + ".bak", previousModel);
+  }
+  const isPg = ctx.database === "postgres";
+  await import_fs_extra4.default.writeFile(modelPath, isPg ? generateDrizzleModel(opts.name, updatedFields, warnings) : generateTypeScriptModel(opts.name, updatedFields));
+  files.push(modelPath);
+  if (opts.updateCrud) {
+    const isElysia = ctx.framework === "elysia";
+    const routePath = import_path4.default.join(ctx.root, "src", "routes", `${camelName}.ts`);
+    let withTasks = false;
+    if (await import_fs_extra4.default.pathExists(routePath)) {
+      const existingRoutes = await import_fs_extra4.default.readFile(routePath, "utf-8");
+      withTasks = existingRoutes.includes("checkPermission(") || existingRoutes.includes("auth: [Task.");
+    }
+    const regens = [
+      {
+        file: import_path4.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`),
+        content: isElysia ? generateElysiaCrudController(opts.name, updatedFields) : generateCRUDController(opts.name, updatedFields)
+      },
+      {
+        file: import_path4.default.join(ctx.root, "src", "services", `${camelName}Service.ts`),
+        content: isPg ? generateDrizzleCRUDService(opts.name, updatedFields) : generateCRUDService(opts.name, updatedFields)
+      },
+      {
+        file: import_path4.default.join(ctx.root, "src", "validators", `${camelName}.ts`),
+        content: isElysia ? generateTypeBoxValidator(opts.name, updatedFields, ctx.database) : generateJoiValidation(opts.name, updatedFields, ctx.database)
+      },
+      {
+        file: routePath,
+        content: isElysia ? generateElysiaCrudRoutes(opts.name, updatedFields, withTasks) : generateCRUDRoutes(opts.name, updatedFields, withTasks)
+      }
+    ];
+    for (const r of regens) {
+      if (!await import_fs_extra4.default.pathExists(r.file)) {
+        warnings.push(`${import_path4.default.relative(ctx.root, r.file)} did not exist \u2014 skipped`);
+        continue;
+      }
+      const previous = await import_fs_extra4.default.readFile(r.file, "utf-8");
+      await import_fs_extra4.default.writeFile(r.file + ".bak", previous);
+      await import_fs_extra4.default.writeFile(r.file, r.content);
+      files.push(r.file);
+    }
+  }
+  await upsertModelManifest(ctx.root, capitalizedName, { ...entry, fields: updatedFields });
+  return { files, warnings };
+};
+
+// src/generators/enum.ts
+var import_fs_extra5 = __toESM(require_lib());
+var import_path5 = __toESM(require("path"));
+var generateTypeScriptEnum = (enumName, enumType2, values) => {
+  const capitalizedName = capitalize(enumName);
+  const enumValues = values.map(({ key, value }) => {
+    if (enumType2 === "string") {
+      return `  ${key} = '${value}'`;
+    }
+    return `  ${key} = ${value}`;
+  }).join(",\n");
+  return `export enum ${capitalizedName} {
+${enumValues}
+}
+
+export default ${capitalizedName};
+`;
+};
+var createEnum = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "enum name (PascalCase)");
+  for (const v of opts.values) {
+    assertValidName(v.key, /^[A-Z][A-Z0-9_]*$/, "enum key (UPPER_SNAKE_CASE)");
+    if (typeof v.value === "string" && /[\r\n']/.test(v.value)) {
+      throw new GeneratorError("INVALID_INPUT", `Enum value for ${v.key} must not contain newlines or quotes`);
+    }
+  }
+  if (opts.values.length === 0) {
+    throw new GeneratorError("INVALID_INPUT", "At least one enum value is required");
+  }
+  const ctx = await resolveProject(opts.projectRoot);
+  const capitalizedName = capitalize(opts.name);
+  const enumPath = import_path5.default.join(ctx.root, "src", "enums", `${capitalizedName}.ts`);
+  if (await import_fs_extra5.default.pathExists(enumPath)) {
+    throw new GeneratorError("DUPLICATE", `Enum already exists: ${enumPath}`);
+  }
+  await import_fs_extra5.default.ensureDir(import_path5.default.dirname(enumPath));
+  await import_fs_extra5.default.writeFile(enumPath, generateTypeScriptEnum(opts.name, opts.enumType, opts.values));
+  await updateIndexExport(import_path5.default.join(ctx.root, "src", "enums"), `export { ${capitalizedName} } from './${capitalizedName}';`);
+  return { files: [enumPath], warnings: ctx.warnings };
+};
+
+// src/generators/controller.ts
+var import_fs_extra6 = __toESM(require_lib());
+var import_path6 = __toESM(require("path"));
+var generateExpressController = (controllerName) => {
+  const capitalizedName = capitalize(controllerName);
+  const camelCaseName = toCamelCase(controllerName);
+  return `import { Request, Response, NextFunction } from 'express';
+import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types/api';
+import { AppError } from '../utils/AppError';
+
+export class ${capitalizedName}Controller {
+  /**
+   * Get all ${controllerName}s with pagination
+   * @route GET /api/${toKebabCase(controllerName)}
+   */
+  public async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+
+      // TODO: Implement actual data fetching logic
+      const data = []; // Replace with actual data fetching
+      const total = 0; // Replace with actual count
+
+      const response: PaginatedResponse = {
+        success: true,
+        message: '${capitalizedName}s retrieved successfully',
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1
+        }
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error fetching ${controllerName}s\`, 500));
+    }
+  }
+
+  /**
+   * Get single ${controllerName} by ID
+   * @route GET /api/${toKebabCase(controllerName)}/:id
+   */
+  public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      // TODO: Implement actual data fetching logic
+      const data = null; // Replace with actual data fetching
+
+      if (!data) {
+        return next(new AppError('${capitalizedName} not found', 404));
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} retrieved successfully',
+        data
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error fetching ${controllerName}\`, 500));
+    }
+  }
+
+  /**
+   * Create new ${controllerName}
+   * @route POST /api/${toKebabCase(controllerName)}
+   */
+  public async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { body } = req;
+
+      // TODO: Implement validation and creation logic
+      const data = body; // Replace with actual creation logic
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} created successfully',
+        data
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      next(new AppError(\`Error creating ${controllerName}\`, 400));
+    }
+  }
+
+  /**
+   * Update ${controllerName} by ID
+   * @route PUT /api/${toKebabCase(controllerName)}/:id
+   */
+  public async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { body } = req;
+
+      // TODO: Implement actual update logic
+      const data = body; // Replace with actual update logic
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} updated successfully',
+        data
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error updating ${controllerName}\`, 400));
+    }
+  }
+
+  /**
+   * Delete ${controllerName} by ID
+   * @route DELETE /api/${toKebabCase(controllerName)}/:id
+   */
+  public async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      // TODO: Implement actual deletion logic
+
+      const response: ApiResponse = {
+        success: true,
+        message: '${capitalizedName} deleted successfully'
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(new AppError(\`Error deleting ${controllerName}\`, 400));
+    }
+  }
+}
+
+export default new ${capitalizedName}Controller();
+`;
+};
+var generateElysiaController = (controllerName) => {
+  const capitalizedName = capitalize(controllerName);
+  const camelCaseName = toCamelCase(controllerName);
+  return `import { AppError } from '../utils/AppError';
+import { success, paginated } from '../utils/respond';
+
+export const ${camelCaseName}Controller = {
+  /** List ${camelCaseName}s with pagination */
+  async getAll({ query }: any) {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 10;
+    // TODO: Implement actual data fetching logic
+    const data: any[] = [];
+    const total = 0;
+    return paginated('${capitalizedName}s retrieved successfully', data, {
+      page, limit, total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page < Math.ceil(total / limit),
+      hasPrev: page > 1,
+    });
+  },
+
+  /** Get one ${camelCaseName} by id */
+  async getById({ params }: any) {
+    // TODO: Implement actual data fetching logic
+    const data = null;
+    if (!data) throw new AppError('${capitalizedName} not found', 404);
+    return success('${capitalizedName} retrieved successfully', data);
+  },
+
+  /** Create a ${camelCaseName} */
+  async create({ body, set }: any) {
+    // TODO: Implement creation logic
+    set.status = 201;
+    return success('${capitalizedName} created successfully', body);
+  },
+
+  /** Update a ${camelCaseName} */
+  async update({ params, body }: any) {
+    // TODO: Implement update logic
+    return success('${capitalizedName} updated successfully', { id: params.id, ...body });
+  },
+
+  /** Delete a ${camelCaseName} */
+  async delete({ params }: any) {
+    // TODO: Implement delete logic
+    return success('${capitalizedName} deleted successfully');
+  }
+};
+
+export default ${camelCaseName}Controller;
+`;
+};
+var createController = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "controller name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path6.default.join(ctx.root, "src", "controllers", `${camelName}Controller.ts`);
+  if (await import_fs_extra6.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Controller already exists: ${filePath}`);
+  }
+  const content = ctx.framework === "elysia" ? generateElysiaController(opts.name) : generateExpressController(opts.name);
+  await import_fs_extra6.default.ensureDir(import_path6.default.dirname(filePath));
+  await import_fs_extra6.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path6.default.join(ctx.root, "src", "controllers"),
+    `export { default as ${camelName}Controller } from './${camelName}Controller';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/service.ts
+var import_fs_extra7 = __toESM(require_lib());
+var import_path7 = __toESM(require("path"));
+var generateService = (serviceName) => {
+  const capitalizedName = capitalize(serviceName);
+  return `import { AppError } from '../utils/AppError';
+
+export class ${capitalizedName}Service {
+  /**
+   * Service method example
+   * @param data - Input data
+   * @returns Promise<any>
+   */
+  public async performOperation(data: any): Promise<any> {
+    try {
+      // TODO: Implement service logic here
+      return data;
+    } catch (error) {
+      throw new AppError(\`${capitalizedName} service error: \${error}\`, 500);
+    }
+  }
+
+  /**
+   * Validation method example
+   * @param data - Data to validate
+   * @returns boolean
+   */
+  public validateData(data: any): boolean {
+    // TODO: Implement validation logic
+    return data !== null && data !== undefined;
+  }
+
+  /**
+   * Process data method example
+   * @param rawData - Raw data to process
+   * @returns Processed data
+   */
+  public processData(rawData: any): any {
+    // TODO: Implement data processing logic
+    return rawData;
+  }
+}
+
+export default new ${capitalizedName}Service();
+`;
+};
+var createService = async (opts) => {
+  assertValidName(opts.name, /^[A-Z][a-zA-Z0-9]*$/, "service name (PascalCase)");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path7.default.join(ctx.root, "src", "services", `${camelName}Service.ts`);
+  if (await import_fs_extra7.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Service already exists: ${filePath}`);
+  }
+  const content = generateService(opts.name);
+  await import_fs_extra7.default.ensureDir(import_path7.default.dirname(filePath));
+  await import_fs_extra7.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path7.default.join(ctx.root, "src", "services"),
+    `export * from './${camelName}Service';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/middleware.ts
+var import_fs_extra8 = __toESM(require_lib());
+var import_path8 = __toESM(require("path"));
+var generateExpressMiddleware = (middlewareName) => {
+  const camelCaseName = toCamelCase(middlewareName);
+  return `import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/AppError';
+
+/**
+ * ${capitalize(middlewareName)} middleware
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
+export const ${camelCaseName} = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // TODO: Implement middleware logic here
+    console.log(\`${capitalize(middlewareName)} middleware executed for \${req.method} \${req.path}\`);
+
+    // Example: Check some condition
+    const isValid = true; // Replace with actual validation logic
+
+    if (!isValid) {
+      return next(new AppError('${capitalize(middlewareName)} validation failed', 400));
+    }
+
+    next();
+  } catch (error) {
+    next(new AppError(\`${capitalize(middlewareName)} middleware error\`, 500));
+  }
+};
+
+export default ${camelCaseName};
+`;
+};
+var generateElysiaMiddleware = (middlewareName) => {
+  const camelCaseName = toCamelCase(middlewareName);
+  return `import { Elysia } from 'elysia';
+
+/**
+ * ${capitalize(middlewareName)} middleware plugin
+ * Attach with .use(${camelCaseName}) on an Elysia instance or route group.
+ */
+export const ${camelCaseName} = new Elysia({ name: '${camelCaseName}' })
+  .onBeforeHandle(({ request, set }) => {
+    // TODO: Implement middleware logic here
+    console.log(\`${capitalize(middlewareName)} middleware executed for \${request.method} \${new URL(request.url).pathname}\`);
+
+    // Example: block the request by returning a response
+    // set.status = 400;
+    // return { success: false, message: '${capitalize(middlewareName)} validation failed' };
+  });
+
+export default ${camelCaseName};
+`;
+};
+var createMiddleware = async (opts) => {
+  assertValidName(opts.name, /^[A-Za-z][a-zA-Z0-9]*$/, "middleware name");
+  const ctx = await resolveProject(opts.projectRoot);
+  const camelName = toCamelCase(opts.name);
+  const filePath = import_path8.default.join(ctx.root, "src", "middleware", `${camelName}.ts`);
+  if (await import_fs_extra8.default.pathExists(filePath)) {
+    throw new GeneratorError("DUPLICATE", `Middleware already exists: ${filePath}`);
+  }
+  const content = ctx.framework === "elysia" ? generateElysiaMiddleware(opts.name) : generateExpressMiddleware(opts.name);
+  await import_fs_extra8.default.ensureDir(import_path8.default.dirname(filePath));
+  await import_fs_extra8.default.writeFile(filePath, content);
+  await updateIndexExport(
+    import_path8.default.join(ctx.root, "src", "middleware"),
+    `export { ${camelName} } from './${camelName}';`
+  );
+  return { files: [filePath], warnings: ctx.warnings };
+};
+
+// src/generators/switchDb.ts
+var import_fs_extra9 = __toESM(require_lib());
+var import_path9 = __toESM(require("path"));
+var FRAGMENT_ENTRIES = /* @__PURE__ */ new Set(["src", "package.deps.json", "env.fragment", "readme.fragment.md"]);
+var rootEntriesOf = async (database) => {
+  const entries = await import_fs_extra9.default.readdir(import_path9.default.join(templatesDir(), "db", database)).catch(() => []);
+  return entries.filter((e) => !FRAGMENT_ENTRIES.has(e));
+};
+var srcFilesOf = async (database) => {
+  const base = import_path9.default.join(templatesDir(), "db", database, "src");
+  const found = /* @__PURE__ */ new Set();
+  const walk = async (dir) => {
+    for (const entry of await import_fs_extra9.default.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      const full = import_path9.default.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else found.add(import_path9.default.relative(base, full));
+    }
+  };
+  await walk(base);
+  return found;
+};
+var orphansOf = async (source, target) => {
+  const [from, to] = await Promise.all([srcFilesOf(source), srcFilesOf(target)]);
+  return [...from].filter((f) => !to.has(f)).sort();
+};
+var backup = async (target) => {
+  if (!await import_fs_extra9.default.pathExists(target)) return false;
+  await import_fs_extra9.default.copy(target, `${target}.bak`, { overwrite: true });
+  return true;
+};
+var listFiles = async (dir) => {
+  const entries = await import_fs_extra9.default.readdir(dir).catch(() => []);
+  return entries.filter((e) => e.endsWith(".ts") && !e.endsWith(".bak")).map((e) => import_path9.default.join(dir, e));
+};
+var commentOutDbLine = async (file) => {
+  if (!await import_fs_extra9.default.pathExists(file)) return;
+  const content = await import_fs_extra9.default.readFile(file, "utf-8");
+  const next = content.split("\n").map((l) => /^\s*(MONGODB_URI|DATABASE_URL)\s*=/.test(l) ? `# ${l.trim()}` : l).join("\n");
+  await import_fs_extra9.default.writeFile(file, next);
+};
+var removeDbFragment = async (projectPath, source) => {
+  const fragmentPath = import_path9.default.join(templatesDir(), "db", source, "package.deps.json");
+  const pkgPath = import_path9.default.join(projectPath, "package.json");
+  if (!await import_fs_extra9.default.pathExists(fragmentPath) || !await import_fs_extra9.default.pathExists(pkgPath)) return;
+  const fragment = await import_fs_extra9.default.readJson(fragmentPath);
+  const pkg = await import_fs_extra9.default.readJson(pkgPath);
+  for (const section of ["dependencies", "devDependencies", "scripts"]) {
+    const names = Object.keys(fragment[section] ?? {});
+    if (names.length === 0 || !pkg[section]) continue;
+    for (const name of names) delete pkg[section][name];
+  }
+  await import_fs_extra9.default.writeJson(pkgPath, pkg, { spaces: 2 });
+};
+var modelBarrelLine = (name, database) => database === "postgres" ? `export * from './${name}';` : `export { default as ${name}, I${name} } from './${name}';`;
+var switchDatabase = async (projectRoot, target) => {
+  if (!DATABASES.includes(target)) {
+    throw new GeneratorError("UNSUPPORTED_DATABASE", `Unsupported database: "${target}" (must be one of ${DATABASES.join(", ")})`);
+  }
+  const ctx = await resolveProject(projectRoot);
+  const source = ctx.database;
+  if (source === target) {
+    throw new GeneratorError("INVALID_INPUT", `Project already uses ${target} \u2014 nothing to switch`);
+  }
+  const root = ctx.root;
+  const files = [];
+  const warnings = [...ctx.warnings];
+  const configPath = import_path9.default.join(root, "koti.config.json");
+  let initialConfig;
+  try {
+    initialConfig = await import_fs_extra9.default.readJson(configPath);
+  } catch {
+    throw new GeneratorError("IO_ERROR", `Cannot read ${configPath}`);
+  }
+  if (!initialConfig.models) {
+    if (source === "postgres") {
+      throw new GeneratorError(
+        "IO_ERROR",
+        'koti.config.json has no "models" manifest and Drizzle sources are never parsed. Restore koti.config.json (or re-add the "models" section by hand) before switching.'
+      );
+    }
+    const imported = await importManifestFromSource(root);
+    warnings.push(...imported.warnings);
+    if (imported.imported.length > 0) {
+      warnings.push(`Imported ${imported.imported.length} model(s) into the manifest from source: ${imported.imported.join(", ")}`);
+    }
+  }
+  const manifest = await readModelManifest(root);
+  const modelNames = Object.keys(manifest);
+  const srcDir = import_path9.default.join(root, "src");
+  const [sourceRootEntries, targetRootEntries, orphans] = await Promise.all([
+    rootEntriesOf(source),
+    rootEntriesOf(target),
+    orphansOf(source, target)
+  ]);
+  const retiredRootEntries = sourceRootEntries.filter((e) => !targetRootEntries.includes(e));
+  const backupTargets = [
+    import_path9.default.join(srcDir, "config", "database.ts"),
+    ...await listFiles(import_path9.default.join(srcDir, "models")),
+    ...await listFiles(import_path9.default.join(srcDir, "services")),
+    ...await listFiles(import_path9.default.join(srcDir, "seeds")),
+    ...modelNames.map((n) => import_path9.default.join(srcDir, "validators", `${toCamelCase(n)}.ts`)),
+    ...orphans.map((rel) => import_path9.default.join(srcDir, rel)),
+    ...retiredRootEntries.map((e) => import_path9.default.join(root, e))
+  ];
+  for (const t of new Set(backupTargets)) {
+    if (await backup(t)) files.push(`${t}.bak`);
+  }
+  const dbTemplateDir = import_path9.default.join(templatesDir(), "db", target);
+  const dbTemplateSrc = import_path9.default.join(dbTemplateDir, "src");
+  if (await import_fs_extra9.default.pathExists(dbTemplateSrc)) {
+    await import_fs_extra9.default.copy(dbTemplateSrc, srcDir, { overwrite: true });
+  }
+  for (const entry of targetRootEntries) {
+    const dest = import_path9.default.join(root, entry);
+    const restored = `${dest}.bak`;
+    if (await import_fs_extra9.default.pathExists(restored)) {
+      await import_fs_extra9.default.copy(restored, dest, { overwrite: true });
+    } else if (await import_fs_extra9.default.pathExists(import_path9.default.join(dbTemplateDir, entry))) {
+      await import_fs_extra9.default.copy(import_path9.default.join(dbTemplateDir, entry), dest, { overwrite: true });
+    }
+    files.push(dest);
+  }
+  for (const rel of orphans) await import_fs_extra9.default.remove(import_path9.default.join(srcDir, rel));
+  for (const entry of retiredRootEntries) await import_fs_extra9.default.remove(import_path9.default.join(root, entry));
+  const isPg = target === "postgres";
+  const isElysia = ctx.framework === "elysia";
+  for (const [name, entry] of Object.entries(manifest)) {
+    const capitalizedName = capitalize(name);
+    const camelName = toCamelCase(name);
+    const modelPath = import_path9.default.join(srcDir, "models", `${capitalizedName}.ts`);
+    await import_fs_extra9.default.writeFile(modelPath, isPg ? generateDrizzleModel(name, entry.fields, warnings) : generateTypeScriptModel(name, entry.fields));
+    files.push(modelPath);
+    await updateIndexExport(import_path9.default.join(srcDir, "models"), modelBarrelLine(capitalizedName, target));
+    if (!entry.crud) continue;
+    const servicePath = import_path9.default.join(srcDir, "services", `${camelName}Service.ts`);
+    await import_fs_extra9.default.writeFile(servicePath, isPg ? generateDrizzleCRUDService(name, entry.fields) : generateCRUDService(name, entry.fields));
+    files.push(servicePath);
+    await updateIndexExport(import_path9.default.join(srcDir, "services"), `export * from './${camelName}Service';`);
+    const validatorPath = import_path9.default.join(srcDir, "validators", `${camelName}.ts`);
+    await import_fs_extra9.default.writeFile(validatorPath, isElysia ? generateTypeBoxValidator(name, entry.fields, target) : generateJoiValidation(name, entry.fields, target));
+    files.push(validatorPath);
+  }
+  await removeDbFragment(root, source);
+  for (const envFile of [".env", ".env.example"]) {
+    await commentOutDbLine(import_path9.default.join(root, envFile));
+  }
+  const projectName = await import_fs_extra9.default.readJson(import_path9.default.join(root, "package.json")).then((p) => p.name ?? import_path9.default.basename(root)).catch(() => import_path9.default.basename(root));
+  await applyDbFragments(root, target, ctx.framework, projectName);
+  const config = await import_fs_extra9.default.readJson(configPath).catch(() => {
+    throw new GeneratorError("IO_ERROR", `Cannot read ${configPath}`);
+  });
+  config.database = target;
+  await import_fs_extra9.default.writeJson(configPath, config, { spaces: 2 });
+  files.push(configPath);
+  const nextSteps = [
+    "Install dependencies: bun install (or npm install)",
+    ...isPg ? [
+      "Generate a migration for your own models: npm run db:generate",
+      "Apply migrations: npm run db:migrate",
+      "Start PostgreSQL and set DATABASE_URL in .env"
+    ] : ["Start MongoDB and set MONGODB_URI in .env"],
+    "Re-seed the new database: npm run seed",
+    "Review the .bak files, then delete them once you are happy"
+  ];
+  warnings.push("Data is not migrated \u2014 db:switch converts code only, and the new database starts empty");
+  if (isPg) {
+    warnings.push("Drizzle migration history is not preserved across a round-trip unless the previous drizzle/ directory was restored from .bak");
+  }
+  return { files, warnings, nextSteps };
+};
+
+// src/mcp-server.ts
+var rootArgIdx = process.argv.indexOf("--project-root");
+var PROJECT_ROOT = rootArgIdx >= 0 && process.argv[rootArgIdx + 1] || process.env.KOTI_PROJECT_ROOT || process.cwd();
+var ok = (text, files = [], warnings = []) => ({
+  content: [{
+    type: "text",
+    text: [
+      text,
+      files.length ? `
+Files created/updated:
+${files.map((f) => `  - ${f}`).join("\n")}` : "",
+      warnings.length ? `
+Warnings:
+${warnings.map((w) => `  \u26A0 ${w}`).join("\n")}` : ""
+    ].filter(Boolean).join("\n")
+  }]
+});
+var fail = (error) => ({
+  isError: true,
+  content: [{
+    type: "text",
+    text: error instanceof GeneratorError ? `[${error.code}] ${error.message}` : `Unexpected error: ${error.message}`
+  }]
+});
+var requireAbsolute = (p, what) => {
+  if (!path10.isAbsolute(p)) {
+    throw new GeneratorError("INVALID_INPUT", `${what} must be an absolute path (got "${p}")`);
+  }
+  return p;
+};
 var walkDir = async (dir, base) => {
   const root = base || dir;
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const entries = await fs10.readdir(dir, { withFileTypes: true });
   let files = [];
   for (const entry of entries) {
-    const full = path.join(dir, entry.name);
+    const full = path10.join(dir, entry.name);
     if (entry.name === "node_modules" || entry.name === ".git") continue;
     if (entry.isDirectory()) {
       files = files.concat(await walkDir(full, root));
     } else {
-      files.push(path.relative(root, full));
+      files.push(path10.relative(root, full));
     }
   }
   return files.sort();
 };
-var isKotiProject = async (dir) => {
-  var _a, _b;
-  try {
-    const pkgPath = path.join(dir, "package.json");
-    if (await fs.pathExists(pkgPath)) {
-      const pkg = await fs.readJSON(pkgPath);
-      return !!(((_a = pkg.dependencies) == null ? void 0 : _a.mongoose) || ((_b = pkg.dependencies) == null ? void 0 : _b.express));
-    }
-  } catch {
-  }
-  return false;
-};
 var getExistingModels = async (projectPath) => {
-  const modelsDir = path.join(projectPath, "src", "models");
-  if (!await fs.pathExists(modelsDir)) return [];
-  const files = await fs.readdir(modelsDir);
+  const modelsDir = path10.join(projectPath, "src", "models");
+  if (!await fs10.pathExists(modelsDir)) return [];
+  const files = await fs10.readdir(modelsDir);
   return files.filter((f) => f.endsWith(".ts") && f !== "index.ts").map((f) => f.replace(".ts", ""));
 };
 var getExistingTasks = async (projectPath) => {
-  const taskPath = path.join(projectPath, "src", "enums", "Task.ts");
-  if (!await fs.pathExists(taskPath)) return [];
-  const content = await fs.readFile(taskPath, "utf-8");
+  const taskPath = path10.join(projectPath, "src", "enums", "Task.ts");
+  if (!await fs10.pathExists(taskPath)) return [];
+  const content = await fs10.readFile(taskPath, "utf-8");
   const matches = content.match(/^\s+(\w+)\s*=/gm);
   return (matches || []).map((m) => m.trim().split("=")[0].trim());
 };
-var server = new McpServer({
-  name: "koti-mcp",
-  version: getVersion()
+var runSeed = (cwd, script) => new Promise((resolve, reject) => {
+  const child = (0, import_child_process2.spawn)("npm", ["run", script], { cwd, stdio: ["ignore", "pipe", "pipe"], shell: process.platform === "win32" });
+  let output = "";
+  const timer = setTimeout(() => {
+    child.kill("SIGKILL");
+    reject(new GeneratorError("IO_ERROR", `Seed timed out after 120s.
+Output so far:
+${output}`));
+  }, 12e4);
+  child.stdout.on("data", (d) => {
+    output += d.toString();
+  });
+  child.stderr.on("data", (d) => {
+    output += d.toString();
+  });
+  child.on("error", (err) => {
+    clearTimeout(timer);
+    reject(new GeneratorError("IO_ERROR", `Failed to spawn npm: ${err.message}`));
+  });
+  child.on("close", (code) => {
+    clearTimeout(timer);
+    resolve({ code, output });
+  });
 });
+var fieldSchema = external_exports.object({
+  name: external_exports.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Must be a valid identifier (e.g. "name", "createdBy")').describe("Field name (camelCase)"),
+  type: external_exports.enum(["String", "Number", "Date", "Boolean", "ObjectId", "Array", "Mixed", "JSON"]).describe("Field data type"),
+  required: external_exports.boolean().optional().default(false),
+  unique: external_exports.boolean().optional().default(false),
+  index: external_exports.boolean().optional().default(false).describe("Add a schema-level index on this field"),
+  default: external_exports.string().optional().describe("Default value rendered verbatim into the schema (single line)")
+});
+var server = new McpServer({ name: "koti-mcp", version: getVersion() });
 server.registerTool(
   "create_project",
   {
-    title: "Create New API Project",
-    description: "Scaffolds a complete Bun + Express + MongoDB TypeScript API project with JWT authentication, RBAC (role-based access control), Swagger docs, audit logging, and security middleware. Equivalent to `koti new <name>`.",
+    title: "Create Project",
+    description: "Scaffold a complete Bun API project with your choice of Express or Elysia framework and MongoDB or PostgreSQL database (JWT auth, RBAC, audit, documents/S3, tinyURL, Swagger, email).",
     inputSchema: {
       projectName: external_exports.string().regex(/^[a-z0-9-]+$/, 'Must be kebab-case (e.g. "my-api")').describe("Project name in kebab-case (used as directory name and DB name)"),
-      directory: external_exports.string().optional().describe("Parent directory to create the project in. Defaults to current working directory."),
+      framework: external_exports.enum(["express", "elysia"]).optional().default("express").describe("Web framework for the generated project"),
+      database: external_exports.enum(["mongodb", "postgres"]).optional().default("mongodb").describe("Database for the generated project: mongodb (Mongoose) or postgres (Drizzle ORM)"),
+      directory: external_exports.string().optional().describe("ABSOLUTE parent directory to create the project in. Defaults to the server process cwd."),
       skipInstall: external_exports.boolean().optional().default(false).describe("Skip running bun/npm install after scaffolding")
     },
-    annotations: {
-      title: "Create Project",
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: false
-    }
+    annotations: { title: "Create Project", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
   },
-  async ({ projectName, directory, skipInstall }) => {
-    const cwd = directory || process.cwd();
-    const projectPath = path.join(cwd, projectName);
-    if (await fs.pathExists(projectPath)) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: Directory "${projectPath}" already exists. Choose a different project name or remove the existing directory.`
-          }
-        ],
-        isError: true
-      };
-    }
-    const result = await runKotiCommand(["new", projectName], cwd);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0) {
-      return {
-        content: [{ type: "text", text: `Error creating project:
-${output}` }],
-        isError: true
-      };
-    }
-    let fileList = "";
+  async ({ projectName, framework, database, directory, skipInstall }) => {
     try {
-      const files = await walkDir(projectPath);
-      fileList = `
-
-Generated ${files.length} files:
-${files.map((f) => `  ${f}`).join("\n")}`;
-    } catch {
+      if (directory !== void 0) requireAbsolute(directory, "directory");
+      const result = await createProject({ name: projectName, framework, database, directory, skipInstall });
+      return ok(`Project "${projectName}" created at ${result.projectPath} (framework: ${framework}, database: ${database}).`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Project "${projectName}" created successfully at ${projectPath}${fileList}
-
-Next steps:
-  cd ${projectName}
-  npm run seed    # Create default roles & users
-  npm run dev     # Start the API server`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_model",
   {
-    title: "Create Mongoose Model",
-    description: "Creates a TypeScript Mongoose model with interface definition, optional CRUD endpoints (controller, service, routes, Joi validation), and optional RBAC task generation. Equivalent to `koti model <name>` with all interactive prompts answered programmatically.",
+    title: "Create Data Model",
+    description: "Creates a TypeScript data model (Mongoose or Drizzle, matching the project database) with optional CRUD endpoints (controller, service, routes, validation), and optional RBAC task generation.",
     inputSchema: {
       modelName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Product", "UserProfile")').describe("Model name in PascalCase"),
-      fields: external_exports.array(
-        external_exports.object({
-          name: external_exports.string().describe("Field name (camelCase)"),
-          type: external_exports.enum([
-            "String",
-            "Number",
-            "Date",
-            "Boolean",
-            "ObjectId",
-            "Array",
-            "Mixed",
-            "Decimal128",
-            "Map",
-            "Schema"
-          ]).describe("Mongoose data type"),
-          required: external_exports.boolean().optional().default(false),
-          unique: external_exports.boolean().optional().default(false),
-          ref: external_exports.string().optional().describe("Referenced model name (for ObjectId fields)")
-        })
-      ).min(1).describe("Array of field definitions for the schema"),
-      generateCrud: external_exports.boolean().optional().default(false).describe("Generate CRUD controller, service, routes, and Joi validation"),
+      fields: external_exports.array(fieldSchema).min(1).describe("Array of field definitions for the schema"),
+      generateCrud: external_exports.boolean().optional().default(false).describe("Generate CRUD controller, service, routes, and validation"),
       generateTasks: external_exports.boolean().optional().default(false).describe("Generate RBAC tasks (VIEW_X, CREATE_X, UPDATE_X, DELETE_X) in the Task enum"),
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
   },
   async ({ modelName, fields, generateCrud, generateTasks, projectPath }) => {
-    if (!await isKotiProject(projectPath)) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: "${projectPath}" does not appear to be a Koti project. Run create_project first.`
-          }
-        ],
-        isError: true
-      };
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await createModel({
+        projectRoot: projectPath,
+        name: modelName,
+        fields,
+        crud: generateCrud,
+        tasks: generateTasks
+      });
+      return ok(`Model "${modelName}" created (CRUD: ${generateCrud ? "yes" : "no"}, RBAC tasks: ${generateTasks ? "yes" : "no"}).`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    const typeMap = {
-      String: 1,
-      Number: 2,
-      Date: 3,
-      Boolean: 4,
-      ObjectId: 5,
-      Array: 6,
-      Mixed: 7,
-      Decimal128: 8,
-      Map: 9,
-      Schema: 10
-    };
-    let input = "";
-    for (const field of fields) {
-      input += `${field.name}
-`;
-      input += `${typeMap[field.type] || 1}
-`;
-      input += `${field.required ? "y" : "n"}
-`;
-      input += `${field.unique ? "y" : "n"}
-`;
+  }
+);
+server.registerTool(
+  "edit_model",
+  {
+    title: "Edit Data Model",
+    description: "Add or remove fields on an existing model; regenerates CRUD files with .bak backups.",
+    inputSchema: {
+      modelName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Product", "UserProfile")').describe("Model name in PascalCase"),
+      addFields: external_exports.array(fieldSchema).optional().describe("Fields to add to the model"),
+      removeFields: external_exports.array(external_exports.string()).optional().describe("Names of existing fields to remove from the model"),
+      updateCrud: external_exports.boolean().optional().default(true).describe("Regenerate CRUD controller/service/routes/validator (with .bak backups) to reflect the field changes"),
+      projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
-    input += "done\n";
-    input += generateCrud ? "y\n" : "n\n";
-    if (generateCrud) {
-      input += generateTasks ? "y\n" : "n\n";
+  },
+  async ({ modelName, addFields, removeFields, updateCrud, projectPath }) => {
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await editModel({
+        projectRoot: projectPath,
+        name: modelName,
+        addFields,
+        removeFields,
+        updateCrud
+      });
+      return ok(`Model "${modelName}" updated.`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    const result = await runKotiCommand(["model", modelName], projectPath, input);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return {
-        content: [{ type: "text", text: `Error creating model:
-${output}` }],
-        isError: true
-      };
-    }
-    const createdFiles = [];
-    const possibleFiles = [
-      `src/models/${modelName}.ts`,
-      ...generateCrud ? [
-        `src/controllers/${modelName.charAt(0).toLowerCase() + modelName.slice(1)}Controller.ts`,
-        `src/services/${modelName.charAt(0).toLowerCase() + modelName.slice(1)}Service.ts`,
-        `src/routes/${modelName.charAt(0).toLowerCase() + modelName.slice(1)}.ts`,
-        `src/validators/${modelName.charAt(0).toLowerCase() + modelName.slice(1)}Validator.ts`
-      ] : []
-    ];
-    for (const f of possibleFiles) {
-      if (await fs.pathExists(path.join(projectPath, f))) {
-        createdFiles.push(f);
-      }
-    }
-    const fieldsDesc = fields.map((f) => `  ${f.name}: ${f.type}${f.required ? " (required)" : ""}${f.unique ? " (unique)" : ""}`).join("\n");
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Model "${modelName}" created successfully!
-
-Fields:
-${fieldsDesc}
-
-CRUD: ${generateCrud ? "Yes" : "No"}
-RBAC Tasks: ${generateTasks ? "Yes" : "No"}
-
-Files created:
-${createdFiles.map((f) => `  ${f}`).join("\n")}`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_controller",
   {
     title: "Create Controller",
-    description: "Creates an empty TypeScript Express controller class. Equivalent to `koti controller <name>`.",
+    description: "Creates an empty controller (class for Express, handler object for Elysia).",
     inputSchema: {
-      controllerName: external_exports.string().describe('Controller name in PascalCase (e.g. "Payment")'),
+      controllerName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Payment")').describe("Controller name in PascalCase"),
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
   },
   async ({ controllerName, projectPath }) => {
-    const result = await runKotiCommand(["controller", controllerName], projectPath);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return { content: [{ type: "text", text: `Error:
-${output}` }], isError: true };
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await createController({ projectRoot: projectPath, name: controllerName });
+      return ok(`Controller "${controllerName}" created.`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Controller "${controllerName}" created at src/controllers/${controllerName.charAt(0).toLowerCase() + controllerName.slice(1)}Controller.ts`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_service",
   {
     title: "Create Service",
-    description: "Creates an empty TypeScript service class. Equivalent to `koti service <name>`.",
+    description: "Creates an empty TypeScript service class.",
     inputSchema: {
-      serviceName: external_exports.string().describe('Service name in PascalCase (e.g. "Payment")'),
+      serviceName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "Payment")').describe("Service name in PascalCase"),
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
   },
   async ({ serviceName, projectPath }) => {
-    const result = await runKotiCommand(["service", serviceName], projectPath);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return { content: [{ type: "text", text: `Error:
-${output}` }], isError: true };
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await createService({ projectRoot: projectPath, name: serviceName });
+      return ok(`Service "${serviceName}" created.`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Service "${serviceName}" created at src/services/${serviceName.charAt(0).toLowerCase() + serviceName.slice(1)}Service.ts`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_middleware",
   {
     title: "Create Middleware",
-    description: "Creates an Express middleware function. Equivalent to `koti middleware <name>`.",
+    description: "Creates a middleware function (Express) or plugin (Elysia).",
     inputSchema: {
-      middlewareName: external_exports.string().describe('Middleware name (e.g. "rateLimiter", "cors")'),
+      middlewareName: external_exports.string().regex(/^[A-Za-z][a-zA-Z0-9]*$/, 'Must start with a letter (e.g. "rateLimiter", "cors")').describe('Middleware name (e.g. "rateLimiter", "cors")'),
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
   },
   async ({ middlewareName, projectPath }) => {
-    const result = await runKotiCommand(["middleware", middlewareName], projectPath);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return { content: [{ type: "text", text: `Error:
-${output}` }], isError: true };
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await createMiddleware({ projectRoot: projectPath, name: middlewareName });
+      return ok(`Middleware "${middlewareName}" created.`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Middleware "${middlewareName}" created at src/middleware/${middlewareName}.ts`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_enum",
   {
     title: "Create TypeScript Enum",
-    description: "Creates a TypeScript enum with string or number values. Equivalent to `koti enum <name>`.",
+    description: "Creates a TypeScript enum with string or number values.",
     inputSchema: {
-      enumName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/).describe('Enum name in PascalCase (e.g. "OrderStatus")'),
+      enumName: external_exports.string().regex(/^[A-Z][a-zA-Z0-9]*$/, 'Must be PascalCase (e.g. "OrderStatus")').describe('Enum name in PascalCase (e.g. "OrderStatus")'),
       enumType: external_exports.enum(["string", "number"]).describe("Whether enum values are strings or numbers"),
       values: external_exports.array(
         external_exports.object({
-          key: external_exports.string().describe("Enum key (UPPER_SNAKE_CASE)"),
+          key: external_exports.string().regex(/^[A-Z][A-Z0-9_]*$/, "Must be UPPER_SNAKE_CASE").describe("Enum key (UPPER_SNAKE_CASE)"),
           value: external_exports.union([external_exports.string(), external_exports.number()]).describe("Enum value")
         })
       ).min(1).describe("Enum key-value pairs"),
@@ -23560,103 +19586,89 @@ server.registerTool(
     }
   },
   async ({ enumName, enumType: enumType2, values, projectPath }) => {
-    let input = `${enumType2 === "string" ? "1" : "2"}
-`;
-    for (const v of values) {
-      input += `${v.key}
-${v.value}
-`;
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await createEnum({ projectRoot: projectPath, name: enumName, enumType: enumType2, values });
+      return ok(`Enum "${enumName}" created with ${values.length} values: ${values.map((v) => v.key).join(", ")}.`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    input += "done\n";
-    const result = await runKotiCommand(["enum", enumName], projectPath, input);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return { content: [{ type: "text", text: `Error:
-${output}` }], isError: true };
-    }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Enum "${enumName}" created at src/enums/${enumName}.ts with ${values.length} values: ${values.map((v) => v.key).join(", ")}`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "create_task",
   {
     title: "Add RBAC Task",
-    description: "Adds a new task to the Task enum for role-based access control. Tasks are permissions that can be assigned to roles. Equivalent to `koti task <name>`.",
+    description: "Adds a new task to the Task enum for role-based access control. Tasks are permissions that can be assigned to roles.",
     inputSchema: {
-      taskName: external_exports.string().regex(/^[A-Z_]+$/, 'Must be UPPER_SNAKE_CASE (e.g. "MANAGE_INVENTORY")').describe("Task name in UPPER_SNAKE_CASE"),
-      description: external_exports.string().optional().default("").describe("Human-readable description of this permission"),
+      taskName: external_exports.string().regex(/^[A-Z][A-Z0-9_]*$/, 'Must be UPPER_SNAKE_CASE, starting with a letter (e.g. "MANAGE_INVENTORY")').describe("Task name in UPPER_SNAKE_CASE"),
+      description: external_exports.string().optional().default("").describe("Human-readable description of this permission (auto-generated from the task name if omitted)"),
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory")
     }
   },
   async ({ taskName, description, projectPath }) => {
-    let input = description ? `${description}
-` : `Allows ${taskName.toLowerCase().replace(/_/g, " ")}
-`;
-    const result = await runKotiCommand(["task", taskName], projectPath, input);
-    const output = stripAnsi(result.stdout + result.stderr);
-    if (result.exitCode !== 0 && !output.includes("successfully")) {
-      return { content: [{ type: "text", text: `Error:
-${output}` }], isError: true };
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const desc = description.trim() || `Allows ${taskName.toLowerCase().replace(/_/g, " ")}`;
+      const result = await createTask({ projectRoot: projectPath, name: taskName, description: desc });
+      return ok(`RBAC task "${taskName}" added to src/enums/Task.ts.
+Description: ${desc}`, result.files, result.warnings);
+    } catch (error) {
+      return fail(error);
     }
-    return {
-      content: [
-        {
-          type: "text",
-          text: `RBAC task "${taskName}" added to src/enums/Task.ts
-Description: ${description || taskName.toLowerCase().replace(/_/g, " ")}`
-        }
-      ]
-    };
   }
 );
 server.registerTool(
   "seed_database",
   {
     title: "Seed Database",
-    description: "Runs the seed script to populate MongoDB with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running. Equivalent to `npm run seed`.",
+    description: "Runs the seed script to populate the project database with default roles (Super Admin, Admin) and users (superadmin, admin). The database must be running.",
     inputSchema: {
       projectPath: external_exports.string().describe("Absolute path to the Koti project root directory"),
       seedType: external_exports.enum(["all", "roles"]).optional().default("all").describe('"all" seeds roles + users, "roles" seeds only roles')
     }
   },
   async ({ projectPath, seedType }) => {
-    const cmd = seedType === "roles" ? "seed:roles" : "seed";
     try {
-      const output = (0, import_child_process.execSync)(`npm run ${cmd}`, {
-        cwd: projectPath,
-        encoding: "utf-8",
-        timeout: 3e4,
-        env: { ...process.env, FORCE_COLOR: "0" }
-      });
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Database seeded successfully!
+      requireAbsolute(projectPath, "projectPath");
+      await resolveProject(projectPath);
+      const { code, output } = await runSeed(projectPath, seedType === "roles" ? "seed:roles" : "seed");
+      if (code !== 0) {
+        return fail(new GeneratorError("IO_ERROR", `Seeding failed (exit ${code}):
+${output}`));
+      }
+      return ok(`Database seeded (${seedType}).
+${output}`);
+    } catch (error) {
+      return fail(error);
+    }
+  }
+);
+server.registerTool(
+  "switch_database",
+  {
+    title: "Switch Database",
+    description: "Convert an existing Koti project between MongoDB and PostgreSQL (code-only; data does not move; originals kept as .bak).",
+    inputSchema: {
+      projectPath: external_exports.string().describe("Absolute path to the Koti project root directory"),
+      database: external_exports.enum(["mongodb", "postgres"]).describe("Target database to convert the project to")
+    },
+    annotations: { title: "Switch Database", readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false }
+  },
+  async ({ projectPath, database }) => {
+    try {
+      requireAbsolute(projectPath, "projectPath");
+      const result = await switchDatabase(projectPath, database);
+      return ok(
+        `Project at ${projectPath} switched to ${database}.
 
-${stripAnsi(output)}`
-          }
-        ]
-      };
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error seeding database. Make sure MongoDB is running.
-
-${stripAnsi(err.stderr || err.message)}`
-          }
-        ],
-        isError: true
-      };
+Next steps:
+${result.nextSteps.map((s) => `  - ${s}`).join("\n")}`,
+        result.files,
+        result.warnings
+      );
+    } catch (error) {
+      return fail(error);
     }
   }
 );
@@ -23669,21 +19681,22 @@ server.registerResource(
     mimeType: "text/plain"
   },
   async (uri) => {
-    const projectPath = process.cwd();
-    if (!await isKotiProject(projectPath)) {
+    try {
+      await resolveProject(PROJECT_ROOT);
+    } catch {
       return {
         contents: [
           { uri: uri.href, mimeType: "text/plain", text: "Not a Koti project directory." }
         ]
       };
     }
-    const files = await walkDir(projectPath);
+    const files = await walkDir(PROJECT_ROOT);
     return {
       contents: [
         {
           uri: uri.href,
           mimeType: "text/plain",
-          text: `Project: ${path.basename(projectPath)}
+          text: `Project: ${path10.basename(PROJECT_ROOT)}
 Files: ${files.length}
 
 ${files.join("\n")}`
@@ -23697,11 +19710,11 @@ server.registerResource(
   "koti://project/models",
   {
     title: "Project Models",
-    description: "Lists all Mongoose models defined in the project",
+    description: "Lists all data models defined in the project",
     mimeType: "text/plain"
   },
   async (uri) => {
-    const models = await getExistingModels(process.cwd());
+    const models = await getExistingModels(PROJECT_ROOT);
     return {
       contents: [
         {
@@ -23723,7 +19736,7 @@ server.registerResource(
     mimeType: "text/plain"
   },
   async (uri) => {
-    const tasks = await getExistingTasks(process.cwd());
+    const tasks = await getExistingTasks(PROJECT_ROOT);
     return {
       contents: [
         {
@@ -23752,12 +19765,14 @@ server.registerPrompt(
         role: "user",
         content: {
           type: "text",
-          text: `I want to create a new Bun + Express + MongoDB API project called "${projectName}".
+          text: `I want to create a new Bun + MongoDB API project (Express or Elysia \u2014 ask me which, or default to Express) called "${projectName}".
 
 ${description}
 
 Please:
 1. Use the create_project tool to scaffold the project
+1.5. Ask which framework I want (or default to Express) and pass it as the "framework" parameter to create_project
+1.6. Ask which database I want (or default to MongoDB) and pass it as the "database" parameter to create_project
 2. Create the data models I described using create_model (with CRUD and RBAC tasks)
 3. Add any additional RBAC tasks using create_task
 4. Seed the database using seed_database

@@ -185,6 +185,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'controllers'));
+      // The controller command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'ctrl-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -221,6 +227,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
+      // The service command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'svc-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -255,6 +267,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'middleware'));
+      // The middleware command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'mw-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -291,6 +309,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'models'));
+      // The model command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'model-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -378,11 +402,18 @@ describe('Koti CLI Commands Integration', () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
       await fs.ensureDir(path.join(projectDir, 'src', 'routes'));
       await fs.ensureDir(path.join(projectDir, 'src', 'validators'));
+      // The model command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'crud-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
 
-      // Create a minimal routes/index.ts so updateMainRoutes can append to it
+      // Create a minimal routes/index.ts with an existing router.use(...Routes) line so
+      // registerRouteInIndex (src/generators/model.ts) can locate where to splice the new route.
       await fs.writeFile(
         path.join(projectDir, 'src', 'routes', 'index.ts'),
-        `import { Router } from 'express';\nconst router = Router();\nexport default router;\n`
+        `import { Router } from 'express';\nimport authRoutes from './auth';\n\nconst router = Router();\n\nrouter.use('/auth', authRoutes);\n\nexport default router;\n`
       );
     });
 
@@ -410,7 +441,7 @@ describe('Koti CLI Commands Integration', () => {
       ];
 
       const output = await runInteractiveCLI('model Product', input, projectDir);
-      expect(output).toContain('Created TypeScript model');
+      expect(output).toContain('Created Mongoose model');   // 'Drizzle model' on a postgres project
       expect(output).toContain('Created TypeScript controller');
       expect(output).toContain('Created TypeScript service');
       expect(output).toContain('Created TypeScript routes');
@@ -478,6 +509,12 @@ describe('Koti CLI Commands Integration', () => {
 
     beforeAll(async () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'enums'));
+      // The enum command now validates it's running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'enum-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
     });
 
     afterAll(async () => {
@@ -543,6 +580,13 @@ describe('Koti CLI Commands Integration', () => {
       await fs.ensureDir(path.join(projectDir, 'src', 'services'));
       await fs.ensureDir(path.join(projectDir, 'src', 'routes'));
       await fs.ensureDir(path.join(projectDir, 'src', 'validators'));
+      // The model command (used below to seed the Person model) now validates it's
+      // running inside a Koti project.
+      await fs.writeJson(path.join(projectDir, 'package.json'), {
+        name: 'edit-test', version: '1.0.0',
+        dependencies: { express: '^4.18.0', mongoose: '^8.0.0' },
+      });
+      await fs.writeJson(path.join(projectDir, 'koti.config.json'), { framework: 'express' });
 
       // Create routes/index.ts
       await fs.writeFile(
@@ -643,6 +687,37 @@ describe('Koti CLI Commands Integration', () => {
 
       const output = await runInteractiveCLI('model:edit Person', input, projectDir);
       expect(output).toContain('No changes detected');
+    });
+  });
+
+  describe('koti db:switch', () => {
+    const projectDir = path.join(TEST_DIR, 'switch-test');
+
+    beforeAll(async () => {
+      runCLI(`new switch-test --framework express --database mongodb`, TEST_DIR, 180000);
+    }, 200000);
+
+    afterAll(async () => {
+      try { await fs.remove(projectDir); } catch {}
+    });
+
+    it('converts a scaffolded mongodb project to postgres', () => {
+      const output = runCLI('db:switch postgres', projectDir);
+      expect(output).toContain('postgres');
+      const cfg = fs.readJsonSync(path.join(projectDir, 'koti.config.json'));
+      expect(cfg.database).toBe('postgres');
+      const pkg = fs.readJsonSync(path.join(projectDir, 'package.json'));
+      expect(pkg.dependencies['drizzle-orm']).toBeDefined();
+      expect(pkg.dependencies.mongoose).toBeUndefined();
+    }, 120000);
+
+    it('rejects an unknown database', () => {
+      try {
+        runCLI('db:switch mysql', projectDir);
+        expect.unreachable('Should have exited non-zero');
+      } catch (error: any) {
+        expect(error.status).not.toBe(0);
+      }
     });
   });
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { globTsFiles } from './helpers/glob';
 
 const ROOT = path.resolve(__dirname, '..');
 const CLI_PATH = path.join(ROOT, 'dist', 'cli.js');
@@ -89,11 +90,10 @@ describe('Koti CLI', () => {
 
   describe('Template files', () => {
     it('should have all required template source files', () => {
-      // Templates are split into per-framework (express/elysia) + shared layers.
+      // Templates are split into per-framework (express/elysia) + shared + db layers.
       const requiredFiles = [
         // Express framework template
         'templates/express/src/server.ts',
-        'templates/express/src/config/database.ts',
         'templates/express/src/config/swagger.ts',
         'templates/express/src/middleware/auth.ts',
         'templates/express/src/middleware/errorHandler.ts',
@@ -106,15 +106,77 @@ describe('Koti CLI', () => {
         'templates/elysia/src/routes/auth.ts',
         'templates/elysia/src/routes/index.ts',
         // Shared (framework-agnostic) layer
-        'templates/shared/src/models/User.ts',
-        'templates/shared/src/services/authService.ts',
         'templates/shared/src/types/api.ts',
         'templates/shared/src/utils/AppError.ts',
+        // MongoDB db layer
+        'templates/db/mongodb/src/config/database.ts',
+        'templates/db/mongodb/src/models/User.ts',
+        'templates/db/mongodb/src/services/authService.ts',
+        'templates/db/mongodb/src/seeds/seed.ts',
+        // PostgreSQL db layer
+        'templates/db/postgres/src/config/database.ts',
+        'templates/db/postgres/src/seeds/seed.ts',
+        'templates/db/postgres/drizzle.config.ts',
       ];
 
       for (const file of requiredFiles) {
         expect(fs.existsSync(path.join(ROOT, file))).toBe(true);
       }
+    });
+
+    it('framework layers never import mongoose (single-axis rule)', async () => {
+      for (const dir of ['templates/express/src', 'templates/elysia/src', 'templates/shared/src']) {
+        const files = await globTsFiles(path.join(ROOT, dir));
+        for (const f of files) {
+          expect(await fs.readFile(f, 'utf8'), `${f} imports mongoose`).not.toMatch(/from 'mongoose'/);
+        }
+      }
+      // middleware must not query models directly — RBAC goes through userService
+      for (const f of ['templates/express/src/middleware/authorize.ts',
+                       'templates/express/src/middleware/checkPermission.ts',
+                       'templates/elysia/src/middleware/auth.ts',
+                       'templates/express/src/config/passport.ts']) {
+        const src = await fs.readFile(path.join(ROOT, f), 'utf8');
+        expect(src, `${f} touches User model directly`).not.toMatch(/User\.(findById|findOne)|from '\.\.\/models/);
+      }
+    });
+
+    it('db config exports the lifecycle contract', async () => {
+      for (const db of ['mongodb', 'postgres']) {
+        const src = await fs.readFile(path.join(ROOT, `templates/db/${db}/src/config/database.ts`), 'utf8');
+        for (const name of ['connectDB', 'closeDB', 'isValidId']) {
+          expect(src, `${db} database.ts missing ${name}`).toContain(`export const ${name}`);
+        }
+      }
+    });
+
+    // Found by the phase-2 live smoke: the pool is constructed at import time,
+    // which is hoisted above every caller's own dotenv.config(), so this module
+    // must load .env before it reads DATABASE_URL or seeds and boot both die.
+    it('postgres db config loads dotenv before reading DATABASE_URL', async () => {
+      const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/config/database.ts'), 'utf8');
+      const dotenvCall = src.indexOf('dotenv.config()');
+      const firstEnvRead = src.indexOf('process.env.DATABASE_URL');
+      expect(dotenvCall, 'database.ts never calls dotenv.config()').toBeGreaterThan(-1);
+      expect(dotenvCall).toBeLessThan(firstEnvRead);
+    });
+
+    it('postgres schema uses uuid PKs, a partial unique googleId, and ORM-level updatedAt', async () => {
+      const user = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/User.ts'), 'utf8');
+      expect(user).toContain('gen_random_uuid');
+      expect(user).toContain('IS NOT NULL');   // partial unique index on googleId
+      expect(user).toContain('$onUpdate');
+      const barrel = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/index.ts'), 'utf8');
+      expect(barrel.match(/^export \* from '\.\/\w+';$/gm)).toHaveLength(6);
+    });
+
+    it('postgres template ships the initial migration and its drizzle-kit meta artifacts', async () => {
+      for (const f of ['templates/db/postgres/drizzle/meta/_journal.json',
+                       'templates/db/postgres/drizzle/meta/0000_snapshot.json']) {
+        expect(fs.existsSync(path.join(ROOT, f)), f).toBe(true);
+      }
+      const sql = (await fs.readdir(path.join(ROOT, 'templates/db/postgres/drizzle'))).filter(f => f.endsWith('.sql'));
+      expect(sql.length).toBeGreaterThan(0);
     });
 
     it('template server.ts should not have hardcoded version', () => {
@@ -182,6 +244,168 @@ describe('Koti CLI', () => {
     });
   });
 
+  // Both db layers must expose the same service functions: controllers and
+  // routes are framework-axis files and are never regenerated on db:switch,
+  // so any name that exists on one side and not the other breaks a switch.
+  describe('db layer parity', () => {
+    // `class` and `interface` are in the pattern because auditService and
+    // documentService expose their whole surface that way — a function-only
+    // regex would compare two empty sets and pass vacuously.
+    const exportedNames = (src: string): Set<string> => {
+      const names = new Set<string>();
+      for (const m of src.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)) names.add(m[1]);
+      for (const m of src.matchAll(/export\s+(?:const|class|interface)\s+(\w+)/g)) names.add(m[1]);
+      return names;
+    };
+
+    for (const service of ['userService', 'authService', 'auditService', 'documentService', 'tinyUrlService']) {
+      it(`postgres ${service} exports every function the mongodb one does`, async () => {
+        const mongo = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/mongodb/src/services/${service}.ts`), 'utf8'));
+        const pg = exportedNames(await fs.readFile(path.join(ROOT, `templates/db/postgres/src/services/${service}.ts`), 'utf8'));
+        const missing = [...mongo].filter(n => !pg.has(n));
+        expect(missing, `postgres ${service} is missing: ${missing.join(', ')}`).toEqual([]);
+      });
+    }
+
+    it('postgres authService keeps the v3.0.1 token guards', async () => {
+      const c = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/authService.ts'), 'utf8');
+      expect(c).toContain('await verifyRefreshToken');       // awaited verification
+      expect(c).not.toContain('your-super-secret-jwt-key');  // no fallback secrets
+      expect(c).not.toContain('your-refresh-secret');
+      expect(c).not.toMatch(/JWT_SECRET\s*\|\|/);
+      // HS256 pinning itself lives in the shared tokenUtils, locked by test #4 above.
+    });
+
+    // Derived, not hand-listed: mongo's toJSON transform is the source of
+    // truth, so adding a secret there without teaching the postgres serializer
+    // about it fails here instead of leaking on the wire.
+    it('postgres serializer strips exactly the fields mongo deletes in toJSON', async () => {
+      const userModel = await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/models/User.ts'), 'utf8');
+      const transform = userModel.slice(userModel.indexOf('toJSON:'), userModel.indexOf('toObject:'));
+      // `_id`/`__v` are mongo bookkeeping, not secrets — postgres has neither.
+      const mongoSecrets = [...transform.matchAll(/delete ret\.(\w+);/g)]
+        .map(m => m[1]).filter(f => !['_id', '__v'].includes(f)).sort();
+      expect(mongoSecrets.length, 'no delete list found in the toJSON transform').toBeGreaterThan(0);
+
+      const serialize = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/serialize.ts'), 'utf8');
+      const block = serialize.slice(serialize.indexOf('SECRET_FIELDS = ['), serialize.indexOf('] as const'));
+      const pgSecrets = [...block.matchAll(/'(\w+)'/g)].map(m => m[1]).sort();
+
+      expect(pgSecrets).toEqual(mongoSecrets);
+    });
+
+    // Mongoose hashes in a pre('save') hook. Postgres has none, so every write
+    // that touches a password has to hash explicitly — a miss here stores the
+    // credential in plaintext and locks the user out (compare vs plaintext fails).
+    it('postgres never writes a password without hashing it first', async () => {
+      const users = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/userService.ts'), 'utf8');
+      expect(users).toContain('hashPassword');
+      expect(users).not.toMatch(/password:\s*data\.password/);
+
+      // Only what actually reaches the database: the password key inside a
+      // drizzle .values({...}) / .set({...}) literal.
+      for (const file of ['services/authService.ts', 'services/userService.ts', 'seeds/seed.ts']) {
+        const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src', file), 'utf8');
+        for (const m of src.matchAll(/\.(?:values|set)\(\{([\s\S]{0,600}?)\}\)/g)) {
+          const assigned = m[1].match(/(?:^|[\s,{])password:\s*([^,\n]+)/);
+          if (!assigned) continue;
+          expect(assigned[1], `${file} writes an unhashed password: ${assigned[0].trim()}`)
+            .toMatch(/hash|Hash|null/);
+        }
+      }
+    });
+
+    // Mongo lowercases/trims email and trims username in the schema, on writes
+    // and on query filters alike. Postgres has no schema layer, so every site
+    // has to normalize explicitly or "John@Example.com" can never log in.
+    it('postgres normalizes email and username at every read and write', async () => {
+      const dir = path.join(ROOT, 'templates/db/postgres/src/services');
+      const auth = await fs.readFile(path.join(dir, 'authService.ts'), 'utf8');
+      const user = await fs.readFile(path.join(dir, 'userService.ts'), 'utf8');
+      expect(await fs.pathExists(path.join(dir, 'normalize.ts'))).toBe(true);
+
+      for (const [name, src] of [['authService', auth], ['userService', user]] as const) {
+        expect(src, `${name} does not import the normalizer`).toContain("from './normalize'");
+        // A request payload's field must never be compared or written straight
+        // through — it goes via the normalizer or a normalized local.
+        const RAW_INPUT = /\b(data|userData|googleUserData|input)\.(email|username)\b/;
+        const raw = (expr: string) => !/normalize/i.test(expr) && RAW_INPUT.test(expr);
+        for (const m of src.matchAll(/eq\(users\.(email|username),\s*([^)]+)\)/g)) {
+          expect(raw(m[2]), `${name} compares a raw ${m[1]}: ${m[0]}`).toBe(false);
+        }
+        for (const m of src.matchAll(/(?:^|[\s,{])(email|username):\s*([^,\n]+)/gm)) {
+          expect(raw(m[2]), `${name} writes a raw ${m[1]}: ${m[0].trim()}`).toBe(false);
+        }
+      }
+      for (const fn of ['login', 'signup', 'googleAuth', 'forgotPassword', 'resendEmailVerification']) {
+        const body = auth.slice(auth.indexOf(`export const ${fn} =`));
+        expect(body.slice(0, 900), `${fn} does not normalize`).toMatch(/normalizeEmail|normalizeUsername/);
+      }
+    });
+
+    // Mongo's Object.assign + save() treats an all-undefined patch as a no-op
+    // and answers 200. Drizzle throws "No values to set" — a 500 for a request
+    // mongo accepted, so every update path filters first and short-circuits.
+    it('postgres update paths drop undefined keys and no-op on an empty patch', async () => {
+      const dir = path.join(ROOT, 'templates/db/postgres/src/services');
+      for (const file of ['userService.ts', 'authService.ts', 'documentService.ts']) {
+        const src = await fs.readFile(path.join(dir, file), 'utf8');
+        expect(src, `${file} does not filter undefined update keys`).toContain('definedOnly');
+      }
+      const helper = await fs.readFile(path.join(dir, 'normalize.ts'), 'utf8');
+      expect(helper).toContain('export const definedOnly');
+    });
+
+    // Mongo populates userId into {username, email, firstName, lastName};
+    // postgres returned a bare uuid, so the same endpoint answered a different
+    // shape on each database.
+    it('postgres audit history joins the actor instead of returning a bare id', async () => {
+      const src = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/auditService.ts'), 'utf8');
+      expect(src).toContain('leftJoin(users');
+      for (const field of ['username', 'email', 'firstName', 'lastName']) {
+        expect(src, `audit history omits ${field}`).toContain(`${field}: users.${field}`);
+      }
+      // one join per history method
+      expect(src.match(/leftJoin\(users/g)).toHaveLength(2);
+    });
+
+    // Token redemption looks rows up by token, and the tag search issues an
+    // array-overlap (&&) that a btree index can never serve.
+    it('postgres indexes the lookup columns mongo indexes, with GIN for tags', async () => {
+      const user = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/User.ts'), 'utf8');
+      expect(user).toContain('t.passwordResetToken');
+      expect(user).toContain('t.emailVerificationToken');
+
+      const doc = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/models/Document.ts'), 'utf8');
+      expect(doc).toMatch(/documents_tags_idx'\)\.using\('gin'/);
+
+      // The shipped migration has to agree with the schema, or a fresh project
+      // silently runs without the indexes its models declare.
+      const sql = await fs.readFile(path.join(ROOT, 'templates/db/postgres/drizzle/0000_init.sql'), 'utf8');
+      expect(sql).toContain('"password_reset_token"');
+      expect(sql).toContain('"email_verification_token"');
+      expect(sql).toMatch(/CREATE INDEX "documents_tags_idx" ON "documents" USING gin/);
+    });
+
+    it('both service barrels re-export the same five modules', async () => {
+      const modules = (src: string) => new Set([...src.matchAll(/from '\.\/(\w+)'/g)].map(m => m[1]));
+      const mongo = modules(await fs.readFile(path.join(ROOT, 'templates/db/mongodb/src/services/index.ts'), 'utf8'));
+      const pg = modules(await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/index.ts'), 'utf8'));
+      expect([...pg].sort()).toEqual([...mongo].sort());
+    });
+
+    // Postgres has no TTL index, so the mongo 7-day expiry has to be enforced
+    // at read time and reclaimed by a script (spec §5).
+    it('postgres tinyUrl expiry is enforced in the query and reclaimed by a script', async () => {
+      const svc = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/services/tinyUrlService.ts'), 'utf8');
+      expect(svc).toContain("interval '7 days'");
+      const cleanup = await fs.readFile(path.join(ROOT, 'templates/db/postgres/src/scripts/cleanupUrls.ts'), 'utf8');
+      expect(cleanup).toContain('delete(tinyUrls)');
+      const deps = JSON.parse(await fs.readFile(path.join(ROOT, 'templates/db/postgres/package.deps.json'), 'utf8'));
+      expect(Object.keys(deps.scripts)).toContain('cleanup:urls');
+    });
+  });
+
   describe('README validation', () => {
     it('should not have duplicated version in install command', () => {
       const content = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');
@@ -189,26 +413,29 @@ describe('Koti CLI', () => {
       expect(content).not.toContain('beta.1-beta.1');
     });
 
-    it('should not claim UUID support that is not implemented', () => {
+    // The UUID prohibition is retired in v3.2.0: postgres projects really do
+    // get uuid primary keys, so the README is now required to document the
+    // database axis instead of denying it.
+    it('should document the database choice and the switch command', () => {
       const content = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');
-      expect(content).not.toContain('UUID Primary Keys');
-      expect(content).not.toContain('uuid: UUID generation');
+      expect(content).toContain('--database');
+      expect(content).toContain('db:switch');
     });
   });
 
   describe('Generated code consistency', () => {
     it('CRUD generators should use toCamelCase not toLowerCase', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-
-      // Find all generateCRUD* function bodies and check they use toCamelCase
+      // generateCRUDController/generateCRUDRoutes live in crud/express.ts,
+      // generateCRUDService lives in crud/mongoose/service.ts (moved out of cli.ts in Task 7).
       const crudFunctions = [
-        'generateCRUDController',
-        'generateCRUDService',
-        'generateCRUDRoutes',
+        { fn: 'generateCRUDController', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
+        { fn: 'generateCRUDService', file: path.join(ROOT, 'src', 'generators', 'crud', 'mongoose', 'service.ts') },
+        { fn: 'generateCRUDRoutes', file: path.join(ROOT, 'src', 'generators', 'crud', 'express.ts') },
       ];
 
-      for (const fn of crudFunctions) {
-        const fnMatch = cliContent.match(
+      for (const { fn, file } of crudFunctions) {
+        const content = fs.readFileSync(file, 'utf-8');
+        const fnMatch = content.match(
           new RegExp(`const ${fn}[\\s\\S]*?^};`, 'm')
         );
         if (fnMatch) {
@@ -219,15 +446,20 @@ describe('Koti CLI', () => {
     });
 
     it('should auto-generate JWT secrets (not use placeholder)', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-      expect(cliContent).toContain('generateSecret');
-      expect(cliContent).toContain('crypto.randomBytes');
+      // generateSecret lives in generators/context.ts (moved out of cli.ts in Task 9);
+      // createProject (generators/project.ts) imports and uses it for JWT_SECRET/JWT_REFRESH_SECRET.
+      const contextContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'context.ts'), 'utf-8');
+      expect(contextContent).toContain('generateSecret');
+      expect(contextContent).toContain('crypto.randomBytes');
+      const projectContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'project.ts'), 'utf-8');
+      expect(projectContent).toContain('generateSecret');
     });
 
     it('should generate Joi validation for CRUD models', () => {
-      const cliContent = fs.readFileSync(path.join(ROOT, 'src', 'cli.ts'), 'utf-8');
-      expect(cliContent).toContain('generateJoiValidation');
-      expect(cliContent).toContain("import Joi from 'joi'");
+      // generateJoiValidation lives in crud/express.ts (moved out of cli.ts in Task 7).
+      const expressContent = fs.readFileSync(path.join(ROOT, 'src', 'generators', 'crud', 'express.ts'), 'utf-8');
+      expect(expressContent).toContain('generateJoiValidation');
+      expect(expressContent).toContain("import Joi from 'joi'");
     });
   });
 });

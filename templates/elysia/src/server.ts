@@ -2,9 +2,8 @@ import 'dotenv/config';
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { rateLimit } from 'elysia-rate-limit';
-import mongoose from 'mongoose';
 
-import { connectDB } from './config/database';
+import { connectDB, closeDB } from './config/database';
 import { errorHandlerPlugin } from './middleware/errorHandler';
 import { swaggerPlugin, SWAGGER_PATH } from './config/swagger';
 import { apiRoutes } from './routes/index';
@@ -77,8 +76,8 @@ const gracefulShutdown = async (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   try {
     await app.stop();
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed.');
+    await closeDB();
+    console.log('Database connection closed.');
   } catch (err) {
     console.error('Error during shutdown:', err);
   }

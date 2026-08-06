@@ -2,8 +2,7 @@ import { Elysia } from 'elysia';
 import { AppError } from '../utils/AppError';
 import { verifyAccessToken } from '../utils/tokenUtils';
 import { Task } from '../enums/Task';
-import User from '../models/User';
-import { IRole } from '../models/Role';
+import { getUserWithRoles } from '../services/userService';
 import { AuthUser } from '../types/api';
 
 /**
@@ -41,7 +40,7 @@ const authenticate = async (authHeader: string | undefined): Promise<AuthUser> =
 };
 
 const assertPermission = async (userId: string, requiredTasks: Task[]): Promise<void> => {
-  const user = await User.findById(userId).populate<{ roles: IRole[] }>('roles');
+  const user = await getUserWithRoles(userId);
   if (!user) {
     throw new AppError('Unauthorized: User not found', 401);
   }
@@ -50,7 +49,7 @@ const assertPermission = async (userId: string, requiredTasks: Task[]): Promise<
   }
 
   const userTasks = new Set<string>();
-  for (const role of user.roles as unknown as IRole[]) {
+  for (const role of user.roles) {
     if (role.isActive) {
       for (const task of role.tasks) userTasks.add(task);
     }

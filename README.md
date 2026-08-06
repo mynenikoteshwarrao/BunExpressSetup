@@ -1,10 +1,41 @@
 # Koti - Bun API Generator
 
-A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and MongoDB. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on either framework.
+A CLI tool that generates Bun-based API projects with your choice of **Express** or **Elysia** framework and **MongoDB** or **PostgreSQL** database. Creates a complete, production-ready API project structure with authentication, RBAC, security middleware, and best practices built-in — identical features on every combination.
 
-## Current Version: 3.0.1
+## Current Version: 3.2.0
 
 > **Note:** Review all generated code before using in production environments. Update dependencies to latest secure versions after generation. This software is provided "as-is" without warranty of any kind.
+
+## What's New in v3.2.0 🐘
+
+Koti gains a second axis: pick your **database** the same way you pick your framework.
+
+- **`koti new --database mongodb|postgres`** — PostgreSQL projects come with Drizzle ORM, `pg`, drizzle-kit, an initial migration for the built-in tables, and `db:generate` / `db:migrate` scripts. Everything else (auth, RBAC, audit log, documents, tiny URLs, Swagger) is feature-identical to the MongoDB output.
+- **`koti model` speaks both dialects** — the same eight field types emit a Mongoose schema on MongoDB projects and a Drizzle `pgTable` on PostgreSQL ones, with matching CRUD services and validators (`Joi.string().uuid()` / `t.String({ format: 'uuid' })` for ObjectId fields on Postgres).
+- **`koti db:switch <database>`** (MCP: `switch_database`) — converts an existing project between the two. Code only; see [Database Choice](#database-choice).
+- **Models manifest** — `koti.config.json` now records every generated model's fields, so regeneration never has to re-parse your source.
+- **Templates split along axes** — `templates/express|elysia` (framework), `templates/shared` (DB-neutral), `templates/db/mongodb|postgres` (database), composed at scaffold time. No file outside the MongoDB layer imports mongoose.
+- **MCP server is now 10 tools**, with `create_project` taking a `database` parameter.
+
+## What's New in v3.1.1 🛠️
+
+Bug-fix release for the model generators (CLI and MCP alike):
+
+- **Array fields now typecheck** — generated models emit Array-typed fields as `[{ type: Schema.Types.Mixed, ...options }]` instead of `{ type: Array }`, which Mongoose 8's TypeScript types reject. Models with Array fields now compile cleanly, alone or combined with `required`/`unique`/`index`/`default`.
+- **`koti model:edit` no longer corrupts models** — editing a model previously dropped every `index: true` flag and silently removed Array-typed fields (the field parser couldn't read either back). Both are now parsed and preserved through regeneration.
+- **Safer edits** — the model file is backed up to `.bak` before an edit overwrites it, matching the existing behavior for regenerated CRUD files.
+- **Internal cleanup** — `cli.ts` reuses the shared generator helpers instead of local duplicates, `--framework` validation is driven by the shared `FRAMEWORKS` constant, and the publishing docs now describe what `npm run update-version` actually updates.
+
+## What's New in v3.1.0 ⚙️
+
+The shared generator core release — one code-generation engine behind both the CLI and the MCP server:
+
+- **Framework-aware component generators** — `koti model`, `controller`, `service`, and `middleware` now emit idiomatic code for the project's framework (detected from `koti.config.json`). Elysia projects get Elysia controllers/routes and TypeBox validators; Express projects keep Joi. This delivers the follow-up promised in v3.0.0.
+- **`koti model:edit` rebuilt** — permission-preserving CRUD regeneration with validator refresh, plus `index`/`default` support on model fields.
+- **MCP server rewritten on the shared generators** — all 9 tools (`create_project`, `create_model`, `edit_model`, `create_enum`, `create_task`, `create_controller`, `create_service`, `create_middleware`, `seed_database`) call the generator core directly: real errors instead of false successes, no CLI stdin puppeteering, and a JSON-RPC stdio integration test covering every tool and resource.
+- **`create_project` hardening** — optional `skipInstall`, hardened dependency install, and ~1,500 lines of dead code removed.
+- **Version sync tooling** — `version.json` is the single source of truth; `npm run update-version` propagates it to `package.json`, `manifest.json`, and the README install line.
+- **Real install docs + fresh bundle** — MCP install docs now describe the three real channels (global npm install + `koti-mcp`, `.mcpb` bundle, from source), with a fresh `.mcpb` built per release and `@modelcontextprotocol/sdk` pinned to 1.22.0 for stdio stability.
 
 ## What's New in v3.0.1 🔒
 
@@ -67,7 +98,7 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 - **No more template overwrites** — `generateEssentialFiles()` no longer overwrites production-quality template files with simpler inline versions. Only `.env` is generated dynamically.
 
 ### Server & Runtime
-- **Graceful shutdown** — Generated `server.ts` includes SIGTERM/SIGINT handlers with `mongoose.connection.close()`.
+- **Graceful shutdown** — Generated `server.ts` includes SIGTERM/SIGINT handlers that close the database connection.
 - **Dynamic version** — Server reads version from `package.json` at startup instead of hardcoding `1.0.0`.
 
 ### Developer Experience
@@ -81,7 +112,7 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 - **TypeScript First**: Full TypeScript support with type safety
 - **Bun Runtime**: Optimized for speed with modern JavaScript runtime
 - **Express.js or Elysia**: Pick a minimal, flexible web framework at create time
-- **MongoDB Integration**: Complete setup with Mongoose ODM
+- **Database Choice**: **MongoDB** (Mongoose ODM) or **PostgreSQL** (Drizzle ORM) — pick at create time, or convert later with `koti db:switch`
 - **JWT Authentication**: Access and refresh token system with Google OAuth support
 - **Security First**: Helmet, CORS, rate limiting, and password hashing
 - **Input Validation**: Joi schemas on Express; TypeBox (`t`) schemas on Elysia — validation idiomatic to each framework
@@ -91,12 +122,25 @@ This major release adds **first-class [Elysia](https://elysiajs.com/) support** 
 - **Email Support**: Nodemailer integration for password reset and verification
 - **File Uploads**: Multer-based file upload with S3 support
 
+## MCP Server (use Koti from Claude)
+
+Koti ships an MCP server so AI agents can scaffold and grow projects directly:
+
+    npm install -g koti
+    claude mcp add koti -- koti-mcp
+
+10 tools: `create_project` (Express or Elysia × MongoDB or PostgreSQL), `create_model`
+(+CRUD +RBAC), `edit_model`, `create_enum`, `create_task`, `create_controller`,
+`create_service`, `create_middleware`, `seed_database`, `switch_database`.
+Resources describe the project pointed to by
+`KOTI_PROJECT_ROOT`. See MCP_DISTRIBUTION_GUIDE.md for Claude Desktop setup.
+
 ## Installation
 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g koti@3.0.1
+npm install -g koti@3.2.0
 ```
 
 ### Development Setup
@@ -115,22 +159,25 @@ npm run build
 Creates a complete API project with all boilerplate, templates, and auto-installed dependencies. Prompts for the framework (Express or Elysia) unless `--framework` is supplied.
 
 ```bash
-# Interactive — choose Express or Elysia when prompted
+# Interactive — choose the framework and database when prompted
 koti new my-awesome-api
 
 # Non-interactive — choose explicitly (CI-friendly)
-koti new my-awesome-api --framework elysia
-koti new my-awesome-api --framework express
+koti new my-awesome-api --framework elysia --database postgres
+koti new my-awesome-api --framework express --database mongodb
+
+# Either flag may be omitted; the defaults are express and mongodb
+koti new my-awesome-api --database postgres
 
 # `create` is an alias for `new`
 koti create my-awesome-api --framework elysia
 ```
 
-The generated project includes a `koti.config.json` recording the chosen framework.
+The generated project includes a `koti.config.json` recording the chosen framework and database.
 
 ### `koti model <name>`
 
-Interactive command to create a Mongoose model with TypeScript interfaces. Prompts for field names, types (String, Number, Date, Boolean, ObjectId, Array, Mixed, JSON), required/unique/indexed flags, and default values. Optionally generates full CRUD (controller, service, routes, Joi validation).
+Interactive command to create a data model with TypeScript types — a Mongoose schema on MongoDB projects, a Drizzle `pgTable` on PostgreSQL ones. Prompts for field names, types (String, Number, Date, Boolean, ObjectId, Array, Mixed, JSON), required/unique/indexed flags, and default values. Optionally generates full CRUD (controller, service, routes, Joi validation).
 
 ```bash
 koti model Product
@@ -139,6 +186,17 @@ koti model Product
 ### `koti model:edit <name>`
 
 Interactive command to add or delete fields on an existing model. Detects and optionally updates associated CRUD files. Previous files are saved as `.bak` backups.
+
+### `koti db:switch <database>`
+
+Converts an existing project between MongoDB and PostgreSQL. Run it from the project root.
+
+```bash
+koti db:switch postgres
+koti db:switch mongodb
+```
+
+See [Database Choice](#database-choice) for exactly what it rewrites and what it leaves alone.
 
 ```bash
 koti model:edit Product
@@ -194,7 +252,7 @@ koti task MANAGE_ORDERS
 my-awesome-api/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts         # MongoDB connection
+│   │   ├── database.ts         # Database connection (Mongoose or Drizzle)
 │   │   ├── email.ts            # Email configuration
 │   │   ├── logger.ts           # Logger configuration
 │   │   ├── passport.ts         # Passport.js / Google OAuth
@@ -253,7 +311,9 @@ my-awesome-api/
 │   └── server.ts               # Entry point with graceful shutdown
 ├── .env                        # Auto-generated with secure secrets
 ├── .gitignore
-├── koti.config.json            # Records the chosen framework + CLI version
+├── drizzle.config.ts            # PostgreSQL projects only
+├── drizzle/                     # PostgreSQL projects only — SQL migrations
+├── koti.config.json            # Records the framework, database, CLI version, and model manifest
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -266,6 +326,91 @@ my-awesome-api/
 > and `utils/respond.ts` instead of `responseHelper.ts`. Models, services, seeds, enums, and
 > types are shared verbatim between both frameworks.
 
+## Database Choice
+
+Koti scaffolds against **MongoDB** (Mongoose ODM) or **PostgreSQL** (Drizzle ORM). The two
+outputs are feature-identical: same routes, same auth and RBAC, same audit log, same
+Swagger docs, same JSON on the wire — every response carries a string `id`, never a raw
+`_id`, so a client cannot tell which database is underneath.
+
+One documented asymmetry: where MongoDB embeds a related record (the actor on an audit
+log entry, for example), the embedded object is keyed `_id` on MongoDB and `id` on
+PostgreSQL — the same `_id`-to-`id` rule the rest of the wire contract already follows.
+
+### Choosing at create time
+
+```bash
+koti new my-api --database postgres
+koti new my-api --database mongodb   # the default
+```
+
+The choice is recorded in `koti.config.json` and drives every later generator, so
+`koti model`, `koti service`, and the MCP tools emit the right idiom without being told.
+
+PostgreSQL projects additionally get `drizzle.config.ts`, a `drizzle/` directory holding
+the initial migration for the built-in tables, and two scripts:
+
+```bash
+npm run db:generate   # diff your schema into a new SQL migration
+npm run db:migrate    # apply pending migrations
+```
+
+### Switching later
+
+```bash
+cd my-api
+koti db:switch postgres
+```
+
+What it does, and what it deliberately does not:
+
+- **Code only.** Every model, service, seed, validator, and the database config are
+  regenerated in the target idiom from the model manifest in `koti.config.json`.
+- **Your data does not move.** The target database starts empty; re-run `npm run seed`.
+  Exporting and importing your own data is out of scope.
+- **Nothing is destroyed.** Every file the switch overwrites is kept alongside it as
+  `<file>.bak`. Review them, then delete them once you are happy.
+- **Dependencies and `.env` are rewritten.** The old layer's dependencies and scripts are
+  removed, the old connection variable is commented out rather than deleted, and the new
+  one is appended to `.env` and `.env.example`.
+- **Migration-history caveat.** Switching *away* from PostgreSQL leaves `drizzle/` only as
+  a `.bak` copy. Switching back restores that history if the `.bak` is still present;
+  otherwise the project starts again from the shipped initial migration, which will not
+  match a database that already has your tables. Keep the `.bak` if you intend to return.
+
+### Field-type mapping
+
+The eight field types are the same on both databases — only the emission changes:
+
+| Field type | Mongoose | Drizzle |
+| --- | --- | --- |
+| String | `String` | `text()` |
+| Number | `Number` | `doublePrecision()` |
+| Date | `Date` | `timestamp({ withTimezone: true })` |
+| Boolean | `Boolean` | `boolean()` |
+| ObjectId | `Schema.Types.ObjectId` | `uuid()` |
+| Array | `[{ type: Schema.Types.Mixed }]` | `jsonb().$type<any[]>()` |
+| Mixed | `Schema.Types.Mixed` | `jsonb()` |
+| JSON | `Schema.Types.Mixed` | `jsonb()` |
+
+`required` becomes `NOT NULL`, `unique` a unique constraint, `index` an `index()`, and
+`default` carries over where it can be expressed — a Date default of `Date.now` becomes
+`defaultNow()`. A default that has no PostgreSQL equivalent is skipped with a warning
+rather than failing the generation. Primary keys are `ObjectId` on MongoDB and
+`uuid` (`gen_random_uuid()`) on PostgreSQL.
+
+### Planned (not in this release)
+
+Koti stays a scaffolder — you own every generated line — but the database axis opens a
+roadmap:
+
+- **v3.3+**: pg-boss job-queue scaffold, transactional-outbox generator, and a supported
+  runtime test-harness tier (pglite / testcontainers).
+- **Later**: an SSR/storefront template, relation-aware modeling (field `ref` targets
+  becoming real foreign keys with typed join helpers), and a Bun-native SQL driver option.
+
+Data migration between databases, Prisma, MySQL, and SQLite are **not** planned.
+
 ## Quick Start
 
 ```bash
@@ -273,8 +418,10 @@ koti new my-api
 cd my-api
 # Dependencies are auto-installed via bun or npm
 
-# Configure MongoDB URI in .env (JWT secrets are pre-generated)
-# Start MongoDB, then:
+# MongoDB projects: set MONGODB_URI in .env and start MongoDB
+# PostgreSQL projects: set DATABASE_URL in .env, start Postgres, then:
+#   npm run db:migrate
+# (JWT secrets are pre-generated either way)
 
 # Seed default roles and users
 npm run seed
@@ -319,7 +466,10 @@ The generated `.env` includes auto-generated secure secrets:
 NODE_ENV=development
 PORT=8000
 
+# MongoDB projects
 MONGODB_URI=mongodb://localhost:27017/my-api
+# PostgreSQL projects
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/my-api
 
 JWT_SECRET=<auto-generated 128-char hex>
 JWT_REFRESH_SECRET=<auto-generated 128-char hex>
@@ -339,11 +489,20 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 ## Dependencies (generated projects)
 
+Framework and database dependencies are merged into one `package.json` at scaffold time.
+
 ### Express template
-express, mongoose, typescript, dotenv, cors, helmet, bcryptjs, jsonwebtoken, express-rate-limit, joi, swagger-jsdoc, swagger-ui-express, passport, passport-google-oauth20, nodemailer, multer
+express, typescript, dotenv, cors, helmet, bcryptjs, jsonwebtoken, express-rate-limit, joi, swagger-jsdoc, swagger-ui-express, passport, passport-google-oauth20, express-session, nodemailer, multer, aws-sdk
 
 ### Elysia template
-elysia, @elysiajs/cors, @elysiajs/swagger, elysia-rate-limit, mongoose, dotenv, bcryptjs, jsonwebtoken, nodemailer, aws-sdk (validation via Elysia's built-in TypeBox `t`; uploads/downloads via native `t.File()` + `Bun.file` — no multer; OAuth2 hand-rolled — no passport)
+elysia, @elysiajs/cors, @elysiajs/swagger, elysia-rate-limit, dotenv, bcryptjs, jsonwebtoken, nodemailer, aws-sdk (validation via Elysia's built-in TypeBox `t`; uploads/downloads via native `t.File()` + `Bun.file` — no multer; OAuth2 hand-rolled — no passport)
+
+### MongoDB layer
+mongoose
+
+### PostgreSQL layer
+drizzle-orm, pg (dev: drizzle-kit, @types/pg) — plus the `db:generate` and `db:migrate` scripts.
+Drizzle is a dependency of the *generated project* only; koti itself never depends on it.
 
 ### Development
 ts-node / bun, @types/* (TypeScript type definitions)
@@ -369,4 +528,4 @@ MIT License — free for personal and commercial use.
 
 ---
 
-**Generated with Koti CLI v3.0.1** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)
+**Generated with Koti CLI v3.2.0** — [npm](https://www.npmjs.com/package/koti) | [GitHub](https://github.com/mynenikoteshwarrao/BunExpressSetup)

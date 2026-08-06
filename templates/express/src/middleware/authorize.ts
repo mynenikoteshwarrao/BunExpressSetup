@@ -2,8 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/express-api';
 import { AppError } from '../utils/AppError';
 import { Task } from '../enums/Task';
-import User from '../models/User';
-import Role, { IRole } from '../models/Role';
+import { getUserWithRoles } from '../services/userService';
 
 /**
  * Authorization middleware — checks whether the authenticated user
@@ -26,8 +25,8 @@ export const authorize = (...requiredTasks: Task[]) => {
         return next(new AppError('Unauthorized: Authentication required', 401));
       }
 
-      // Fetch user with populated roles
-      const user = await User.findById(req.user.id).populate<{ roles: IRole[] }>('roles');
+      // Fetch user with roles through the db-layer seam
+      const user = await getUserWithRoles(req.user.id);
 
       if (!user) {
         return next(new AppError('Unauthorized: User not found', 401));

@@ -39,11 +39,11 @@ koti/
 ├── templates/
 │   ├── express/          # Express framework template
 │   ├── elysia/           # Elysia framework template
-│   └── shared/           # Framework-agnostic models/services/utils/…
+│   ├── shared/           # Framework- and database-agnostic code
+│   └── db/               # mongodb/ and postgres/ database layers
 ├── tests/                # vitest suite (NOT published)
 ├── version.json          # ← source of truth for the version number
 ├── package.json          # npm metadata + "files" whitelist + scripts
-├── npm-package.json      # mirror updated by `update-version` (legacy artifact)
 ├── manifest.json         # MCP bundle manifest (has its own version field)
 ├── README.md             # Published docs
 └── LICENSE
@@ -51,19 +51,17 @@ koti/
 
 ## Versioning
 
-`version.json` is the single source of truth, but a few files carry the version
-and must be kept in sync. **`npm run update-version` only propagates to
-`npm-package.json` and the README install line** — it does **not** touch
-`package.json` or `manifest.json`, so bump those by hand.
-
-When cutting a release, set the version in **all three** of:
+`version.json` is the single source of truth. Bump the version there, then run
+**`npm run update-version`** — it reads `version.json` and propagates that
+version into `package.json` and `manifest.json`, and updates the
+`npm install -g koti@X` line in `README.md`. No other file needs
+to be edited by hand.
 
 | File | Field | Updated by |
 |------|-------|------------|
 | `version.json` | `version` | manual (source of truth) |
-| `package.json` | `version` | manual (the version npm publishes) |
-| `manifest.json` | `version` | manual (MCP bundle) |
-| `npm-package.json` | `version` | `npm run update-version` |
+| `package.json` | `version` | `npm run update-version` |
+| `manifest.json` | `version` | `npm run update-version` |
 | `README.md` | `npm install -g koti@X` | `npm run update-version` |
 
 Follow semver: bug/security fixes → patch (`3.0.0 → 3.0.1`); new
@@ -71,15 +69,17 @@ backwards-compatible features → minor; breaking changes → major.
 
 ## Release steps
 
-### 1. Bump the version (3 files)
+### 1. Bump the version
 
-Edit `version.json`, `package.json`, and `manifest.json` to the new version
-(e.g. `3.0.1`). Add a matching **"What's New"** section at the top of `README.md`.
+Edit `version.json` to the new version (e.g. `3.0.1`) — `npm run update-version`
+(next step) propagates it to `package.json`, `manifest.json`, and the
+README install line. Add a matching **"What's New"** section at the top
+of `README.md`.
 
 ### 2. Propagate, build, and test
 
 ```bash
-npm run update-version     # writes npm-package.json + README install line
+npm run update-version     # writes package.json/manifest.json + README install line
 npm run build              # esbuild → dist/cli.js + dist/mcp-server.js
 npm test                   # vitest — all green before publishing
 ```
